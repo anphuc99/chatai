@@ -19,6 +19,7 @@
     "docker:ps": "docker compose -f docker-compose.dev.yml ps"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.26.0",
     "typescript": "^5.7.0",
     "prettier": "^3.4.0",
     "eslint": "^9.15.0",
