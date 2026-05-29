@@ -47,11 +47,17 @@ try {
   console.error('Lỗi khi đồng bộ database:', error.message);
 }
 
-console.log('\n6. Khởi chạy Server và Mobile App song song...');
-const devProcess = spawn('pnpm', ['-r', '--parallel', 'dev'], { stdio: 'inherit', shell: true });
+console.log('\n6. Khởi chạy Server, Mobile App (Web) và Device Previewer song song...');
+const spawnOptions = { stdio: 'inherit', shell: true };
+
+const serverProcess = spawn('pnpm', ['--filter', '@chatai/server', 'dev'], spawnOptions);
+const mobileProcess = spawn('pnpm', ['--filter', '@chatai/mobile', 'web'], spawnOptions);
+const previewerProcess = spawn('pnpm', ['--filter', '@chatai/previewer', 'dev'], spawnOptions);
 
 process.on('SIGINT', () => {
   console.log('\nĐang tắt các tiến trình...');
-  devProcess.kill();
+  serverProcess.kill();
+  mobileProcess.kill();
+  previewerProcess.kill();
   process.exit();
 });

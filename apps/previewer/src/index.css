@@ -1,0 +1,192 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-dark: #0f172a;
+  --bg-panel: rgba(30, 41, 59, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  
+  --glass-blur: blur(12px);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  background: var(--bg-dark);
+  background-image: radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+                    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Layout */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  background: var(--bg-panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--glass-shadow);
+  z-index: 10;
+}
+
+.topbar-brand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Select & Buttons */
+select, button {
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+select:hover, button:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 41, 59, 0.8);
+}
+
+button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+/* Preview Area */
+.preview-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: auto;
+}
+
+.device-frame {
+  position: relative;
+  background: #000;
+  border-radius: 40px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  padding: 12px; /* Bezel size */
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.device-frame.landscape {
+  flex-direction: row;
+}
+
+/* Inner Screen */
+.device-screen {
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.device-screen iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #fff; /* Default bg for iframe */
+}
+
+/* Device specific sizes (Portrait) */
+.device-iphone-14-pro { width: 393px; height: 852px; }
+.device-iphone-se { width: 375px; height: 667px; }
+.device-ipad-pro-11 { width: 834px; height: 1194px; border-radius: 24px; }
+.device-ipad-pro-11 .device-screen { border-radius: 16px; }
+
+/* Landscape Overrides */
+.device-iphone-14-pro.landscape { width: 852px; height: 393px; }
+.device-iphone-se.landscape { width: 667px; height: 375px; }
+.device-ipad-pro-11.landscape { width: 1194px; height: 834px; }
+
+/* Desktop / Responsive Mode */
+.device-responsive {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  border-radius: 12px;
+  padding: 0;
+}
+.device-responsive .device-screen {
+  border-radius: 12px;
+}
+
+/* Notch for iPhone 14 Pro */
+.notch {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 35px;
+  background: #000;
+  border-radius: 0 0 20px 20px;
+  z-index: 10;
+  transition: all 0.4s;
+}
+
+.device-frame.landscape .notch {
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 120px;
+  border-radius: 0 20px 20px 0;
+}
+
+/* Hide notch on other devices */
+.device-iphone-se .notch,
+.device-ipad-pro-11 .notch,
+.device-responsive .notch {
+  display: none;
+}
