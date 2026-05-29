@@ -5,9 +5,8 @@
     "moduleResolution": "bundler",
     "jsx": "react-native",
     "strict": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
+      "@/*": ["./src/*"],
       "@chatai/shared-types": ["../../packages/shared-types/src"]
     }
   },
