@@ -17,7 +17,7 @@ const __dirname = dirname(__filename);
 const DOCS_DIR = join(__dirname, 'docs');
 const DB_DIR = join(__dirname, 'db');
 const VECTORS_FILE = join(DB_DIR, 'vectors.json');
-const EMBEDDING_MODEL = 'nomic-embed-text';
+const EMBEDDING_MODEL = 'qwen3-embedding';
 const OLLAMA_URL = 'http://127.0.0.1:11434/api/embed';
 const MAX_CHARS = 1000;
 const OVERLAP = 100;
@@ -87,7 +87,7 @@ async function createEmbeddings(texts) {
       }
 
       const result = await response.json();
-      
+
       if (result.embeddings && result.embeddings.length > 0) {
         allEmbeddings.push(...result.embeddings);
       } else {
@@ -145,7 +145,7 @@ async function indexDocuments() {
   }
 
   const existingEntries = existingDB.entries || [];
-  
+
   // Tạo map mtime cũ theo từng file
   const oldFileMtimes = {};
   for (const entry of existingEntries) {
@@ -163,7 +163,7 @@ async function indexDocuments() {
   for (const filePath of mdFiles) {
     const filename = basename(filePath);
     currentFiles.add(filename);
-    
+
     const stats = statSync(filePath);
     const mtimeMs = stats.mtimeMs;
 
@@ -198,19 +198,19 @@ async function indexDocuments() {
     // Tạo embeddings cho phần dữ liệu mới/thay đổi
     console.log(`\n🧠 Đang tạo embeddings mới cho ${documentsToEmbed.length} chunks...`);
     const embeddings = await createEmbeddings(documentsToEmbed);
-    
+
     const newEntries = documentsToEmbed.map((doc, i) => ({
       id: `${metadatasToEmbed[i].source}_chunk_${metadatasToEmbed[i].chunkIndex}`,
       document: doc,
       metadata: metadatasToEmbed[i],
       embedding: embeddings[i],
     }));
-    
+
     finalEntries.push(...newEntries);
   } else {
     console.log(`\n✅ Không có nội dung mới nào cần tạo embeddings (đã cache 100%).`);
   }
-  
+
   // Dọn dẹp các entry của file đã bị xóa
   finalEntries = finalEntries.filter(entry => currentFiles.has(entry.metadata.source));
 

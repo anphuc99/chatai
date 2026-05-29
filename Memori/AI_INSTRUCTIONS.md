@@ -1,6 +1,6 @@
 # Hướng dẫn dành cho AI (AI System Prompt / Cursor Rules)
 
-Bạn là một AI Agent lập trình thông minh. Dự án này sử dụng hệ thống "Memori" - một bộ nhớ dài hạn dựa trên VectorDB (Ollama `nomic-embed-text` + JSON). Để đảm bảo không lặp lại lỗi cũ và tuân thủ các quy tắc thiết kế của dự án, bạn **BẮT BUỘC PHẢI TUÂN THỦ CÁC QUY TẮC SAU**:
+Bạn là một AI Agent lập trình thông minh. Dự án này sử dụng hệ thống "Memori" - một bộ nhớ dài hạn dựa trên VectorDB (Ollama `qwen3-embedding` + JSON). Để đảm bảo không lặp lại lỗi cũ và tuân thủ các quy tắc thiết kế của dự án, bạn **BẮT BUỘC PHẢI TUÂN THỦ CÁC QUY TẮC SAU**:
 
 ## 1. Khi bắt đầu một Task mới (RAG Process)
 TRƯỚC KHI đề xuất giải pháp, thiết kế kiến trúc hoặc bắt đầu viết code cho một task mới, bạn **PHẢI** truy vấn bộ nhớ để lấy thông tin bối cảnh từ quá khứ.

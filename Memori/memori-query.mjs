@@ -17,7 +17,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const DB_DIR = join(__dirname, 'db');
 const VECTORS_FILE = join(DB_DIR, 'vectors.json');
-const EMBEDDING_MODEL = 'nomic-embed-text';
+const EMBEDDING_MODEL = 'qwen3-embedding';
 const OLLAMA_URL = 'http://127.0.0.1:11434/api/embed';
 
 // === Cosine Similarity ===
@@ -76,7 +76,7 @@ async function queryMemory(queryText, nResults = 3) {
     if (!result.embeddings || result.embeddings.length === 0) {
       throw new Error('Ollama không trả về embeddings hợp lệ cho query');
     }
-    
+
     queryEmbedding = result.embeddings[0];
   } catch (error) {
     console.error(`\n❌ LỖI KẾT NỐI OLLAMA: Đảm bảo Ollama đang chạy và đã pull model ${EMBEDDING_MODEL}`);

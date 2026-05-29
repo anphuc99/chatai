@@ -100,7 +100,7 @@
    @Injectable()
    export class EmbeddingService {
      private ollamaUrl: string;
-     private model: string = 'bge-m3';  // hoặc 'nomic-embed-text'
+     private model: string = 'bge-m3';  // hoặc 'qwen3-embedding'
 
      async embed(text: string): Promise<number[]> {
        // POST {OLLAMA_URL}/api/embeddings
@@ -124,7 +124,7 @@
    ```bash
    ollama pull bge-m3
    # hoặc
-   ollama pull nomic-embed-text
+   ollama pull qwen3-embedding
    ```
 3. Caching: embedding của cùng text → cache trong Redis (TTL 24h):
    - Key: `embed:${MD5(text)}`.
