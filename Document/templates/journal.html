@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhật ký Hành trình - Roleplay Chat AI</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c16;
+            --card-bg: rgba(22, 25, 51, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00f2fe;
+            --secondary-accent: #8a2be2;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glow-color: rgba(0, 242, 254, 0.15);
+            --success-color: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1035 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(138, 43, 226, 0.1);
+            overflow: hidden;
+        }
+
+        /* Sidebar bên trái */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            background: rgba(10, 11, 22, 0.4);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Danh sách Session */
+        .session-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .session-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .session-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .session-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .session-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 242, 254, 0.2);
+            transform: translateX(4px);
+        }
+
+        .session-item.active {
+            background: rgba(0, 242, 254, 0.08);
+            border-color: var(--primary-accent);
+            border-left: 4px solid var(--primary-accent);
+        }
+
+        .session-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .session-date {
+            font-size: 0.75rem;
+            color: var(--primary-accent);
+            margin-bottom: 8px;
+        }
+
+        .session-preview {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        /* Sổ tay từ vựng */
+        .vocab-notebook {
+            height: 30%;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--border-color);
+            padding: 16px;
+            background: rgba(0,0,0,0.15);
+        }
+
+        .vocab-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vocab-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .vocab-list::-webkit-scrollbar { width: 4px; }
+        .vocab-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
+
+        .vocab-chip {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .vocab-chip-top {
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .vocab-chip-word { font-weight: 600; color: #fff; }
+        .vocab-chip-pinyin { color: var(--primary-accent); font-size: 0.75rem; }
+        .vocab-chip-meaning { color: var(--text-muted); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+
+
+        /* Khu vực hiển thị chi tiết (Main Area) */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .main-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-title h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .main-title p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions button {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-actions button:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--primary-accent);
+            color: var(--primary-accent);
+        }
+
+        /* Tabs Navigation */
+        .tabs-nav {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(10, 11, 22, 0.3);
+        }
+
+        .tab-btn {
+            padding: 16px 24px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 0.95rem;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-accent);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-accent);
+            box-shadow: 0 -2px 10px rgba(0, 242, 254, 0.5);
+        }
+
+        /* Tab Content Area */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Tab 1: Summary Styles */
+        .summary-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            color: #e5e7eb;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+
+        .summary-box p {
+            margin-bottom: 16px;
+        }
+        
+        .summary-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Tab 2: Script (Message List) Styles */
+        .message-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+
+        .message-item.narrator {
+            align-self: center;
+            max-width: 90%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .message-item.narrator .sender-name {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .message-item.narrator .text-content {
+            font-style: italic;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        .message-item.character {
+            align-self: flex-start;
+        }
+        
+        .message-item.user {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 20px 20px 20px 4px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .message-item.user .message-bubble {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(138, 43, 226, 0.15));
+            border-color: rgba(0, 242, 254, 0.3);
+            border-radius: 20px 20px 4px 20px;
+        }
+
+        .sender-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+        }
+        
+        .message-item.user .sender-name {
+            color: #fff;
+            text-align: right;
+        }
+
+        .chinese-sentence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 6px;
+            align-items: flex-end;
+            line-height: 1;
+        }
+
+        .word-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            padding: 2px 4px;
+            transition: all 0.2s ease;
+        }
+
+        .word-cell:hover {
+            background: rgba(0, 242, 254, 0.1);
+            transform: scale(1.05);
+        }
+
+        .word-cell .pinyin {
+            font-size: 0.75rem;
+            color: var(--primary-accent);
+            margin-bottom: 4px;
+            font-weight: 500;
+            min-height: 14px;
+        }
+
+        .word-cell .hanzi {
+            font-size: 1.3rem;
+            color: #ffffff;
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            font-weight: 500;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            align-self: flex-start;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .action-btn.active {
+            color: var(--primary-accent);
+            background: rgba(0, 242, 254, 0.08);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        .translation-block {
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: #d1d5db;
+            line-height: 1.5;
+            display: none;
+        }
+
+        /* OOC event block */
+        .ooc-event {
+            justify-content: center;
+            width: 100%;
+            align-items: center;
+        }
+
+        .ooc-text {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.9rem;
+            text-align: center;
+            max-width: 85%;
+            padding: 8px 0;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px 16px;
+        }
+
+        /* Dictionary Popup */
+        .dict-popup {
+            position: absolute;
+            background: rgba(18, 20, 38, 0.96);
+            border: 1px solid var(--primary-accent);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 242, 254, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            z-index: 1000;
+            display: none;
+            width: 220px;
+        }
+        .dict-word { font-size: 1.3rem; font-weight: 600; color: #fff; margin-bottom: 2px; }
+        .dict-pinyin { font-size: 0.85rem; color: var(--primary-accent); margin-bottom: 8px; font-weight: 500; }
+        .dict-meaning { font-size: 0.8rem; color: #e5e7eb; line-height: 1.4; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px; margin-bottom: 12px; }
+        
+        .dict-collect-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px;
+        }
+        .dict-collect-btn.collected {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); cursor: not-allowed;
+        }
+        .dict-close {
+            position: absolute; top: 10px; right: 12px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.95rem; line-height: 1;
+        }
+
+        /* Nút đóng sidebar mặc định ẩn trên desktop */
+        .sidebar-close-btn {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+            z-index: 10;
+            transition: color 0.2s ease;
+        }
+        .sidebar-close-btn:hover { color: #fff; }
+
+        /* Indicator cho bottom sheet trên desktop mặc định ẩn */
+        .bottom-sheet-indicator { display: none; }
+
+        /* Responsive cho điện thoại */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden;
+            }
+
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+                max-width: 100%;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                bottom: 0;
+                width: 290px;
+                z-index: 1500;
+                background: #0f1026;
+                border-right: 1px solid var(--border-color);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                padding-top: 60px; /* Nhường chỗ cho nút đóng sidebar */
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-close-btn {
+                display: block;
+            }
+
+            .main-header {
+                padding: 12px 16px;
+            }
+
+            .menu-toggle-btn {
+                display: block !important;
+            }
+
+            .main-title h3 {
+                font-size: 1.05rem;
+            }
+            .header-actions button {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+
+            .tabs-nav {
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .tab-btn {
+                padding: 12px 16px;
+                font-size: 0.85rem;
+            }
+
+            .tab-content {
+                padding: 16px;
+            }
+
+            .message-item {
+                max-width: 92%;
+            }
+
+            .message-bubble {
+                padding: 12px 16px;
+                border-radius: 16px 16px 16px 4px;
+            }
+
+            .message-item.user .message-bubble {
+                border-radius: 16px 16px 4px 16px;
+            }
+
+            .chinese-sentence {
+                gap: 14px 10px;
+                margin-top: 4px;
+            }
+
+            .word-cell {
+                padding: 4px 8px;
+                min-width: 36px;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.04);
+                border-radius: 8px;
+            }
+            .word-cell .hanzi { font-size: 1.25rem; }
+            .word-cell .pinyin { font-size: 0.75rem; margin-bottom: 2px; }
+
+            .message-actions { gap: 8px; margin-top: 6px; }
+            .action-btn { padding: 8px 14px; font-size: 0.85rem; }
+
+            /* Dict Popup Bottom Sheet on Mobile */
+            .dict-popup {
+                position: fixed;
+                left: 0 !important;
+                right: 0;
+                bottom: -100%;
+                top: auto !important;
+                width: 100%;
+                border-radius: 24px 24px 0 0;
+                border: none;
+                background: #151833;
+                z-index: 2000;
+                box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.7);
+                transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                padding: 20px 24px 36px 24px;
+                box-sizing: border-box;
+            }
+
+            .dict-popup.active {
+                bottom: 0;
+                display: block !important;
+            }
+
+            .bottom-sheet-indicator {
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+                margin: -8px auto 16px auto;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar-overlay" id="sidebar-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1400; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s ease;"></div>
+        <!-- Sidebar: Danh sách các phiên chat & Sổ tay -->
+        <div class="sidebar">
+            <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Đóng menu">&times;</button>
+            <div class="sidebar-header">
+                <h2>📖 Nhật ký của bạn</h2>
+            </div>
+            
+            <div class="session-list" id="session-list-container">
+                <!-- Session Item 1 -->
+                <div class="session-item active" onclick="loadSession(1)">
+                    <div class="session-title">Bão tuyết ở Cabin gỗ</div>
+                    <div class="session-date">Hôm nay, 14:30</div>
+                    <div class="session-preview">Mimi và anh trai phát hiện ra một chú chó lạc dưới trời bão tuyết...</div>
+                </div>
+                <!-- Session Item 2 -->
+                <div class="session-item" onclick="loadSession(2)">
+                    <div class="session-title">Ngày đầu tiên đến trường</div>
+                    <div class="session-date">Hôm qua, 09:15</div>
+                    <div class="session-preview">Gặp gỡ những người bạn mới, Lisa đã giúp Mimi tìm lớp học...</div>
+                </div>
+            </div>
+
+            <div class="vocab-notebook">
+                <div class="vocab-header">
+                    <span>📚 TỪ VỰNG ĐÃ LƯU</span>
+                    <span style="font-size: 0.8rem; background: rgba(0, 242, 254, 0.15); padding: 2px 8px; border-radius: 8px;">2 từ</span>
+                </div>
+                <div class="vocab-list">
+                    <div class="vocab-chip">
+                        <div class="vocab-chip-top">
+                            <span class="vocab-chip-word">怕</span>
+                            <span class="vocab-chip-pinyin">pà</span>
+                        </div>
+                        <div class="vocab-chip-meaning">sợ, sợ hãi</div>
+                    </div>
+                    <div class="vocab-chip">
+                        <div class="vocab-chip-top">
+                            <span class="vocab-chip-word">开门</span>
+                            <span class="vocab-chip-pinyin">kāi mén</span>
+                        </div>
+                        <div class="vocab-chip-meaning">mở cửa</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Area: Chi tiết bản Nhật ký -->
+        <div class="main-area">
+            <div class="main-header">
+                <div class="main-title" style="display: flex; align-items: center; gap: 12px;">
+                    <button class="menu-toggle-btn" id="menu-toggle-btn" style="background: transparent; border: none; font-size: 1.5rem; color: #fff; cursor: pointer; display: none;">☰</button>
+                    <div>
+                        <h3 id="detail-title">Bão tuyết ở Cabin gỗ</h3>
+                        <p id="detail-date">Hoàn thành lúc: 15:45 - Thời lượng: 1h 15m</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="auto-play-btn" style="background: rgba(0, 242, 254, 0.1); border-color: rgba(0, 242, 254, 0.3); color: #00f2fe;">
+                        <span>▶️</span> Tự động phát
+                    </button>
+                    <button id="export-pdf-btn">
+                        <span>📥</span> Xuất PDF kịch bản
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="switchTab('summary')">📝 Tóm lược cốt truyện</button>
+                <button class="tab-btn" onclick="switchTab('script')">🎬 Kịch bản chi tiết</button>
+            </div>
+
+            <!-- Tab 1: Summary -->
+            <div class="tab-content active" id="tab-summary">
+                <div class="summary-box" id="summary-content">
+                    <p>Bối cảnh ban đầu là một buổi tối mùa đông bão tuyết dữ dội. Hai anh em (bạn và Mimi) đang ở trong một cabin gỗ giữa rừng.</p>
+                    <p>Đột nhiên, có tiếng gõ cửa mạnh dồn dập vang lên. Mimi rất sợ hãi và khuyên anh trai không nên mở cửa. Tuy nhiên, khi mở cửa ra kiểm tra, hai anh em phát hiện một chú chó con đi lạc đang run rẩy dưới tuyết.</p>
+                    <p>Anh trai đã quyết định mang chú chó vào nhà để sưởi ấm. Bão tuyết sau đó cũng ngớt dần. Một kết thúc ấm áp cho một đêm đông lạnh giá.</p>
+                </div>
+            </div>
+
+            <!-- Tab 2: Full Script -->
+            <div class="tab-content" id="tab-script">
+                <div class="message-list" id="script-list-container">
+                    <!-- Sẽ được render bởi JS, demo cứng trước vài tin -->
+                    <div class="message-item ooc-event">
+                        <div class="ooc-text">🌍 <strong>[Bối cảnh toàn cục]</strong> Chúng ta đang ở trong một cabin gỗ giữa rừng sâu hoang vắng lúc nửa đêm, trời đang bão tuyết dữ dội.</div>
+                    </div>
+
+                    <div class="message-item user">
+                        <div class="message-bubble">
+                            <div class="sender-name">Bạn (Anh trai)</div>
+                            <div style="font-size: 1.05rem; line-height: 1.5; color: #fff;">Mimi, em có nghe thấy tiếng gõ cửa không? Ngồi im đây để anh ra xem.</div>
+                        </div>
+                    </div>
+
+                    <div class="message-item character">
+                        <div class="message-bubble">
+                            <div class="sender-name">Mimi <span style="font-size:0.75rem; font-weight:normal; color:var(--text-muted)">[Scared]</span></div>
+                            <div class="chinese-sentence">
+                                <div class="word-cell" onclick="showWordDetail(event, '啊', 'ā', 'A')"><span class="pinyin">ā</span><span class="hanzi">啊</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '！', '', '')"><span class="pinyin"></span><span class="hanzi">！</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '我', 'wǒ', 'Em')"><span class="pinyin">wǒ</span><span class="hanzi">我</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '怕', 'pà', 'sợ')"><span class="pinyin">pà</span><span class="hanzi">怕</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '了', 'le', 'lắm')"><span class="pinyin">le</span><span class="hanzi">了</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '，', '', '')"><span class="pinyin"></span><span class="hanzi">，</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '哥哥', 'gēge', 'anh trai')"><span class="pinyin">gēge</span><span class="hanzi">哥哥</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '别', 'bié', 'đừng')"><span class="pinyin">bié</span><span class="hanzi">别</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '开门', 'kāi mén', 'mở cửa')"><span class="pinyin">kāi mén</span><span class="hanzi">开门</span></div>
+                                <div class="word-cell" onclick="showWordDetail(event, '！', '', '')"><span class="pinyin"></span><span class="hanzi">！</span></div>
+                            </div>
+                            <div class="translation-block" id="trans-0">
+                                <strong>Bản dịch:</strong> A! Em sợ lắm, anh đừng mở cửa!
+                            </div>
+                        </div>
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="toggleTranslation(0)">🌐 Dịch</button>
+                            <button class="action-btn">🔊 Loa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Từ vựng (dùng chung cho Kịch bản) -->
+    <div class="dict-popup" id="dictionary-popup">
+        <div class="bottom-sheet-indicator"></div>
+        <button class="dict-close" id="close-popup-btn" aria-label="Đóng popup">×</button>
+        <div class="dict-word" id="dict-title">我</div>
+        <div class="dict-pinyin" id="dict-pinyin">wǒ</div>
+        <div class="dict-meaning" id="dict-meaning">Tôi, tao, tớ.</div>
+        <button class="dict-collect-btn" id="dict-collect-button">
+            <span>📖</span> Sưu tầm từ vựng
+        </button>
+    </div>
+
+    <script>
+        // Chuyển Tab
+        function switchTab(tabId) {
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        // Ẩn hiện bản dịch
+        function toggleTranslation(index) {
+            const transBlock = document.getElementById(`trans-${index}`);
+            const btn = event.currentTarget;
+            if (transBlock.style.display === 'block') {
+                transBlock.style.display = 'none';
+                btn.classList.remove('active');
+            } else {
+                transBlock.style.display = 'block';
+                btn.classList.add('active');
+            }
+        }
+
+        // Logic Popup từ điển (tương tự chat.html)
+        const popup = document.getElementById('dictionary-popup');
+        function showWordDetail(event, hz, py, vn) {
+            event.stopPropagation();
+            if (!py) return; // Bỏ qua dấu câu
+
+            document.getElementById('dict-title').innerText = hz;
+            document.getElementById('dict-pinyin').innerText = py;
+            document.getElementById('dict-meaning').innerText = vn ? `Dịch nghĩa: "${vn}"` : '';
+
+            if (window.innerWidth <= 768) {
+                popup.style.left = '0';
+                popup.style.top = 'auto';
+                popup.classList.add('active');
+            } else {
+                popup.classList.remove('active');
+                popup.style.display = 'block';
+                const rect = event.currentTarget.getBoundingClientRect();
+                popup.style.left = `${rect.left + window.scrollX - 40}px`;
+                popup.style.top = `${rect.top + window.scrollY - 130}px`;
+            }
+        }
+
+        document.getElementById('close-popup-btn').addEventListener('click', () => {
+            popup.style.display = 'none';
+            popup.classList.remove('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!popup.contains(e.target)) {
+                popup.style.display = 'none';
+                popup.classList.remove('active');
+            }
+        });
+
+        // Sidebar logic cho điện thoại
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const openSidebarBtn = document.getElementById('menu-toggle-btn');
+        const closeSidebarBtn = document.getElementById('sidebar-close-btn');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            overlay.style.display = 'block';
+            setTimeout(() => overlay.style.opacity = '1', 10);
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.style.display = 'none', 300);
+        }
+
+        if (openSidebarBtn) openSidebarBtn.addEventListener('click', openSidebar);
+        if (closeSidebarBtn) closeSidebarBtn.addEventListener('click', closeSidebar);
+        if (overlay) overlay.addEventListener('click', closeSidebar);
+        
+        // Logic Auto-play (Tự động phát kịch bản)
+        let autoPlayTimer = null;
+        let isAutoPlaying = false;
+        let currentPlayIndex = 0;
+
+        function toggleAutoPlay() {
+            const btn = document.getElementById('auto-play-btn');
+            if (isAutoPlaying) {
+                // Dừng phát
+                isAutoPlaying = false;
+                btn.innerHTML = '<span>▶️</span> Tự động phát';
+                btn.style.color = '#00f2fe';
+                clearTimeout(autoPlayTimer);
+            } else {
+                // Bắt đầu phát
+                switchTab('script'); // Tự động chuyển sang tab kịch bản
+                isAutoPlaying = true;
+                currentPlayIndex = 0;
+                btn.innerHTML = '<span>⏹️</span> Dừng phát';
+                btn.style.color = '#ff4757';
+                playNextMessage();
+            }
+        }
+
+        function playNextMessage() {
+            if (!isAutoPlaying) return;
+            
+            const messages = document.querySelectorAll('#script-list-container .message-item');
+            if (currentPlayIndex >= messages.length) {
+                toggleAutoPlay(); // Đã phát hết, tự tắt
+                return;
+            }
+
+            const msg = messages[currentPlayIndex];
+            
+            // Cuộn tới tin nhắn với animation mượt
+            msg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Hiệu ứng focus nhẹ
+            msg.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            msg.style.transform = 'scale(1.02)';
+            if (msg.querySelector('.message-bubble')) {
+                 msg.querySelector('.message-bubble').style.boxShadow = '0 0 15px rgba(0, 242, 254, 0.4)';
+            }
+            setTimeout(() => {
+                msg.style.transform = 'none';
+                if (msg.querySelector('.message-bubble')) {
+                     msg.querySelector('.message-bubble').style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.15)';
+                }
+            }, 600);
+
+            let waitTime = 0;
+            
+            if (msg.classList.contains('ooc-event') || msg.classList.contains('narrator')) {
+                // Lời dẫn (Narrator) tiếng Việt -> Chờ 5 giây để người dùng đọc
+                waitTime = 5000;
+            } else {
+                // Nhân vật/User (Có audio) -> Giả lập thời gian TTS (ví dụ 3 giây) + 1 giây nghỉ
+                waitTime = 3000 + 1000;
+                
+                // Giả lập UI nút Loa đang phát (tìm nút loa bên trong msg nếu có)
+                const speakerBtn = Array.from(msg.querySelectorAll('.action-btn')).find(b => b.innerText.includes('Loa'));
+                if (speakerBtn) {
+                    speakerBtn.classList.add('active');
+                    speakerBtn.innerHTML = '🔊 Đang phát...';
+                    setTimeout(() => {
+                        if(isAutoPlaying) {
+                            speakerBtn.classList.remove('active');
+                            speakerBtn.innerHTML = '🔊 Loa';
+                        }
+                    }, 3000);
+                }
+            }
+
+            currentPlayIndex++;
+            autoPlayTimer = setTimeout(playNextMessage, waitTime);
+        }
+
+        if (document.getElementById('auto-play-btn')) {
+            document.getElementById('auto-play-btn').addEventListener('click', toggleAutoPlay);
+        }
+
+        // Demo switch session
+        function loadSession(id) {
+            document.querySelectorAll('.session-item').forEach(item => item.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if(id === 2) {
+                document.getElementById('detail-title').innerText = "Ngày đầu tiên đến trường";
+                document.getElementById('summary-content').innerHTML = "<p>Gặp gỡ những người bạn mới, Lisa đã giúp Mimi tìm lớp học...</p>";
+                document.getElementById('script-list-container').innerHTML = "<div style='color:var(--text-muted); text-align:center; margin-top:40px;'>Đang tải kịch bản...</div>";
+            } else {
+                // Restore demo
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trang chủ - AI Roleplay</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c16;
+            --card-bg: rgba(22, 25, 51, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00f2fe;
+            --secondary-accent: #8a2be2;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1035 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Container chính */
+        .app-container {
+            width: 95vw;
+            max-width: 1200px;
+            margin-top: 4vh;
+            margin-bottom: 4vh;
+            height: 92vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(138, 43, 226, 0.1);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .home-header {
+            padding: 32px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 11, 22, 0.4);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid rgba(0, 242, 254, 0.5);
+            object-fit: cover;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
+        }
+
+        .greeting h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .greeting p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 10px 16px;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-badge.streak {
+            color: var(--warning-color);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .stat-badge.hsk {
+            color: var(--primary-accent);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        /* Main Content Area */
+        .home-content {
+            display: flex;
+            flex: 1;
+            padding: 32px 40px;
+            gap: 32px;
+            overflow-y: auto;
+        }
+
+        .home-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        .home-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        /* Left Column */
+        .main-actions {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Resume Widget */
+        .resume-widget {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(0, 242, 254, 0.1));
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .resume-widget:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(138, 43, 226, 0.2);
+        }
+
+        .widget-info h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: #fff;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .widget-info p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-resume {
+            background: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-resume:hover {
+            background: #fff;
+            transform: scale(1.05);
+        }
+
+        /* Menu Grid */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .menu-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 242, 254, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .menu-item.primary-action {
+            grid-column: span 2;
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(138, 43, 226, 0.1));
+            border-color: rgba(0, 242, 254, 0.4);
+            align-items: center;
+            text-align: center;
+            padding: 32px;
+        }
+
+        .menu-item.primary-action:hover {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(138, 43, 226, 0.15));
+            box-shadow: 0 10px 30px rgba(0, 242, 254, 0.2);
+        }
+
+        .menu-icon {
+            font-size: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+        }
+
+        .primary-action .menu-icon {
+            font-size: 3rem;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .menu-item h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .primary-action h3 {
+            font-size: 1.5rem;
+        }
+
+        .menu-item p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Right Column (Panels) */
+        .side-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .panel-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .panel-card h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Progress Bar */
+        .hsk-progress p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 10px;
+            text-align: right;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-accent), var(--primary-accent));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Daily Quests */
+        .quest-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .quest-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .quest-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .quest-status {
+            font-size: 1.2rem;
+        }
+
+        .quest-text {
+            font-size: 0.9rem;
+            color: var(--text-main);
+            flex: 1;
+        }
+
+        .quest-xp {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+            background: rgba(0, 242, 254, 0.1);
+            padding: 4px 8px;
+            border-radius: 8px;
+        }
+
+        .quest-item.completed .quest-text {
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .quest-item.completed .quest-xp {
+            color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .home-content {
+                flex-direction: column;
+            }
+            .side-panel {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                margin: 0;
+                border-radius: 0;
+                border: none;
+            }
+            .home-header {
+                padding: 24px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .header-stats {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .home-content {
+                padding: 20px;
+            }
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+            .menu-item.primary-action {
+                grid-column: 1;
+            }
+            .resume-widget {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+            .btn-resume {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="home-header">
+            <div class="user-profile">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=256&auto=format&fit=crop" class="avatar" alt="Avatar">
+                <div class="greeting">
+                    <h1>Chào bạn,</h1>
+                    <p>Hôm nay bạn muốn nhập vai vào câu chuyện nào?</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-badge streak">
+                    <span>🔥</span> 12 Ngày
+                </div>
+                <div class="stat-badge hsk">
+                    <span>🎓</span> HSK 3
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="home-content">
+            
+            <!-- Left Column: Actions & Menu -->
+            <div class="main-actions">
+                
+                <!-- Quick Resumption -->
+                <div class="resume-widget">
+                    <div class="widget-info">
+                        <h3>⚡ Tiếp tục trò chuyện</h3>
+                        <p>Đang chat với <strong>Mimi</strong> ở bối cảnh <strong>phòng ngủ</strong></p>
+                    </div>
+                    <button class="btn-resume" onclick="window.location.href='chat.html'">
+                        ▶ Tiếp tục ngay
+                    </button>
+                </div>
+
+                <!-- Menu Grid -->
+                <div class="menu-grid">
+                    <div class="menu-item primary-action" onclick="window.location.href='chat.html'">
+                        <div class="menu-icon">💬</div>
+                        <h3>Chat Nhập vai (AI Chat)</h3>
+                        <p>Bắt đầu một cuộc hội thoại mới với các nhân vật AI</p>
+                    </div>
+                    
+                    <div class="menu-item" onclick="window.location.href='vocab_review.html'">
+                        <div class="menu-icon">📚</div>
+                        <h3>Học từ vựng HSK</h3>
+                        <p>Ôn tập từ vựng từ HSK 1 đến 6</p>
+                    </div>
+
+                    <div class="menu-item" onclick="window.location.href='story.html'">
+                        <div class="menu-icon">📖</div>
+                        <h3>Danh sách Câu chuyện</h3>
+                        <p>Khám phá các kịch bản có sẵn</p>
+                    </div>
+
+                    <div class="menu-item" onclick="window.location.href='character.html'">
+                        <div class="menu-icon">👥</div>
+                        <h3>Quản lý Nhân vật</h3>
+                        <p>Xem và tạo mới nhân vật AI</p>
+                    </div>
+
+                    <div class="menu-item" onclick="window.location.href='journal.html'">
+                        <div class="menu-icon">📔</div>
+                        <h3>Nhật ký (Journal)</h3>
+                        <p>Lịch sử chat và tiến trình học</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Right Column: Progress & Quests -->
+            <div class="side-panel">
+                
+                <!-- HSK Progress -->
+                <div class="panel-card hsk-progress">
+                    <h3>📈 Tiến độ HSK hôm nay</h3>
+                    <div class="progress-container">
+                        <div class="progress-fill" style="width: 40%;"></div>
+                    </div>
+                    <p>Đã học 8/20 từ mục tiêu</p>
+                </div>
+
+                <!-- Daily Quests -->
+                <div class="panel-card daily-quests">
+                    <h3>🎯 Nhiệm vụ hàng ngày</h3>
+                    <ul class="quest-list">
+                        <li class="quest-item completed">
+                            <span class="quest-status">✅</span>
+                            <span class="quest-text">Đăng nhập ứng dụng</span>
+                            <span class="quest-xp">+10 XP</span>
+                        </li>
+                        <li class="quest-item">
+                            <span class="quest-status">⬜</span>
+                            <span class="quest-text">Trò chuyện với 1 nhân vật bất kỳ</span>
+                            <span class="quest-xp">+50 XP</span>
+                        </li>
+                        <li class="quest-item">
+                            <span class="quest-status">⬜</span>
+                            <span class="quest-text">Lưu 5 từ vựng mới vào sổ tay</span>
+                            <span class="quest-xp">+30 XP</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Optional Leaderboard Widget Teaser -->
+                <div class="panel-card" style="background: rgba(138, 43, 226, 0.05); border-color: rgba(138, 43, 226, 0.2);">
+                    <h3 style="color: var(--secondary-accent);">🏆 Bảng xếp hạng</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Bạn đang ở vị trí #12 trong nhóm bạn bè. Cố gắng thêm chút nữa để lọt top 10 nhé!</p>
+                    <button style="width: 100%; background: transparent; border: 1px solid var(--secondary-accent); color: var(--secondary-accent); padding: 8px; border-radius: 8px; cursor: pointer;">
+                        Xem chi tiết
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

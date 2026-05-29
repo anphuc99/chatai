@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleplay Chat AI - Học tiếng Trung</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c16;
+            --card-bg: rgba(22, 25, 51, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00f2fe;
+            --secondary-accent: #8a2be2;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glow-color: rgba(0, 242, 254, 0.15);
+            --success-color: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1035 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Container chính với kính mờ (Glassmorphism) */
+        .app-container {
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(138, 43, 226, 0.1);
+            overflow: hidden;
+        }
+
+        /* Sidebar bên trái */
+        .sidebar {
+            width: 300px;
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(10, 11, 22, 0.4);
+        }
+
+        .character-profile {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .avatar-glow {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .avatar-glow img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-accent);
+            box-shadow: 0 0 15px var(--primary-accent);
+        }
+
+        .avatar-glow::after {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-accent), var(--secondary-accent));
+            z-index: -1;
+            animation: rotateGlow 3s linear infinite;
+        }
+
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .character-info h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .character-info p {
+            font-size: 0.8rem;
+            color: var(--primary-accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 242, 254, 0.2);
+            transform: translateX(4px);
+        }
+
+        .menu-item span.icon {
+            font-size: 1.1rem;
+        }
+
+        .menu-item span.text {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Khối Sổ tay từ vựng */
+        .vocab-notebook {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            overflow: hidden;
+        }
+
+        .vocab-header {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vocab-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 4px;
+        }
+
+        .vocab-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .vocab-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .vocab-chip {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 0.8rem;
+            animation: popIn 0.3s ease forwards;
+        }
+
+        .vocab-chip-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .vocab-chip-word {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .vocab-chip-pinyin {
+            color: var(--primary-accent);
+            font-size: 0.75rem;
+        }
+
+        .vocab-chip-meaning {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* Khu vực Chat chính */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chat-title p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Danh sách tin nhắn */
+        .message-list {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .message-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .message-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        /* Thiết kế tin nhắn dạng Bong bóng */
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Tin nhắn của Narrator (Người dẫn chuyện) */
+        .message-item.narrator {
+            align-self: center;
+            max-width: 90%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .message-item.narrator .sender-name {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .message-item.narrator .text-content {
+            font-style: italic;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        /* Tin nhắn của Character (Nhân vật) */
+        .message-item.character {
+            align-self: flex-start;
+        }
+
+        .message-bubble {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 20px 20px 20px 4px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .sender-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-accent);
+        }
+
+        /* Khối hiển thị chữ Hán + Pinyin dạng cột dọc */
+        .chinese-sentence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 6px;
+            align-items: flex-end;
+            line-height: 1;
+        }
+
+        .word-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 6px;
+            padding: 2px 4px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .word-cell:hover {
+            background: rgba(0, 242, 254, 0.1);
+            transform: scale(1.05);
+        }
+
+        .word-cell .pinyin {
+            font-size: 0.75rem;
+            color: var(--primary-accent);
+            margin-bottom: 4px;
+            font-weight: 500;
+            min-height: 14px;
+        }
+
+        .word-cell .hanzi {
+            font-size: 1.3rem;
+            color: #ffffff;
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            font-weight: 500;
+        }
+
+        /* Thanh Action dưới tin nhắn (Loa, Dịch) */
+        .message-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+            align-self: flex-start;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn.active {
+            color: var(--primary-accent);
+            background: rgba(0, 242, 254, 0.08);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+
+        /* Khung dịch nghĩa ẩn/hiện */
+        .translation-block {
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+            color: #d1d5db;
+            line-height: 1.5;
+            display: none;
+            animation: slideDown 0.3s ease forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Ô nhập liệu ở dưới cùng */
+        .input-bar {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(10, 11, 22, 0.4);
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 20px;
+            color: #fff;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .mic-btn, .send-btn {
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .mic-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            color: var(--primary-accent);
+            box-shadow: none;
+        }
+
+        .mic-btn:hover {
+            background: rgba(0, 242, 254, 0.1);
+            border-color: var(--primary-accent);
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+            margin-left: 2px;
+        }
+
+        /* Tooltip Tra từ vựng chi tiết */
+        .dict-popup {
+            position: absolute;
+            background: rgba(18, 20, 38, 0.96);
+            border: 1px solid var(--primary-accent);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 242, 254, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            z-index: 1000;
+            display: none;
+            width: 220px;
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.9) translateY(5px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .dict-word {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .dict-pinyin {
+            font-size: 0.85rem;
+            color: var(--primary-accent);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .dict-meaning {
+            font-size: 0.8rem;
+            color: #e5e7eb;
+            line-height: 1.4;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
+            margin-bottom: 12px;
+        }
+
+        /* Nút Sưu tầm từ vựng */
+        .dict-collect-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .dict-collect-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 242, 254, 0.3);
+        }
+
+        .dict-collect-btn.collected {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .dict-collect-btn.collected::before {
+            content: '✓ ';
+        }
+
+        .dict-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            line-height: 1;
+        }
+
+        .dict-close:hover {
+            color: #fff;
+        }
+
+        /* Trạng thái khóa Input (Typing Indicator) */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            align-self: flex-start;
+            margin-left: 24px;
+            margin-bottom: 12px;
+            display: none;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--primary-accent);
+            border-radius: 50%;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+
+        /* Waveform Animation khi phát âm */
+        .audio-wave {
+            display: inline-flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+            margin-left: 6px;
+            display: none;
+        }
+
+        .wave-bar {
+            width: 2px;
+            height: 4px;
+            background: var(--primary-accent);
+            animation: pulseWave 0.8s infinite ease-in-out alternate;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 6px; }
+        .wave-bar:nth-child(3) { animation-delay: 0.3s; height: 8px; }
+
+        @keyframes pulseWave {
+            0% { height: 3px; }
+            100% { height: 12px; }
+        }
+
+        /* Toast thông báo */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: rgba(16, 185, 129, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: none;
+            z-index: 2000;
+            animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Nút đóng sidebar mặc định ẩn trên desktop */
+        .sidebar-close-btn {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+            z-index: 10;
+            transition: color 0.2s ease;
+        }
+
+        .sidebar-close-btn:hover {
+            color: #fff;
+        }
+
+        /* Indicator cho bottom sheet trên desktop mặc định ẩn */
+        .bottom-sheet-indicator {
+            display: none;
+        }
+
+        /* Responsive cho điện thoại */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                height: 100vh;
+                height: 100dvh; /* Chiều cao động tránh bị thanh điều hướng di động che khuất */
+                overflow: hidden;
+            }
+
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+                max-width: 100%;
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0;
+                bottom: 0;
+                width: 290px;
+                z-index: 1500;
+                background: #0f1026;
+                border-right: 1px solid var(--border-color);
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.6);
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                padding-top: 60px; /* Nhường chỗ cho nút đóng sidebar */
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .sidebar-close-btn {
+                display: block;
+            }
+
+            .chat-header {
+                padding: 12px 16px;
+            }
+
+            .menu-toggle-btn {
+                display: block !important;
+            }
+
+            .message-list {
+                padding: 16px;
+                gap: 16px;
+            }
+
+            .message-item {
+                max-width: 92%;
+            }
+
+            .message-bubble {
+                padding: 12px 16px;
+                border-radius: 16px 16px 16px 4px;
+            }
+
+            /* Tăng kích thước và khoảng giãn cách của từ Hán tự để dễ chạm bằng ngón tay */
+            .chinese-sentence {
+                gap: 14px 10px;
+                margin-top: 4px;
+            }
+
+            .word-cell {
+                padding: 4px 8px;
+                min-width: 36px;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.04);
+                border-radius: 8px;
+            }
+
+            .word-cell .hanzi {
+                font-size: 1.25rem;
+            }
+
+            .word-cell .pinyin {
+                font-size: 0.75rem;
+                margin-bottom: 2px;
+            }
+
+            .message-actions {
+                gap: 8px;
+                margin-top: 6px;
+            }
+
+            .action-btn {
+                padding: 8px 14px; /* Tăng diện tích bấm của loa/dịch trên mobile */
+                font-size: 0.85rem;
+            }
+
+            .input-bar {
+                padding: 12px 16px;
+                gap: 8px;
+                background: rgba(15, 16, 31, 0.95);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+            }
+
+            .chat-input {
+                padding: 12px 16px;
+                font-size: 0.9rem;
+                border-radius: 12px;
+            }
+
+            .mic-btn, .send-btn {
+                width: 44px;
+                height: 44px;
+                border-radius: 12px;
+            }
+
+            /* Dict Popup chuyển sang dạng Bottom Sheet cao cấp trên Mobile */
+            .dict-popup {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: -100%;
+                top: auto;
+                width: 100%;
+                border-radius: 24px 24px 0 0;
+                border-left: none;
+                border-right: none;
+                border-bottom: none;
+                background: #151833;
+                z-index: 2000;
+                box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.7);
+                transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                animation: none;
+                padding: 20px 24px 36px 24px;
+                box-sizing: border-box;
+            }
+
+            .dict-popup.active {
+                bottom: 0;
+                display: block !important;
+            }
+
+            .bottom-sheet-indicator {
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 2px;
+                margin: -8px auto 16px auto;
+            }
+
+            .dict-close {
+                top: 16px;
+                right: 20px;
+                font-size: 1.5rem;
+                padding: 4px;
+            }
+
+            .dict-word {
+                font-size: 1.8rem;
+                margin-top: 8px;
+            }
+
+            .dict-pinyin {
+                font-size: 1.05rem;
+                margin-bottom: 14px;
+            }
+
+            .dict-meaning {
+                font-size: 0.95rem;
+                padding-top: 14px;
+                margin-bottom: 24px;
+            }
+
+            .dict-collect-btn {
+                padding: 14px 18px;
+                font-size: 0.95rem;
+                border-radius: 14px;
+            }
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 3000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #151833;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            padding: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 242, 254, 0.15);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 12px;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.8rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close:hover { color: #fff; }
+
+        .modal-body textarea, .modal-body input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            outline: none;
+            margin-bottom: 12px;
+        }
+        .modal-body textarea:focus, .modal-body input:focus {
+            border-color: var(--primary-accent);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .btn-cancel, .btn-save {
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .btn-cancel:hover { background: rgba(255, 255, 255, 0.2); }
+        .btn-save {
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff;
+        }
+        .btn-save:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        /* Character List in Modal */
+        .char-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .char-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .char-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+        .char-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .char-item:hover, .char-item.selected {
+            background: rgba(0, 242, 254, 0.1);
+            border-color: rgba(0, 242, 254, 0.3);
+        }
+        .char-item img {
+            width: 44px; height: 44px; border-radius: 50%; object-fit: cover;
+            border: 2px solid transparent;
+        }
+        .char-item.selected img {
+            border-color: var(--primary-accent);
+        }
+        /* Toggle Switch CSS */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+            margin-left: auto;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255,255,255,0.1); transition: .3s; border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; transition: .3s; border-radius: 50%;
+        }
+        input:checked + .toggle-slider { background-color: var(--primary-accent); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar-overlay" id="sidebar-overlay" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1400; backdrop-filter: blur(4px); opacity: 0; transition: opacity 0.3s ease;"></div>
+        <!-- Sidebar bên trái -->
+        <div class="sidebar" id="sidebar">
+            <button class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Đóng menu">&times;</button>
+            <div class="character-profile">
+                <div class="avatar-glow">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop" alt="Mimi Avatar">
+                </div>
+                <div class="character-info">
+                    <h2>Mimi (咪咪)</h2>
+                    <p>Nhân vật chính • HSK 3</p>
+                </div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-item" id="add-char-btn">
+                    <span class="icon">👤</span>
+                    <span class="text">Thêm nhân vật mới</span>
+                </li>
+                <li class="menu-item" id="ooc-btn">
+                    <span class="icon">🌍</span>
+                    <span class="text">Cài đặt bối cảnh chung</span>
+                </li>
+                <li class="menu-item" id="auto-chat-btn">
+                    <span class="icon">🤖</span>
+                    <span class="text">Bật Chat tự động</span>
+                </li>
+            </ul>
+
+            <!-- Sổ tay từ vựng đã sưu tầm -->
+            <div class="vocab-notebook">
+                <div class="vocab-header">
+                    <span>📚 SỔ TAY TỪ VỰNG</span>
+                    <span style="font-size: 0.8rem; background: rgba(0, 242, 254, 0.15); padding: 2px 8px; border-radius: 8px;" id="vocab-count">0 từ</span>
+                </div>
+                <div class="vocab-list" id="vocab-list-container">
+                    <div style="color: var(--text-muted); font-size: 0.75rem; text-align: center; margin-top: 20px; font-style: italic;" id="empty-vocab-msg">
+                        Chưa sưu tầm từ nào. Chạm vào chữ Hán bất kỳ trong chat để sưu tầm.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Area -->
+        <div class="chat-area">
+            <!-- Header phòng chat -->
+            <div class="chat-header">
+                <div class="chat-title" style="display: flex; align-items: center; gap: 12px;">
+                    <button class="menu-toggle-btn" id="menu-toggle-btn" style="background: transparent; border: none; font-size: 1.5rem; color: #fff; cursor: pointer; display: none;">☰</button>
+                    <div>
+                        <h3>Phòng chat học tiếng Trung</h3>
+                        <p>Bối cảnh: Phòng ngủ của Mimi em gái</p>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--primary-accent); display: flex; align-items: center; gap: 6px;">
+                    <span style="color: #ff9900;">🔥</span> Streak: 5 ngày
+                </div>
+            </div>
+
+            <!-- List tin nhắn -->
+            <div class="message-list" id="message-list-container">
+                <!-- Dữ liệu chat sinh động bằng JS -->
+            </div>
+
+            <!-- typing indicator -->
+            <div class="typing-indicator" id="typing-loader">
+                <span>Mimi đang nhập vai</span>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+
+            <!-- Thanh nhập liệu ở dưới -->
+            <div class="input-bar">
+                <button class="mic-btn" title="Nói tiếng Trung (STT)">
+                    🎤
+                </button>
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="message-input" placeholder="Nhập tin nhắn nhập vai hoặc chỉ dẫn OOC bằng tiếng Việt/tiếng Trung...">
+                </div>
+                <button class="send-btn" id="send-button" title="Gửi tin nhắn">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup Tra từ điển nhanh -->
+    <div class="dict-popup" id="dictionary-popup">
+        <div class="bottom-sheet-indicator"></div>
+        <button class="dict-close" id="close-popup-btn" aria-label="Đóng popup">×</button>
+        <div class="dict-word" id="dict-title">我</div>
+        <div class="dict-pinyin" id="dict-pinyin">wǒ</div>
+        <div class="dict-meaning" id="dict-meaning">Tôi, tao, tớ (đại từ nhân xưng ngôi thứ nhất).</div>
+        <button class="dict-collect-btn" id="dict-collect-button">
+            <span>📖</span> Sưu tầm từ vựng
+        </button>
+    </div>
+
+    <!-- Modal: Cài đặt bối cảnh chung (Cố định) -->
+    <div class="modal-overlay" id="persistent-ooc-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">🌍 Bối cảnh toàn cục (Cố định)</div>
+                <button class="modal-close" onclick="closeModal('persistent-ooc-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 12px;">Áp dụng cho toàn bộ cuộc hội thoại. Ví dụ: Thời gian, địa điểm, quan hệ nhân vật.</p>
+                <textarea id="persistent-ooc-input" rows="4" placeholder="Ví dụ: Phòng ngủ của Mimi, thời gian là buổi tối..."></textarea>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn-cancel" onclick="closeModal('persistent-ooc-modal')">Hủy</button>
+                <button class="btn-save" onclick="savePersistentOOC()">Lưu bối cảnh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nhập diễn biến mới (Tạm thời) -->
+    <div class="modal-overlay" id="ephemeral-ooc-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">⚡ Diễn biến mới (Tạm thời)</div>
+                <button class="modal-close" onclick="closeModal('ephemeral-ooc-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0; margin-bottom: 12px;">Chỉ áp dụng cho lượt chat tiếp theo. Ví dụ: Sấm chớp nổ đoàng, cúp điện.</p>
+                <textarea id="ephemeral-ooc-input" rows="4" placeholder="Nhập diễn biến phát sinh hoặc chỉ dẫn đặc biệt..."></textarea>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; line-height: 1.4; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    * Lưu ý nút bấm: <br>
+                    - <b>Xác nhận</b>: Đưa bối cảnh tạm thời vào bộ nhớ chờ (gửi kèm tin nhắn User).<br>
+                    - <b>Gửi</b>: Lập tức gửi sự kiện bối cảnh tạm thời cho AI xử lý (không cần tin nhắn User).
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button class="btn-cancel" onclick="closeModal('ephemeral-ooc-modal')">Hủy</button>
+                <button class="btn-save" onclick="confirmEphemeralOOC()" style="background: rgba(0, 242, 254, 0.2); border: 1px solid var(--primary-accent); color: var(--primary-accent);">Xác nhận</button>
+                <button class="btn-save" onclick="sendEphemeralOOC()">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Thêm nhân vật mới -->
+    <div class="modal-overlay" id="char-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Chọn nhân vật</div>
+                <button class="modal-close" onclick="closeModal('char-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="char-list" id="char-list">
+                    <!-- Danh sách nhân vật sẽ được render bằng JS -->
+                </div>
+                <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+                    <button class="btn-save" style="width: 100%; background: transparent; border: 1px dashed var(--primary-accent); color: var(--primary-accent);" onclick="openModal('temp-char-modal'); closeModal('char-modal');">+ Tạo nhân vật tạm thời</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Thêm nhân vật tạm thời -->
+    <div class="modal-overlay" id="temp-char-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Tạo nhân vật tạm thời</div>
+                <button class="modal-close" onclick="closeModal('temp-char-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+                    <div style="width: 70px; height: 70px; border-radius: 50%; background: rgba(255, 255, 255, 0.05); border: 2px dashed rgba(255, 255, 255, 0.2); display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;" id="temp-avatar-preview-box">
+                        <span style="font-size: 1.5rem; color: rgba(255,255,255,0.2);" id="temp-avatar-placeholder">👤</span>
+                        <img id="temp-avatar-preview-img" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; margin-bottom: 8px;">Ảnh đại diện (Avatar)</div>
+                        <button style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;" onclick="document.getElementById('temp-avatar-input').click()">
+                            Tải ảnh lên...
+                        </button>
+                        <input type="file" id="temp-avatar-input" accept="image/png, image/jpeg" style="display:none;" onchange="previewTempAvatar(event)">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+                    <div style="flex: 2;">
+                        <input type="text" class="chat-input" id="temp-char-name" placeholder="Tên (VD: Bà bán rau)">
+                    </div>
+                    <div style="flex: 1;">
+                        <input type="number" class="chat-input" id="temp-char-age" placeholder="Tuổi">
+                    </div>
+                </div>
+                <textarea class="chat-input" id="temp-char-desc" rows="2" placeholder="Mô tả tính cách / bối cảnh..." style="margin-bottom: 16px; width: 100%; resize: vertical;"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+                    <select class="chat-input" style="width: 60%; padding: 10px;">
+                        <option>Giọng Nữ trung</option>
+                        <option>Giọng Nam trầm</option>
+                    </select>
+                    <button class="action-btn" onclick="alert('Đang phát thử giọng...')">🔊 Nghe thử</button>
+                </div>
+                <button class="btn-save" style="width: 100%;" onclick="createTempChar()">Tạo & Bật</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast thông báo -->
+    <div class="toast" id="toast-notification">Đã sưu tầm từ vựng thành công!</div>
+
+    <script>
+        // Dữ liệu và logic cho Modals (OOC & Thêm nhân vật)
+        const predefinedChars = [
+            { name: "Mimi", desc: "Nhân vật chính • HSK 3", img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop" },
+            { name: "Lisa", desc: "Bạn thân • HSK 4", img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=256&auto=format&fit=crop" },
+            { name: "Klee", desc: "Em gái nhỏ • HSK 2", img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=256&auto=format&fit=crop" },
+            { name: "Nahida", desc: "Cô giáo mầm non • HSK 5", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&auto=format&fit=crop" }
+        ];
+
+        let selectedChar = predefinedChars[0];
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        window.pendingEphemeralOOC = "";
+
+        document.getElementById('ooc-btn').addEventListener('click', () => {
+            openModal('persistent-ooc-modal');
+            if(window.innerWidth <= 768) closeSidebar(); // Có sẵn hàm closeSidebar ở phần sau
+        });
+        document.getElementById('add-char-btn').addEventListener('click', () => {
+            renderCharList();
+            openModal('char-modal');
+            if(window.innerWidth <= 768) closeSidebar();
+        });
+
+        function savePersistentOOC() {
+            const persistentVal = document.getElementById('persistent-ooc-input').value.trim();
+            if (persistentVal) {
+                const chatHeaderDesc = document.querySelector('.chat-header p');
+                if (chatHeaderDesc) {
+                    chatHeaderDesc.innerText = `Bối cảnh: ${persistentVal}`;
+                }
+                
+                // Giả lập thông báo sự kiện OOC cố định lên màn hình
+                staticMessages.push({
+                    characterName: "OOC",
+                    text: `Hệ thống ghi nhận Bối cảnh cố định: ${persistentVal}`,
+                    Emotion: "Neutral",
+                    Intensity: "low",
+                    translation: ""
+                });
+                renderMessages(staticMessages);
+            }
+            showToast("Đã cập nhật Bối cảnh toàn cục (Cố định)!");
+            closeModal('persistent-ooc-modal');
+        }
+
+        function confirmEphemeralOOC() {
+            const ephemeralVal = document.getElementById('ephemeral-ooc-input').value.trim();
+            if(!ephemeralVal) {
+                closeModal('ephemeral-ooc-modal');
+                return;
+            }
+            
+            window.pendingEphemeralOOC = ephemeralVal; // Lưu bối cảnh chờ tin nhắn
+            showToast("Đã lưu bối cảnh OOC tạm thời (Chờ gửi kèm tin nhắn)!");
+            document.getElementById('ephemeral-ooc-input').value = '';
+            closeModal('ephemeral-ooc-modal');
+        }
+
+        function sendEphemeralOOC() {
+            const ephemeralVal = document.getElementById('ephemeral-ooc-input').value.trim();
+            if(!ephemeralVal) return;
+            
+            const oocMsg = {
+                characterName: "OOC",
+                text: ephemeralVal,
+                Emotion: "Neutral",
+                Intensity: "low",
+                translation: ""
+            };
+            staticMessages.push(oocMsg);
+            renderMessages(staticMessages);
+            
+            showToast("Đã gửi bối cảnh OOC lên máy chủ!");
+            document.getElementById('ephemeral-ooc-input').value = '';
+            closeModal('ephemeral-ooc-modal');
+            
+            const loader = document.getElementById('typing-loader');
+            loader.style.display = 'flex';
+            setTimeout(() => {
+                loader.style.display = 'none';
+                staticMessages.push({
+                    "characterName": "Narrator",
+                    "text": "The characters adapt to the new situation.",
+                    "Emotion": "Neutral",
+                    "Intensity": "low",
+                    "translation": "Các nhân vật bắt đầu thích nghi với tình huống mới."
+                });
+                renderMessages(staticMessages);
+            }, 1500);
+        }
+
+        function renderCharList() {
+            const list = document.getElementById('char-list');
+            list.innerHTML = '';
+            predefinedChars.forEach((c, index) => {
+                const item = document.createElement('div');
+                item.className = 'char-item';
+                // Thay vì selected, ta dùng toggle switch cho phép nhiều nhân vật cùng bật
+                const isChecked = c.active !== false ? 'checked' : ''; 
+                item.innerHTML = `
+                    <img src="${c.img}" alt="${c.name}">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #fff;">${c.name}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">${c.desc}</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${isChecked} onchange="toggleCharStatus(${index}, this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function toggleCharStatus(index, isChecked) {
+            predefinedChars[index].active = isChecked;
+            const c = predefinedChars[index];
+            if(isChecked) {
+                showToast(`Đã bật nhân vật: ${c.name}`);
+                // Giả lập sinh OOC Add
+                window.pendingEphemeralOOC = `Nhân vật ${c.name} đã được thêm vào câu chuyện.`;
+            } else {
+                showToast(`Đã tắt nhân vật: ${c.name}`);
+                // Giả lập sinh OOC Remove
+                window.pendingEphemeralOOC = `Nhân vật ${c.name} đã rời khỏi câu chuyện.`;
+            }
+        }
+
+        function previewTempAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imgElement = document.getElementById('temp-avatar-preview-img');
+                    imgElement.src = e.target.result;
+                    imgElement.style.display = 'block';
+                    document.getElementById('temp-avatar-placeholder').style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function createTempChar() {
+            const nameInput = document.getElementById('temp-char-name').value.trim();
+            const descInput = document.getElementById('temp-char-desc').value.trim();
+            if(!nameInput) return;
+            
+            const imgEl = document.getElementById('temp-avatar-preview-img');
+            const imgSrc = imgEl.style.display === 'block' ? imgEl.src : "https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=256&auto=format&fit=crop";
+
+            const newChar = {
+                name: nameInput + " (Tạm thời)",
+                desc: descInput || "Nhân vật dùng 1 lần",
+                img: imgSrc,
+                active: true
+            };
+            predefinedChars.push(newChar);
+            renderCharList();
+            
+            showToast(`Đã tạo và bật nhân vật tạm thời: ${newChar.name}`);
+            window.pendingEphemeralOOC = `Nhân vật ${newChar.name} đã được thêm vào câu chuyện.`;
+            
+            // Reset form
+            document.getElementById('temp-char-name').value = '';
+            document.getElementById('temp-char-desc').value = '';
+            document.getElementById('temp-char-age').value = '';
+            imgEl.style.display = 'none';
+            document.getElementById('temp-avatar-placeholder').style.display = 'block';
+            
+            closeModal('temp-char-modal');
+            openModal('char-modal');
+        }
+
+        // Danh sách từ vựng đã sưu tầm (Notebook state)
+        const savedVocab = new Set();
+        let userGems = 20;
+
+        window.handleShopChoice = function(msgIndex, isBuy, price) {
+            const msg = staticMessages[msgIndex];
+            if (!msg || !msg.shopEvent || msg.shopEvent.handled) return;
+            
+            msg.shopEvent.handled = true;
+            
+            if (isBuy) {
+                if (userGems >= price) {
+                    userGems -= price;
+                    msg.shopEvent.purchased = true;
+                    showToast(`Đã mua thành công! Số dư còn: ${userGems} Gem 💎`);
+                    
+                    staticMessages.push({
+                        characterName: "OOC",
+                        text: "Bạn đã thanh toán thành công. Các nhân vật vui vẻ.",
+                        Emotion: "Neutral",
+                        Intensity: "low",
+                        translation: ""
+                    });
+                    renderMessages(staticMessages);
+                    
+                    loader.style.display = 'flex';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        staticMessages.push({
+                            characterName: "Mimi",
+                            text: "谢谢哥哥！太好看了！",
+                            Emotion: "Happy",
+                            Intensity: "high",
+                            translation: "Cảm ơn anh! Đẹp quá đi mất!",
+                            words: [
+                                {"hz": "谢谢", "py": "xièxiè", "vn": "Cảm ơn"},
+                                {"hz": "哥哥", "py": "gēge", "vn": "anh trai"},
+                                {"hz": "太", "py": "tài", "vn": "quá"},
+                                {"hz": "好看", "py": "hǎokàn", "vn": "đẹp"},
+                                {"hz": "了", "py": "le", "vn": "rồi"}
+                            ]
+                        });
+                        renderMessages(staticMessages);
+                    }, 1500);
+                } else {
+                    msg.shopEvent.purchased = false;
+                    showToast(`Không đủ Gem! Bạn có ${userGems} Gem, cần ${price} Gem 💎`);
+                    
+                    staticMessages.push({
+                        characterName: "OOC",
+                        text: "Bạn không đủ tiền. Chủ quán mỉa mai, các nhân vật đi cùng xấu hổ.",
+                        Emotion: "Neutral",
+                        Intensity: "low",
+                        translation: ""
+                    });
+                    renderMessages(staticMessages);
+                    
+                    loader.style.display = 'flex';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        staticMessages.push({
+                            characterName: "Narrator",
+                            text: "The shopkeeper sneers: 'If you don't have money, don't pretend.' Mimi blushes and pulls your hand to leave.",
+                            Emotion: "Scared",
+                            Intensity: "medium",
+                            translation: "Chủ quán cười khẩy: 'Không có tiền thì đừng ra vẻ.' Mimi đỏ mặt xấu hổ kéo tay bạn rời đi."
+                        });
+                        renderMessages(staticMessages);
+                    }, 1500);
+                }
+            } else {
+                msg.shopEvent.purchased = false;
+                showToast("Bạn đã từ chối mua món đồ.");
+                
+                staticMessages.push({
+                    characterName: "OOC",
+                    text: "Bạn từ chối mua. Các nhân vật xung quanh hụt hẫng.",
+                    Emotion: "Neutral",
+                    Intensity: "low",
+                    translation: ""
+                });
+                renderMessages(staticMessages);
+                
+                loader.style.display = 'flex';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    staticMessages.push({
+                        characterName: "Mimi",
+                        text: "哦...没关系。",
+                        Emotion: "Sad",
+                        Intensity: "low",
+                        translation: "Ồ... không sao đâu.",
+                        words: [
+                            {"hz": "哦", "py": "ò", "vn": "ồ"},
+                            {"hz": "没关系", "py": "méiguānxi", "vn": "không sao"}
+                        ]
+                    });
+                    renderMessages(staticMessages);
+                }, 1500);
+            }
+        };
+
+        // Dữ liệu tĩnh mảng JSON được cấu trúc theo định dạng mới từ Ollama
+        const staticMessages = [
+          {
+            "characterName": "Narrator",
+            "text": "Brother rushed straight into the room of Mimi, his younger sister. He shouted angrily:",
+            "Emotion": "Angry",
+            "Intensity": "high",
+            "translation": "Anh trai xông thẳng vào phòng Mimi em gái của mình. Anh ấy giận dữ quát lớn:"
+          },
+          {
+            "characterName": "OOC",
+            "text": "Trời bỗng nhiên đổ mưa to, sấm chớp nổ đoàng ngoài cửa sổ.",
+            "Emotion": "Neutral",
+            "Intensity": "low",
+            "translation": ""
+          },
+          {
+            "characterName": "Anh trai",
+            "text": "你在干嘛？",
+            "Emotion": "Angry",
+            "Intensity": "high",
+            "translation": "Em đang làm gì thế?",
+            "words": [
+              {"hz": "你", "py": "nǐ", "vn": "Em/Mày"},
+              {"hz": "在", "py": "zài", "vn": "đang"},
+              {"hz": "干", "py": "gàn", "vn": "làm"},
+              {"hz": "嘛", "py": "ma", "vn": "gì"},
+              {"hz": "？", "py": "", "vn": ""}
+            ]
+          },
+          {
+            "characterName": "Narrator",
+            "text": "Mimi was startled, quickly hid the phone behind her back and answered in confusion:",
+            "Emotion": "Scared",
+            "Intensity": "medium",
+            "translation": "Mimi hoảng hốt vội giấu chiếc điện thoại ra sau lưng và lúng túng trả lời:"
+          },
+          {
+            "characterName": "Mimi",
+            "text": "我没做什么。",
+            "Emotion": "Shy",
+            "Intensity": "medium",
+            "translation": "Em không làm gì cả.",
+            "words": [
+              {"hz": "我", "py": "wǒ", "vn": "Em"},
+              {"hz": "没", "py": "méi", "vn": "không/chưa"},
+              {"hz": "做", "py": "zuò", "vn": "làm"},
+              {"hz": "什么", "py": "shénme", "vn": "cái gì"},
+              {"hz": "。", "py": "", "vn": ""}
+            ]
+          }
+        ];
+
+        const listContainer = document.getElementById('message-list-container');
+        const popup = document.getElementById('dictionary-popup');
+        const loader = document.getElementById('typing-loader');
+        const msgInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-button');
+        const collectBtn = document.getElementById('dict-collect-button');
+        const toast = document.getElementById('toast-notification');
+        const vocabCount = document.getElementById('vocab-count');
+        const vocabListContainer = document.getElementById('vocab-list-container');
+        const emptyVocabMsg = document.getElementById('empty-vocab-msg');
+
+        // Trạng thái từ hiện tại đang mở trong popup
+        let currentWordData = null;
+
+        // Render toàn bộ tin nhắn
+        function renderMessages(messages) {
+            listContainer.innerHTML = '';
+            messages.forEach((msg, msgIndex) => {
+                const messageItem = document.createElement('div');
+                messageItem.classList.add('message-item');
+                
+                if (msg.characterName === 'OOC' || msg.characterName === 'System') {
+                    // Render tin nhắn bối cảnh OOC
+                    messageItem.classList.add('ooc-event');
+                    messageItem.style.justifyContent = 'center';
+                    messageItem.style.width = '100%';
+                    messageItem.innerHTML = `
+                        <div style="color: var(--text-muted); font-style: italic; font-size: 0.9rem; text-align: center; max-width: 85%; padding: 8px 0;">
+                            📝 <strong>[OOC]</strong> ${msg.text}
+                        </div>
+                    `;
+                } else if (msg.characterName === 'Bạn') {
+                    messageItem.style.alignSelf = 'flex-end';
+                    messageItem.innerHTML = `
+                        <div class="message-bubble" style="background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(138, 43, 226, 0.15)); border-color: rgba(0, 242, 254, 0.3); border-radius: 20px 20px 4px 20px;">
+                            <div class="sender-name" style="color: #fff; text-align: right;">Bạn</div>
+                            <div style="font-size: 1.05rem; line-height: 1.5; color: #fff;">${msg.text}</div>
+                        </div>
+                    `;
+                } else if (msg.characterName === 'Narrator') {
+                    // Render tin nhắn dẫn chuyện
+                    messageItem.classList.add('narrator');
+                    
+                    let shopHtml = '';
+                    if (msg.shopEvent && !msg.shopEvent.handled) {
+                        shopHtml = `
+                            <div class="shop-event-container" style="margin-top: 12px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border: 1px solid var(--primary-accent);">
+                                <div style="margin-bottom: 8px; font-weight: 500; color: var(--primary-accent);">🛍️ Sự kiện Cửa hàng</div>
+                                <div style="margin-bottom: 12px; font-size: 0.95rem;">Vật phẩm: <strong>${msg.shopEvent.itemName}</strong><br>Giá: <strong>${msg.shopEvent.price} Gem 💎</strong></div>
+                                <div style="display: flex; gap: 10px;">
+                                    <button onclick="handleShopChoice(${msgIndex}, true, ${msg.shopEvent.price})" style="flex: 1; padding: 8px; background: var(--primary-accent); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Mua</button>
+                                    <button onclick="handleShopChoice(${msgIndex}, false, ${msg.shopEvent.price})" style="flex: 1; padding: 8px; background: transparent; color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Không</button>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.shopEvent && msg.shopEvent.handled) {
+                        shopHtml = `
+                            <div class="shop-event-container" style="margin-top: 12px; padding: 8px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; opacity: 0.7;">
+                                <div style="font-size: 0.9rem;">🛍️ Vật phẩm: <strong>${msg.shopEvent.itemName}</strong> - Giá: <strong>${msg.shopEvent.price} Gem 💎</strong></div>
+                                <div style="font-size: 0.85rem; color: ${msg.shopEvent.purchased ? 'var(--success-color)' : 'var(--text-muted)'}; margin-top: 4px;">
+                                    Trạng thái: ${msg.shopEvent.purchased ? 'Đã mua' : 'Đã từ chối'}
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    messageItem.innerHTML = `
+                        <div class="sender-name">Dẫn chuyện</div>
+                        <div class="text-content">${msg.text}</div>
+                        ${shopHtml}
+                        <div class="message-actions" style="justify-content: center; margin-top: 8px;">
+                            <button class="action-btn" onclick="toggleTranslation(${msgIndex})">🌐 Dịch</button>
+                            <button class="action-btn" onclick="speakText('${msg.text}', 'en-US', ${msgIndex})">
+                                🔊 Loa
+                                <div class="audio-wave" id="wave-${msgIndex}">
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="translation-block" id="trans-${msgIndex}">
+                            <strong>Bản dịch:</strong> ${msg.translation}
+                        </div>
+                    `;
+                } else {
+                    // Render bong bóng thoại của nhân vật
+                    messageItem.classList.add('character');
+                    
+                    // Xây dựng chuỗi Hán tự có gắn Pinyin và hỗ trợ click tra từ
+                    let chineseHtml = '';
+                    if (msg.words && msg.words.length > 0) {
+                        msg.words.forEach((item) => {
+                            const hz = item.hz || '';
+                            const py = item.py || '';
+                            const vn = item.vn || '';
+                            chineseHtml += `
+                                <div class="word-cell" onclick="showWordDetail(event, '${hz}', '${py}', '${vn}')">
+                                    <span class="pinyin">${py}</span>
+                                    <span class="hanzi">${hz}</span>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        chineseHtml = `<div class="word-cell"><span class="hanzi">${msg.text}</span></div>`;
+                    }
+
+                    messageItem.innerHTML = `
+                        <div class="message-bubble">
+                            <div class="sender-name">${msg.characterName} <span style="font-size:0.75rem; font-weight:normal; color:var(--text-muted)">[${msg.Emotion}]</span></div>
+                            <div class="chinese-sentence">
+                                ${chineseHtml}
+                            </div>
+                            <div class="translation-block" id="trans-${msgIndex}">
+                                <strong>Bản dịch:</strong> ${msg.translation}
+                            </div>
+                        </div>
+                        <div class="message-actions">
+                            <button class="action-btn" onclick="toggleTranslation(${msgIndex})">🌐 Dịch</button>
+                            <button class="action-btn" onclick="speakText('${msg.text}', 'zh-CN', ${msgIndex})">
+                                🔊 Loa
+                                <div class="audio-wave" id="wave-${msgIndex}">
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                    <div class="wave-bar"></div>
+                                </div>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                listContainer.appendChild(messageItem);
+            });
+            
+            // Khóa UI nếu có Shop Event chưa xử lý
+            const hasActiveShop = messages.some(m => m.shopEvent && !m.shopEvent.handled);
+            if (hasActiveShop) {
+                msgInput.disabled = true;
+                sendBtn.disabled = true;
+                msgInput.placeholder = "Vui lòng đưa ra lựa chọn để tiếp tục...";
+            } else {
+                msgInput.disabled = false;
+                sendBtn.disabled = false;
+                msgInput.placeholder = "Nhập tin nhắn... (hoặc gõ /ooc, /shop)";
+            }
+
+            listContainer.scrollTop = listContainer.scrollHeight;
+        }
+
+        // Ẩn/hiện bản dịch dưới tin nhắn
+        window.toggleTranslation = function(index) {
+            const transBlock = document.getElementById(`trans-${index}`);
+            const btn = event.currentTarget;
+            if (transBlock.style.display === 'block') {
+                transBlock.style.display = 'none';
+                btn.classList.remove('active');
+            } else {
+                transBlock.style.display = 'block';
+                btn.classList.add('active');
+            }
+        };
+
+        // Phát âm giả lập dùng SpeechSynthesis
+        window.speakText = function(text, lang, index) {
+            window.speechSynthesis.cancel();
+            document.querySelectorAll('.audio-wave').forEach(w => w.style.display = 'none');
+            
+            const wave = document.getElementById(`wave-${index}`);
+            if (wave) wave.style.display = 'inline-flex';
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.85;
+            
+            utterance.onend = () => {
+                if (wave) wave.style.display = 'none';
+            };
+            utterance.onerror = () => {
+                if (wave) wave.style.display = 'none';
+            };
+
+            window.speechSynthesis.speak(utterance);
+        };
+
+        // Hiện pop-up tra từ chi tiết
+        window.showWordDetail = function(event, hz, py, vn) {
+            event.stopPropagation();
+            if (hz === '。' || hz === '？' || hz === '，' || hz === '！' || hz === '：') {
+                return;
+            }
+
+            currentWordData = { hz, py, vn };
+
+            document.getElementById('dict-title').innerText = hz;
+            document.getElementById('dict-pinyin').innerText = py || '—';
+            document.getElementById('dict-meaning').innerText = vn ? `Dịch nghĩa: "${vn}"` : 'Chưa có thông tin dịch sát nghĩa.';
+
+            // Kiểm tra xem từ đã được sưu tầm chưa
+            if (savedVocab.has(hz)) {
+                collectBtn.classList.add('collected');
+                collectBtn.innerHTML = 'Đã sưu tầm';
+                collectBtn.disabled = true;
+            } else {
+                collectBtn.classList.remove('collected');
+                collectBtn.innerHTML = '<span>📖</span> Sưu tầm từ vựng';
+                collectBtn.disabled = false;
+            }
+
+            if (window.innerWidth <= 768) {
+                popup.style.left = '0';
+                popup.style.top = 'auto';
+                popup.classList.add('active');
+            } else {
+                popup.classList.remove('active');
+                const rect = event.currentTarget.getBoundingClientRect();
+                popup.style.left = `${rect.left + window.scrollX - 40}px`;
+                popup.style.top = `${rect.top + window.scrollY - 130}px`;
+                popup.style.display = 'block';
+            }
+        };
+
+        // Đóng popup tra từ
+        document.getElementById('close-popup-btn').addEventListener('click', () => {
+            popup.style.display = 'none';
+            popup.classList.remove('active');
+        });
+
+        // Click ra ngoài để đóng popup
+        document.addEventListener('click', (e) => {
+            if (!popup.contains(e.target)) {
+                popup.style.display = 'none';
+                popup.classList.remove('active');
+            }
+        });
+
+        // Logic Sưu tầm từ vựng
+        collectBtn.addEventListener('click', () => {
+            if (!currentWordData || savedVocab.has(currentWordData.hz)) return;
+
+            // 1. Thêm vào Set vựng
+            savedVocab.add(currentWordData.hz);
+
+            // 2. Cập nhật giao diện nút bấm trong popup
+            collectBtn.classList.add('collected');
+            collectBtn.innerHTML = 'Đã sưu tầm';
+            collectBtn.disabled = true;
+
+            // 3. Hiển thị Toast thông báo
+            showToast(`Đã sưu tầm từ: "${currentWordData.hz} (${currentWordData.py})"`);
+
+            // 4. Cập nhật danh sách hiển thị ở Sidebar
+            updateVocabSidebar();
+        });
+
+        // Hàm hiện Toast
+        function showToast(message) {
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                    toast.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
+
+        // Cập nhật notebook sidebar
+        function updateVocabSidebar() {
+            vocabCount.innerText = `${savedVocab.size} từ`;
+            if (savedVocab.size > 0) {
+                emptyVocabMsg.style.display = 'none';
+            }
+
+            // Xóa rỗng list chỉ chừa lại tin nhắn trống nếu cần
+            const items = vocabListContainer.querySelectorAll('.vocab-chip');
+            items.forEach(el => el.remove());
+
+            // Render lại các từ vựng
+            savedVocab.forEach(hz => {
+                // Tìm thông tin gốc để hiển thị
+                let py = '';
+                let vn = '';
+                staticMessages.forEach(m => {
+                    if (m.words) {
+                        const wordObj = m.words.find(w => w.hz === hz);
+                        if (wordObj) {
+                            py = wordObj.py;
+                            vn = wordObj.vn;
+                        }
+                    }
+                });
+
+                const chip = document.createElement('div');
+                chip.classList.add('vocab-chip');
+                chip.innerHTML = `
+                    <div class="vocab-chip-top">
+                        <span class="vocab-chip-word">${hz}</span>
+                        <span class="vocab-chip-pinyin">${py}</span>
+                    </div>
+                    <div class="vocab-chip-meaning">${vn || 'Sát nghĩa'}</div>
+                `;
+                vocabListContainer.appendChild(chip);
+            });
+        }
+
+        // Luồng giả lập gửi tin nhắn và phản hồi từ AI
+        function handleSendMessage() {
+            const val = msgInput.value.trim();
+            if (!val) return;
+
+            // Xử lý lệnh /ooc
+            if (val.toLowerCase() === '/ooc') {
+                msgInput.value = '';
+                openModal('ephemeral-ooc-modal');
+                return;
+            }
+
+            // Xử lý lệnh /shop để test tính năng Cửa hàng
+            if (val.toLowerCase() === '/shop') {
+                msgInput.value = '';
+                staticMessages.push({
+                    characterName: "Bạn",
+                    text: "Anh muốn mua cho em chiếc váy này."
+                });
+                renderMessages(staticMessages);
+                
+                loader.style.display = 'flex';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    staticMessages.push({
+                        characterName: "Narrator",
+                        text: "Chủ cửa hàng lấy ra một chiếc váy màu hồng rất dễ thương.",
+                        Emotion: "Neutral",
+                        Intensity: "low",
+                        translation: "The shopkeeper brings out a very cute pink dress.",
+                        shopEvent: { itemName: "Chiếc váy hồng", price: 15 }
+                    });
+                    renderMessages(staticMessages);
+                }, 1000);
+                return;
+            }
+
+            // Nếu trước đó người dùng nhấn "Xác nhận" ở Modal OOC tạm thời
+            if (window.pendingEphemeralOOC) {
+                staticMessages.push({
+                    characterName: "OOC",
+                    text: window.pendingEphemeralOOC,
+                    Emotion: "Neutral",
+                    Intensity: "low",
+                    translation: ""
+                });
+                window.pendingEphemeralOOC = ""; // Reset
+            }
+
+            // Thêm tin nhắn của User
+            staticMessages.push({
+                characterName: "Bạn",
+                text: val
+            });
+            
+            renderMessages(staticMessages);
+            
+            msgInput.value = '';
+            loader.style.display = 'flex';
+            
+            setTimeout(() => {
+                loader.style.display = 'none';
+                
+                const newResponse = [
+                    {
+                      "characterName": "Narrator",
+                      "text": "Mimi carefully looks at her brother, sighing in relief that he didn't check the phone.",
+                      "Emotion": "Neutral",
+                      "Intensity": "low",
+                      "translation": "Mimi cẩn thận nhìn anh trai mình, thở phào nhẹ nhõm vì anh ấy không kiểm tra điện thoại."
+                    },
+                    {
+                      "characterName": "Mimi",
+                      "text": "你别担心。",
+                      "Emotion": "Neutral",
+                      "Intensity": "low",
+                      "translation": "Anh đừng lo lắng.",
+                      "words": [
+                        {"hz": "你", "py": "nǐ", "vn": "Anh"},
+                        {"hz": "别", "py": "bié", "vn": "đừng"},
+                        {"hz": "担心", "py": "dānxīn", "vn": "lo lắng"},
+                        {"hz": "。", "py": "", "vn": ""}
+                      ]
+                    }
+                ];
+
+                newResponse.forEach(m => {
+                    staticMessages.push(m);
+                });
+                
+                renderMessages(staticMessages);
+                speakText("你别担心。", 'zh-CN', staticMessages.length - 1);
+                
+            }, 2500);
+        }
+
+        sendBtn.addEventListener('click', handleSendMessage);
+        msgInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSendMessage();
+            }
+        });
+
+        // Auto Chat Simulator
+        let autoChatInterval;
+        const autoChatBtn = document.getElementById('auto-chat-btn');
+        autoChatBtn.addEventListener('click', () => {
+            if (autoChatBtn.classList.contains('active')) {
+                autoChatBtn.classList.remove('active');
+                autoChatBtn.innerHTML = `<span class="icon">🤖</span><span class="text">Bật Chat tự động</span>`;
+                clearInterval(autoChatInterval);
+            } else {
+                autoChatBtn.classList.add('active');
+                autoChatBtn.innerHTML = `<span class="icon">🤖</span><span class="text" style="color: var(--primary-accent);">Đang chạy Auto Chat</span>`;
+                
+                autoChatInterval = setInterval(() => {
+                    loader.style.display = 'flex';
+                    setTimeout(() => {
+                        loader.style.display = 'none';
+                        const autoMsg = {
+                            "characterName": "Narrator",
+                            "text": "She slowly walks to the window and points outside.",
+                            "Emotion": "Neutral",
+                            "Intensity": "low",
+                            "translation": "Cô ấy từ từ đi về phía cửa sổ và chỉ tay ra bên ngoài."
+                        };
+                        staticMessages.push(autoMsg);
+                        renderMessages(staticMessages);
+                    }, 2000);
+                }, 7000);
+            }
+        });
+
+        // Render tin nhắn đầu tiên
+        renderMessages(staticMessages);
+
+        // Responsive Sidebar Toggle
+        const menuToggleBtn = document.getElementById('menu-toggle-btn');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.style.display = 'block';
+            setTimeout(() => {
+                sidebarOverlay.style.opacity = '1';
+            }, 10);
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.style.opacity = '0';
+            setTimeout(() => {
+                sidebarOverlay.style.display = 'none';
+            }, 300);
+        }
+
+        if (menuToggleBtn) {
+            menuToggleBtn.addEventListener('click', openSidebar);
+        }
+
+        if (sidebarCloseBtn) {
+            sidebarCloseBtn.addEventListener('click', closeSidebar);
+        }
+
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', closeSidebar);
+        }
+
+        // Tự động cuộn xuống cuối khi bàn phím ảo hiển thị trên điện thoại (sự kiện resize)
+        window.addEventListener('resize', () => {
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                setTimeout(() => {
+                    listContainer.scrollTop = listContainer.scrollHeight;
+                }, 150);
+            }
+        });
+    </script>
+</body>
+</html>

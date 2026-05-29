@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câu chuyện của tôi - Roleplay Chat AI</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c16;
+            --card-bg: rgba(22, 25, 51, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00f2fe;
+            --secondary-accent: #8a2be2;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --glow-color: rgba(0, 242, 254, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1035 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 95vw;
+            max-width: 1200px;
+            height: 90vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(138, 43, 226, 0.1);
+            overflow: hidden;
+        }
+
+        /* Sidebar: Danh sách Câu chuyện */
+        .sidebar {
+            width: 350px;
+            border-right: 1px solid var(--border-color);
+            background: rgba(10, 11, 22, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .story-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .story-list::-webkit-scrollbar { width: 6px; }
+        .story-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+
+        .story-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid transparent;
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .story-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(0, 242, 254, 0.2);
+            transform: translateX(4px);
+        }
+
+        .story-item.active {
+            background: rgba(0, 242, 254, 0.08);
+            border-color: var(--primary-accent);
+        }
+
+        .story-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .story-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .story-preview {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Main Content: Chi tiết Câu chuyện */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .story-detail-view {
+            display: none; /* Ẩn mặc định */
+            flex-direction: column;
+            height: 100%;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .detail-header {
+            padding: 30px 40px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, rgba(0, 242, 254, 0.05), transparent);
+        }
+
+        .detail-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .detail-date {
+            font-size: 0.9rem;
+            color: var(--primary-accent);
+        }
+
+        .detail-body {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .detail-body::-webkit-scrollbar { width: 6px; }
+        .detail-body::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: var(--primary-accent);
+            border-radius: 4px;
+        }
+
+        .section-content {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .progress-content {
+            background: rgba(0, 242, 254, 0.03);
+            border: 1px solid rgba(0, 242, 254, 0.1);
+        }
+
+        .detail-footer {
+            padding: 24px 40px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            background: rgba(10, 11, 22, 0.4);
+        }
+
+        .btn-chat {
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 16px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+        }
+
+        .btn-chat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 242, 254, 0.5);
+        }
+
+        /* Modal Tạo mới */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #121424;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+
+        .btn-close-modal {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-close-modal:hover { color: #fff; }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: border-color 0.3s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-accent);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+                height: 100vh;
+                height: 100dvh;
+            }
+
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+                flex-direction: column;
+                max-width: 100%;
+            }
+
+            .sidebar {
+                width: 100%;
+                flex: 1; /* Hiển thị full height trên mobile */
+                border-right: none;
+            }
+
+            .main-content {
+                display: none; /* Ẩn đi trên mobile lúc đầu */
+                width: 100%;
+                flex: 1;
+                z-index: 10;
+            }
+
+            .app-container.show-detail .sidebar {
+                display: none; /* Ẩn danh sách khi xem chi tiết */
+            }
+
+            .app-container.show-detail .main-content {
+                display: flex; /* Hiện chi tiết */
+            }
+
+            .detail-header {
+                padding: 20px 24px;
+            }
+
+            .btn-back-mobile {
+                display: inline-flex !important;
+                background: transparent;
+                border: none;
+                color: var(--primary-accent);
+                font-size: 0.95rem;
+                margin-bottom: 12px;
+                cursor: pointer;
+                align-items: center;
+                gap: 4px;
+                font-family: 'Outfit', sans-serif;
+            }
+
+            .detail-title { font-size: 1.5rem; }
+            .detail-body { padding: 20px 24px; gap: 20px; }
+            .detail-footer { padding: 20px 24px; }
+            .btn-chat { width: 100%; justify-content: center; }
+
+            .modal-content {
+                width: 95%;
+                padding: 24px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar: Danh sách Câu chuyện -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Cốt truyện</h2>
+                <button class="btn-create" id="btn-open-modal">
+                    <span>+</span> Tạo mới
+                </button>
+            </div>
+            <div class="story-list" id="story-list-container">
+                <!-- Data rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Empty State -->
+            <div class="empty-state" id="empty-state-view">
+                <div class="icon">📖</div>
+                <h3>Chọn một câu chuyện</h3>
+                <p>Nhấp vào danh sách bên trái hoặc tạo một cốt truyện mới để bắt đầu cuộc phiêu lưu.</p>
+            </div>
+
+            <!-- Story Detail View -->
+            <div class="story-detail-view" id="story-detail-view">
+                <div class="detail-header">
+                    <button class="btn-back-mobile" id="btn-back-mobile" style="display: none;">&larr; Cốt truyện</button>
+                    <h1 class="detail-title" id="view-title">Tên câu chuyện</h1>
+                    <p class="detail-date">Cập nhật lần cuối: <span id="view-date"></span></p>
+                </div>
+                <div class="detail-body">
+                    <div>
+                        <h3 class="section-title">Bối cảnh ban đầu</h3>
+                        <div class="section-content" id="view-setting">
+                            <!-- Setting text -->
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="section-title">Tiến độ hiện tại</h3>
+                        <div class="section-content progress-content" id="view-progress">
+                            <!-- Progress text -->
+                        </div>
+                    </div>
+                </div>
+                <div class="detail-footer">
+                    <a href="chat.html" class="btn-chat" id="btn-start-chat">
+                        Bắt đầu Chat
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tạo mới -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal-content">
+            <button class="btn-close-modal" id="btn-close-modal">&times;</button>
+            <h2 class="modal-title">Tạo Câu chuyện mới</h2>
+            <div class="form-group">
+                <label for="input-title">Tiêu đề câu chuyện</label>
+                <input type="text" id="input-title" class="form-control" placeholder="Ví dụ: Tu tiên dị giới...">
+            </div>
+            <div class="form-group">
+                <label for="input-setting">Bối cảnh & Nhân vật (Prompt)</label>
+                <textarea id="input-setting" class="form-control" placeholder="Mô tả thế giới, vai trò của bạn và nhân vật AI..."></textarea>
+            </div>
+            <button class="btn-submit" id="btn-submit-story">Tạo và Bắt đầu</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Mock Data ---
+        let stories = [
+            {
+                id: 1,
+                title: "Thám tử tại Thượng Hải",
+                setting: "Tôi là một thám tử tư sống ở Thượng Hải những năm 1930. Bạn đóng vai một nữ ca sĩ phòng trà bí ẩn, người vừa là nhân chứng vừa là nghi phạm chính trong một vụ án mạng.",
+                progress: "Chúng ta vừa gặp nhau tại phòng trà. Bạn từ chối trả lời trực tiếp các câu hỏi của tôi và cố tình đánh trống lảng bằng một ly rượu vang. Tôi bắt đầu nghi ngờ bạn đang che giấu điều gì đó về nạn nhân.",
+                updatedAt: "28/05/2026 10:00"
+            },
+            {
+                id: 2,
+                title: "Giao dịch tại quán Trà đá",
+                setting: "Tôi là một người học tiếng Trung đang cố gắng mua một món đồ cổ từ bạn. Bạn là chủ một tiệm đồ cổ khó tính ở Bắc Kinh.",
+                progress: "Chưa có tiến độ nào. Hãy bắt đầu cuộc trò chuyện!",
+                updatedAt: "27/05/2026 15:30"
+            }
+        ];
+
+        // --- DOM Elements ---
+        const listContainer = document.getElementById('story-list-container');
+        const emptyStateView = document.getElementById('empty-state-view');
+        const detailView = document.getElementById('story-detail-view');
+        
+        // Detail elements
+        const viewTitle = document.getElementById('view-title');
+        const viewDate = document.getElementById('view-date');
+        const viewSetting = document.getElementById('view-setting');
+        const viewProgress = document.getElementById('view-progress');
+        const btnStartChat = document.getElementById('btn-start-chat');
+
+        // Modal elements
+        const modal = document.getElementById('create-modal');
+        const btnOpenModal = document.getElementById('btn-open-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnSubmitStory = document.getElementById('btn-submit-story');
+        const inputTitle = document.getElementById('input-title');
+        const inputSetting = document.getElementById('input-setting');
+
+        let currentActiveId = null;
+
+        // --- Functions ---
+        
+        // Render danh sách story
+        function renderStoryList() {
+            listContainer.innerHTML = '';
+            
+            stories.sort((a, b) => b.id - a.id).forEach(story => {
+                const item = document.createElement('div');
+                item.className = `story-item ${story.id === currentActiveId ? 'active' : ''}`;
+                item.onclick = () => selectStory(story.id);
+                
+                item.innerHTML = `
+                    <div class="story-title">${story.title}</div>
+                    <div class="story-date">${story.updatedAt}</div>
+                    <div class="story-preview">${story.setting}</div>
+                `;
+                
+                listContainer.appendChild(item);
+            });
+        }
+
+        // Chọn 1 story để xem chi tiết
+        function selectStory(id) {
+            currentActiveId = id;
+            renderStoryList(); // update active class
+
+            const story = stories.find(s => s.id === id);
+            if (story) {
+                // Đổ dữ liệu
+                viewTitle.textContent = story.title;
+                viewDate.textContent = story.updatedAt;
+                viewSetting.textContent = story.setting;
+                
+                if (story.progress === "Chưa có tiến độ nào. Hãy bắt đầu cuộc trò chuyện!") {
+                    viewProgress.style.color = 'var(--text-muted)';
+                    viewProgress.style.fontStyle = 'italic';
+                    btnStartChat.innerHTML = `Bắt đầu Chat <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+                } else {
+                    viewProgress.style.color = '#d1d5db';
+                    viewProgress.style.fontStyle = 'normal';
+                    btnStartChat.innerHTML = `Tiếp tục Chat <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+                }
+                viewProgress.textContent = story.progress;
+
+                // Gắn link giả lập (trong thực tế sẽ truyền story_id)
+                btnStartChat.href = `chat.html?story_id=${story.id}`;
+
+                // Đổi view
+                emptyStateView.style.display = 'none';
+                detailView.style.display = 'flex';
+                
+                // Show detail on mobile
+                document.querySelector('.app-container').classList.add('show-detail');
+            }
+        }
+
+        // --- Event Listeners ---
+        
+        // Nút back trên mobile
+        const btnBackMobile = document.getElementById('btn-back-mobile');
+        btnBackMobile.onclick = () => {
+            document.querySelector('.app-container').classList.remove('show-detail');
+        };
+
+        // Mở modal
+        btnOpenModal.onclick = () => {
+            modal.classList.add('active');
+            inputTitle.value = '';
+            inputSetting.value = '';
+            inputTitle.focus();
+        };
+
+        // Đóng modal
+        btnCloseModal.onclick = () => {
+            modal.classList.remove('active');
+        };
+
+        // Đóng modal khi click ra ngoài
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        };
+
+        // Tạo câu chuyện mới
+        btnSubmitStory.onclick = () => {
+            const title = inputTitle.value.trim();
+            const setting = inputSetting.value.trim();
+
+            if (!title || !setting) {
+                alert("Vui lòng nhập đầy đủ Tiêu đề và Bối cảnh!");
+                return;
+            }
+
+            const now = new Date();
+            const dateString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth()+1).toString().padStart(2, '0')}/${now.getFullYear()} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+            const newStory = {
+                id: Date.now(),
+                title: title,
+                setting: setting,
+                progress: "Chưa có tiến độ nào. Hãy bắt đầu cuộc trò chuyện!",
+                updatedAt: dateString
+            };
+
+            stories.push(newStory);
+            modal.classList.remove('active');
+            
+            // Chọn luôn story vừa tạo
+            selectStory(newStory.id);
+        };
+
+        // Khởi tạo ban đầu
+        renderStoryList();
+
+    </script>
+</body>
+</html>

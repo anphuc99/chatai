@@ -1,0 +1,29 @@
+{
+  "name": "chatai",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20.0.0 <21"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "clean": "pnpm -r exec rm -rf node_modules dist .turbo",
+    "docker:up": "docker compose -f docker-compose.dev.yml up -d",
+    "docker:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:logs": "docker compose -f docker-compose.dev.yml logs -f --tail=100",
+    "docker:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d",
+    "docker:ps": "docker compose -f docker-compose.dev.yml ps"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "prettier": "^3.4.0",
+    "eslint": "^9.15.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "eslint-config-prettier": "^9.1.0"
+  }
+}

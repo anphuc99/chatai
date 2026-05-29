@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chatai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatai_dev
+      POSTGRES_USER: chatai
+      POSTGRES_PASSWORD: chatai_dev_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatai -d chatai_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chatai_net
+
+  redis:
+    image: redis:7-alpine
+    container_name: chatai-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - chatai_net
+
+  chromadb:
+    image: chromadb/chroma:0.5.20
+    container_name: chatai-chromadb
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_dev_data:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=FALSE
+      - IS_PERSISTENT=TRUE
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - chatai_net
+
+networks:
+  chatai_net:
+    driver: bridge
+
+volumes:
+  pg_dev_data:
+  redis_dev_data:
+  chroma_dev_data:

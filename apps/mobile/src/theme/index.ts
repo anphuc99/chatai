@@ -1,0 +1,37 @@
+export const theme = {
+  colors: {
+    primary: '#6366F1',
+    secondary: '#8B5CF6',
+    background: '#FFFFFF',
+    surface: '#F8FAFC',
+    text: '#1E293B',
+    textMuted: '#64748B',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    success: '#10B981',
+    info: '#3B82F6',
+    border: '#E2E8F0',
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    xxl: 32,
+  },
+  typography: {
+    h1: { fontSize: 32, fontWeight: '700' as const },
+    h2: { fontSize: 24, fontWeight: '600' as const },
+    h3: { fontSize: 20, fontWeight: '600' as const },
+    body: { fontSize: 16, fontWeight: '400' as const },
+    caption: { fontSize: 14, fontWeight: '400' as const },
+    small: { fontSize: 12, fontWeight: '400' as const },
+  },
+  radius: {
+    sm: 4,
+    md: 8,
+    lg: 16,
+    full: 9999,
+  },
+} as const;

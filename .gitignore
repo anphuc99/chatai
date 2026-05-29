@@ -1,0 +1,43 @@
+# Node
+node_modules/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+
+# Env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Expo / React Native
+.expo/
+android/
+ios/
+*.jks
+*.keystore
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Secret
+firebase-sa.json
+firebase-sa-dev.json
+*-credentials.json
+
+# Data
+data/chat-cache/
+data/tts-cache/
+
+# Misc
+coverage/
+*.tgz

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Story Review - Ôn tập Từ vựng</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c16;
+            --card-bg: rgba(22, 25, 51, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --primary-accent: #00f2fe;
+            --secondary-accent: #8a2be2;
+            --warning-color: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --success-color: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 50% 50%, #1e1035 0%, var(--bg-color) 70%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 95vw;
+            max-width: 800px; /* Hẹp hơn chat một chút để tập trung vào đọc */
+            height: 90vh;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 40px rgba(138, 43, 226, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .chat-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 11, 22, 0.4);
+        }
+
+        .header-title h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-title p {
+            font-size: 0.8rem;
+            color: var(--primary-accent);
+            margin-top: 2px;
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            width: 100px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 40%; /* Demo progress */
+            background: linear-gradient(90deg, var(--primary-accent), var(--secondary-accent));
+            border-radius: 4px;
+        }
+
+        /* Message List */
+        .message-list {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .message-list::-webkit-scrollbar { width: 6px; }
+        .message-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 3px; }
+
+        .message-item {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Narrator (Người dẫn chuyện) */
+        .message-item.narrator {
+            align-self: center;
+            max-width: 90%;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+        }
+
+        .message-item.narrator .text-content {
+            font-style: italic;
+            color: #d1d5db;
+            line-height: 1.6;
+        }
+
+        /* Task Block (Nhiệm vụ dịch) */
+        .message-item.task {
+            align-self: center;
+            max-width: 95%;
+            background: rgba(0, 242, 254, 0.05);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.1);
+        }
+
+        .task-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .task-instruction {
+            color: var(--primary-accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .task-sentence {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* User Message (Câu trả lời) */
+        .message-item.user {
+            align-self: flex-end;
+        }
+
+        .message-bubble {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(138, 43, 226, 0.15));
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 20px 20px 4px 20px;
+            padding: 16px 20px;
+            color: #fff;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Input Area & Hint System */
+        .input-area {
+            background: rgba(10, 11, 22, 0.6);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Puzzle Box (Gợi ý xáo trộn) */
+        .puzzle-box {
+            display: none; /* Mặc định ẩn, bật khi bấm bóng đèn */
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .puzzle-header {
+            font-size: 0.8rem;
+            color: var(--warning-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .puzzle-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .puzzle-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .puzzle-card .pinyin {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .puzzle-card .hanzi {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .puzzle-card:hover {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: var(--warning-color);
+            transform: translateY(-2px);
+        }
+        
+        .puzzle-card.used {
+            opacity: 0.3;
+            pointer-events: none;
+            background: transparent;
+            border-style: dashed;
+        }
+
+        /* Thanh Input */
+        .input-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .hint-btn {
+            background: transparent;
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: var(--warning-color);
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        /* Hiệu ứng rung lắc khi Bóng đèn gọi ý xuất hiện */
+        .hint-btn.shake {
+            animation: wiggle 2s infinite ease-in-out;
+            background: rgba(245, 158, 11, 0.1);
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+        }
+
+        @keyframes wiggle {
+            0%, 7% { transform: rotateZ(0); }
+            15% { transform: rotateZ(-15deg); }
+            20% { transform: rotateZ(10deg); }
+            25% { transform: rotateZ(-10deg); }
+            30% { transform: rotateZ(6deg); }
+            35% { transform: rotateZ(-4deg); }
+            40%, 100% { transform: rotateZ(0); }
+        }
+
+        .chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 20px;
+            color: #fff;
+            font-size: 1.1rem; /* Chữ to hơn để dễ đọc tiếng Trung */
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .chat-input.error {
+            animation: inputError 0.4s ease;
+            border-color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        @keyframes inputError {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        .chat-input:focus {
+            border-color: var(--primary-accent);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary-accent), var(--secondary-accent));
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #fff;
+            margin-left: 2px;
+        }
+
+        /* Hiệu ứng Pháo hoa thành công (Overlay) */
+        .success-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            background: rgba(16, 185, 129, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .success-overlay.active {
+            opacity: 1;
+        }
+        .success-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success-color);
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            transform: scale(0.5);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .success-overlay.active .success-text {
+            transform: scale(1);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .app-container {
+                width: 100vw;
+                height: 100vh;
+                height: 100dvh;
+                border-radius: 0;
+                border: none;
+            }
+            .message-list {
+                padding: 16px;
+            }
+            .message-item {
+                max-width: 95%;
+            }
+            .puzzle-card {
+                padding: 6px 12px;
+                font-size: 1.05rem;
+            }
+            .hint-btn, .send-btn {
+                width: 44px; height: 44px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Hiệu ứng Thành công -->
+        <div class="success-overlay" id="success-overlay">
+            <div class="success-text">Tuyệt vời! 🎉</div>
+        </div>
+
+        <div class="chat-header">
+            <div class="header-title">
+                <h3>📖 Ôn tập: Cabin Gỗ trong Bão</h3>
+                <p>Super Sentence Mode</p>
+            </div>
+            <div class="progress-container">
+                <span class="progress-text">Trạm 2/5</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="message-list" id="message-list">
+            <!-- Tin nhắn Lời dẫn -->
+            <div class="message-item narrator">
+                <div class="text-content">
+                    "Trời đã tối muộn, Tiểu Minh để quên cuốn sổ bài tập ở lớp nên phải quay lại trường lấy. Hành lang trường học tối om, vắng lặng không một bóng người. Cậu bé vừa đi vừa run. Đột nhiên, từ phòng học số 3 ở cuối hành lang phát ra tiếng sột soạt. Đúng lúc đó..."
+                </div>
+            </div>
+
+            <!-- Khối Giao nhiệm vụ -->
+            <div class="message-item task">
+                <div class="task-icon">🎯</div>
+                <div class="task-instruction">Hãy gõ câu sau bằng tiếng Trung để tiếp tục:</div>
+                <div class="task-sentence">"Cô giáo mở cửa, Tiểu Minh rất sợ hãi."</div>
+            </div>
+
+            <!-- Câu trả lời của User (Mô phỏng sau khi gõ xong) -->
+            <!--
+            <div class="message-item user">
+                <div class="message-bubble">老师开门了，小明很害怕。</div>
+            </div>
+            -->
+        </div>
+
+        <div class="input-area">
+            <!-- Khu vực Giải đố (Puzzle Box) - Ẩn mặc định -->
+            <div class="puzzle-box" id="puzzle-box">
+                <div class="puzzle-header">
+                    <span>💡 KÉO THẢ HOẶC CHẠM ĐỂ GHÉP CÂU</span>
+                    <button style="background:transparent;border:none;color:var(--text-muted);cursor:pointer;" onclick="togglePuzzle()">✕</button>
+                </div>
+                <div class="puzzle-cards">
+                    <!-- Các thẻ từ bị xáo trộn (có Pinyin) -->
+                    <div class="puzzle-card" onclick="addWordToInput(this, '害怕')">
+                        <span class="pinyin">hàipà</span><span class="hanzi">害怕</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '门')">
+                        <span class="pinyin">mén</span><span class="hanzi">门</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '很')">
+                        <span class="pinyin">hěn</span><span class="hanzi">很</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '老师')">
+                        <span class="pinyin">lǎoshī</span><span class="hanzi">老师</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '。')">
+                        <span class="pinyin"></span><span class="hanzi">。</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '小明')">
+                        <span class="pinyin">xiǎomíng</span><span class="hanzi">小明</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '了')">
+                        <span class="pinyin">le</span><span class="hanzi">了</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '开')">
+                        <span class="pinyin">kāi</span><span class="hanzi">开</span>
+                    </div>
+                    <div class="puzzle-card" onclick="addWordToInput(this, '，')">
+                        <span class="pinyin"></span><span class="hanzi">，</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-bar">
+                <!-- Nút Bóng đèn gợi ý (Thêm class 'shake' để gây chú ý) -->
+                <button class="hint-btn shake" id="hint-btn" onclick="togglePuzzle()" title="Gợi ý Xếp từ">
+                    💡
+                </button>
+
+                <input type="text" class="chat-input" id="chat-input" placeholder="Gõ câu trả lời tiếng Trung..." autocomplete="off">
+                
+                <button class="send-btn" onclick="submitAnswer()">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script tương tác cơ bản cho UI Demo -->
+    <script>
+        const chatInput = document.getElementById('chat-input');
+        const puzzleBox = document.getElementById('puzzle-box');
+        const hintBtn = document.getElementById('hint-btn');
+
+        // Bật/tắt khu vực Puzzle
+        function togglePuzzle() {
+            if (puzzleBox.style.display === 'block') {
+                puzzleBox.style.display = 'none';
+            } else {
+                puzzleBox.style.display = 'block';
+                hintBtn.classList.remove('shake'); // Tắt rung khi đã mở hint
+            }
+        }
+
+        // Chạm vào thẻ từ để thêm vào ô Input
+        function addWordToInput(cardElement, word) {
+            if(cardElement.classList.contains('used')) return;
+            
+            chatInput.value += word;
+            cardElement.classList.add('used'); // Đánh dấu thẻ đã xài
+        }
+
+        const TARGET_SENTENCE = "老师开门了，小明很害怕。";
+
+        function normalizeText(text) {
+            // Loại bỏ dấu câu tiếng Trung và khoảng trắng
+            return text.replace(/[，。！？\s]/g, '');
+        }
+
+        // Giả lập Gửi câu trả lời
+        function submitAnswer() {
+            const userInput = chatInput.value.trim();
+            if(userInput === '') return;
+
+            // KIỂM TRA ĐÁP ÁN
+            const normalizedInput = normalizeText(userInput);
+            const normalizedTarget = normalizeText(TARGET_SENTENCE);
+
+            if (normalizedInput !== normalizedTarget) {
+                // Rung lắc báo lỗi nếu gõ sai
+                chatInput.classList.add('error');
+                const oldVal = chatInput.value;
+                chatInput.value = '';
+                chatInput.placeholder = "Sai rồi, hãy thử lại!";
+                
+                setTimeout(() => {
+                    chatInput.classList.remove('error');
+                    chatInput.value = oldVal;
+                    chatInput.placeholder = "Gõ câu trả lời tiếng Trung...";
+                }, 1000);
+                return; // Dừng lại, không cho đi tiếp
+            }
+
+            // 1. Render tin nhắn user lên UI (Khi gõ đúng)
+            const messageList = document.getElementById('message-list');
+            const userMsgHtml = `
+                <div class="message-item user" style="animation: fadeIn 0.3s ease;">
+                    <div class="message-bubble">${chatInput.value}</div>
+                </div>
+            `;
+            messageList.insertAdjacentHTML('beforeend', userMsgHtml);
+
+            // 2. Clear input & Đóng puzzle
+            chatInput.value = '';
+            puzzleBox.style.display = 'none';
+            
+            // Reset trạng thái thẻ puzzle
+            document.querySelectorAll('.puzzle-card').forEach(el => el.classList.remove('used'));
+
+            // 3. Cuộn xuống cuối
+            messageList.scrollTop = messageList.scrollHeight;
+
+            // 4. Bật hiệu ứng Pháo hoa thành công
+            const overlay = document.getElementById('success-overlay');
+            overlay.classList.add('active');
+            
+            // Tắt hiệu ứng sau 1.5s và giả lập AI phản hồi
+            setTimeout(() => {
+                overlay.classList.remove('active');
+                
+                // Giả lập cốt truyện tiếp theo
+                setTimeout(() => {
+                    const nextNarrator = `
+                        <div class="message-item narrator" style="animation: fadeIn 0.4s ease;">
+                            <div class="text-content">
+                                "Cánh cửa kẽo kẹt mở ra. Ánh trăng hắt vào phòng, đứng đó không phải là ma, mà chính là cô giáo chủ nhiệm Vương đang tìm đồ! Tiểu Minh giật mình lùi lại một bước."
+                            </div>
+                        </div>
+                    `;
+                    messageList.insertAdjacentHTML('beforeend', nextNarrator);
+                    messageList.scrollTop = messageList.scrollHeight;
+                }, 500);
+
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
