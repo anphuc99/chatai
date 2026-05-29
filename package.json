@@ -17,7 +17,8 @@
     "docker:down": "docker compose -f docker-compose.dev.yml down",
     "docker:logs": "docker compose -f docker-compose.dev.yml logs -f --tail=100",
     "docker:reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d",
-    "docker:ps": "docker compose -f docker-compose.dev.yml ps"
+    "docker:ps": "docker compose -f docker-compose.dev.yml ps",
+    "memori:sync": ".\\Memori\\sync.bat"
   },
   "devDependencies": {
     "@babel/runtime": "^7.26.0",

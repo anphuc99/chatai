@@ -1,0 +1,11 @@
+# Bỏ qua VectorDB database files
+db/
+
+# Môi trường ảo Python
+.venv/
+env/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
