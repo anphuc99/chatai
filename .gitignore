@@ -41,3 +41,7 @@ data/tts-cache/
 # Misc
 coverage/
 *.tgz
+
+# Memori VectorDB
+Memori/db/
+Memori/.chroma_db/

@@ -1,0 +1,11 @@
+{
+  "name": "memori",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bộ nhớ dài hạn cho AI Agent - RAG-based document indexing & query",
+  "scripts": {
+    "sync": "node memori-indexer.mjs",
+    "query": "node memori-query.mjs"
+  }
+}
