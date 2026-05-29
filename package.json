@@ -6,6 +6,7 @@
     "node": ">=20.0.0 <21"
   },
   "scripts": {
+    "start": "node start-dev.js",
     "dev": "pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
