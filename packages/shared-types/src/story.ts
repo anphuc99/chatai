@@ -1,6 +1,5 @@
 export type StoryDto = {
   id: string;
-  userId: string;
   title: string;
   initialSetting: string;
   currentProgress: string;

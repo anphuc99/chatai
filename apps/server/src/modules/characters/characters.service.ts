@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import sharp from 'sharp';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { StorageService } from '../../shared/firebase/storage.service';
 import { OwnershipService } from '../../shared/ownership/ownership.service';
@@ -8,6 +9,8 @@ import { AppException, ERR } from '../../shared/errors/app-exception';
 import { CharacterDto } from '@chatai/shared-types';
 import { CreateCharacterDto } from './dto/create-character.dto';
 import { UpdateCharacterDto } from './dto/update-character.dto';
+import { CharacterResponseDto } from './dto/character-response.dto';
+import { plainToInstance } from 'class-transformer';
 import { isValidVoice } from './voice.constants';
 import { FastifyFile } from '../users/decorators/uploaded-file.decorator';
 
@@ -28,7 +31,7 @@ export class CharactersService {
     const cacheKey = `${REDIS_PREFIX.CHAR_CACHE}list:${storyId}`;
     return this.redis.cacheWrap(cacheKey, REDIS_TTL.CHAR_CACHE_SEC, async () => {
       try {
-        const rows = await (this.prisma as any).character.findMany({
+        const rows = await this.prisma.character.findMany({
           where: { storyId },
           orderBy: { createdAt: 'asc' },
         });
@@ -48,7 +51,7 @@ export class CharactersService {
     }
 
     try {
-      const row = await (this.prisma as any).character.create({
+      const row = await this.prisma.character.create({
         data: {
           storyId,
           name: dto.name,
@@ -76,7 +79,7 @@ export class CharactersService {
     }
 
     try {
-      const updated = await (this.prisma as any).character.update({
+      const updated = await this.prisma.character.update({
         where: { id },
         data: {
           name: dto.name,
@@ -101,7 +104,7 @@ export class CharactersService {
     try {
       await this.prisma.$transaction(async (tx) => {
         await this.detachMessages(tx, id);
-        await (tx as any).character.delete({
+        await tx.character.delete({
           where: { id },
         });
       });
@@ -130,7 +133,6 @@ export class CharactersService {
 
     let buffer = file.buffer;
     try {
-      const sharp = require('sharp');
       buffer = await sharp(file.buffer).resize(256, 256).jpeg().toBuffer();
     } catch (error: any) {
       this.logger.warn(`Sharp resize not available or failed, using raw buffer: ${error.message}`);
@@ -140,7 +142,7 @@ export class CharactersService {
     let urls;
     try {
       urls = await this.storage.uploadToPath(path, buffer, 'image/jpeg');
-      await (this.prisma as any).character.update({
+      await this.prisma.character.update({
         where: { id },
         data: { avatarUrl: urls.publicUrl },
       });
@@ -167,7 +169,7 @@ export class CharactersService {
   }
 
   private toDto(row: any): CharacterDto {
-    return {
+    return plainToInstance(CharacterResponseDto, {
       id: row.id,
       storyId: row.storyId,
       name: row.name,
@@ -177,7 +179,7 @@ export class CharactersService {
       voiceName: row.voiceName,
       pitch: row.pitch,
       createdAt: row.createdAt.toISOString(),
-    };
+    });
   }
 
   private async invalidateCache(storyId: string, id?: string): Promise<void> {

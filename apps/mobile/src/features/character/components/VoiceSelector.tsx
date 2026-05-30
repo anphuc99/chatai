@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { VOICES, VoiceName, VoiceMeta } from '../constants/voices';
+import { VOICE_METADATA, VoiceName, VoiceMeta } from '@chatai/shared-types';
 import { theme } from '../../../theme';
 
 interface VoiceSelectorProps {
@@ -35,7 +35,7 @@ export function VoiceSelector({ value, onChange }: VoiceSelectorProps) {
     <View style={styles.container}>
       <Text style={styles.label}>Giọng nói nhân vật *</Text>
       <FlatList
-        data={VOICES}
+        data={VOICE_METADATA}
         renderItem={renderItem}
         keyExtractor={(item) => item.name}
         horizontal

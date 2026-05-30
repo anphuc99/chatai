@@ -3,7 +3,10 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { RedisService } from '../../shared/redis/redis.service';
 import { REDIS_PREFIX, REDIS_TTL } from '../../shared/redis/redis.constants';
 import { AppException, ERR } from '../../shared/errors/app-exception';
+import { OwnershipService } from '../../shared/ownership/ownership.service';
 import { StoryDto } from '@chatai/shared-types';
+import { plainToInstance } from 'class-transformer';
+import { StoryResponseDto } from './dto/story-response.dto';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 
@@ -14,6 +17,7 @@ export class StoriesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly ownership: OwnershipService,
   ) {}
 
   async list(
@@ -63,9 +67,10 @@ export class StoriesService {
   }
 
   async getById(uid: string, id: string): Promise<StoryDto> {
+    await this.ownership.assertStoryOwner(uid, id);
     const cacheKey = `${REDIS_PREFIX.STORY_CACHE}${id}`;
     
-    const story = await this.redis.cacheWrap(cacheKey, REDIS_TTL.STORY_CACHE_SEC, async () => {
+    return this.redis.cacheWrap(cacheKey, REDIS_TTL.STORY_CACHE_SEC, async () => {
       const row = await this.prisma.story.findUnique({
         where: { id },
         include: {
@@ -79,12 +84,6 @@ export class StoriesService {
       }
       return this.toDto(row);
     });
-
-    if (story.userId !== uid) {
-      throw new AppException(ERR.FORBIDDEN as string, 'Không có quyền truy cập câu chuyện này');
-    }
-
-    return story;
   }
 
   async create(uid: string, dto: CreateStoryDto): Promise<StoryDto> {
@@ -105,7 +104,7 @@ export class StoriesService {
   }
 
   async update(uid: string, id: string, dto: UpdateStoryDto): Promise<StoryDto> {
-    await this.assertOwnership(uid, id);
+    await this.ownership.assertStoryOwner(uid, id);
     try {
       const updated = await this.prisma.story.update({
         where: { id },
@@ -125,7 +124,7 @@ export class StoriesService {
   }
 
   async delete(uid: string, id: string): Promise<void> {
-    await this.assertOwnership(uid, id);
+    await this.ownership.assertStoryOwner(uid, id);
 
     const activeSession = await this.hasActiveSession(id);
     if (activeSession) {
@@ -146,23 +145,7 @@ export class StoriesService {
     }
   }
 
-  private async assertOwnership(uid: string, id: string) {
-    const row = await this.prisma.story.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { characters: true },
-        },
-      },
-    });
-    if (!row) {
-      throw new AppException(ERR.NOT_FOUND as string, 'Không tìm thấy câu chuyện');
-    }
-    if (row.userId !== uid) {
-      throw new AppException(ERR.FORBIDDEN as string, 'Không có quyền truy cập câu chuyện này');
-    }
-    return row;
-  }
+
 
   private async hasActiveSession(storyId: string): Promise<boolean> {
     try {
@@ -183,17 +166,16 @@ export class StoriesService {
   }
 
   private toDto(row: any, counts?: { characters: number }): StoryDto {
-    return {
+    return plainToInstance(StoryResponseDto, {
       id: row.id,
-      userId: row.userId,
       title: row.title,
       initialSetting: row.initialSetting,
       currentProgress: row.currentProgress || '',
       characterCount: counts ? counts.characters : (row._count?.characters ?? 0),
-      sessionCount: 0, // Mock return 0 ở phase này
+      sessionCount: 0, // TODO: Update when Session model is added in P04
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
-    };
+    });
   }
 
   private async invalidateCache(uid: string, id?: string): Promise<void> {

@@ -1,10 +1,11 @@
-import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsIn, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, MaxLength, IsIn, IsNumber } from 'class-validator';
 import { CreateCharacterDto as ICreateCharacterDto } from '@chatai/shared-types';
 import { VOICES, VoiceName } from '../voice.constants';
 
 export class CreateCharacterDto implements ICreateCharacterDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
   name!: string;
 
   @IsOptional()
@@ -15,6 +16,7 @@ export class CreateCharacterDto implements ICreateCharacterDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(3000)
   personality!: string;
 
   @IsString()

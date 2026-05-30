@@ -7,7 +7,7 @@ export class OwnershipService {
   constructor(private readonly prisma: PrismaService) {}
 
   async assertStoryOwner(uid: string, sid: string) {
-    const story = await (this.prisma as any).story.findUnique({
+    const story = await this.prisma.story.findUnique({
       where: { id: sid },
     });
     if (!story) {
@@ -20,7 +20,7 @@ export class OwnershipService {
   }
 
   async assertCharacterOwner(uid: string, cid: string) {
-    const char = await (this.prisma as any).character.findUnique({
+    const char = await this.prisma.character.findUnique({
       where: { id: cid },
       include: { story: true },
     });

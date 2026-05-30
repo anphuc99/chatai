@@ -22,7 +22,7 @@ import { VoiceSelector } from '../components/VoiceSelector';
 import { PitchSlider } from '../components/PitchSlider';
 import { AvatarPicker } from '../../profile/components/AvatarPicker';
 import { avatarService } from '../../profile/services/avatar.service';
-import { VoiceName } from '../constants/voices';
+import { VoiceName } from '@chatai/shared-types';
 import { theme } from '../../../theme';
 
 type Nav = NativeStackNavigationProp<StoryStackParamList, 'CharacterEditor'>;

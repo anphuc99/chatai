@@ -6,60 +6,65 @@ import { CreateCharacterInput, UpdateCharacterInput } from '../services/characte
 import { avatarService } from '../../profile/services/avatar.service';
 
 export function useCharacters() {
-  const store = useCharacterStore();
+  const byStory = useCharacterStore((s) => s.byStory);
+  const loadingByStoryState = useCharacterStore((s) => s.loadingByStory);
+  const setLoading = useCharacterStore((s) => s.setLoading);
+  const setForStory = useCharacterStore((s) => s.setForStory);
+  const upsert = useCharacterStore((s) => s.upsert);
+  const remove = useCharacterStore((s) => s.remove);
 
   const getCharactersByStory = useCallback(
     (sid: string): CharacterDto[] => {
-      return store.byStory[sid] || [];
+      return byStory[sid] || [];
     },
-    [store.byStory],
+    [byStory],
   );
 
   const getLoadingByStory = useCallback(
     (sid: string): boolean => {
-      return !!store.loadingByStory[sid];
+      return !!loadingByStoryState[sid];
     },
-    [store.loadingByStory],
+    [loadingByStoryState],
   );
 
   const load = useCallback(
     async (sid: string) => {
-      store.setLoading(sid, true);
+      setLoading(sid, true);
       try {
         const data = await characterApi.listByStory(sid);
-        store.setForStory(sid, data);
+        setForStory(sid, data);
       } catch (error) {
-        store.setLoading(sid, false);
+        setLoading(sid, false);
         throw error;
       }
     },
-    [store],
+    [setLoading, setForStory],
   );
 
   const create = useCallback(
     async (sid: string, dto: CreateCharacterInput): Promise<CharacterDto> => {
       const result = await characterApi.create(sid, dto);
-      store.upsert(result);
+      upsert(result);
       return result;
     },
-    [store],
+    [upsert],
   );
 
   const update = useCallback(
     async (id: string, dto: UpdateCharacterInput): Promise<CharacterDto> => {
       const result = await characterApi.update(id, dto);
-      store.upsert(result);
+      upsert(result);
       return result;
     },
-    [store],
+    [upsert],
   );
 
   const deleteCharacter = useCallback(
     async (id: string, sid: string): Promise<void> => {
       await characterApi.delete(id);
-      store.remove(id, sid);
+      remove(id, sid);
     },
-    [store],
+    [remove],
   );
 
   const uploadAvatar = useCallback(
@@ -81,11 +86,11 @@ export function useCharacters() {
         }
       }
       if (foundChar) {
-        store.upsert({ ...foundChar, avatarUrl });
+        useCharacterStore.getState().upsert({ ...foundChar, avatarUrl });
       }
       return avatarUrl;
     },
-    [store],
+    [],
   );
 
   return {

@@ -5,64 +5,72 @@ import { storyApi } from '../services/story.api';
 import { CreateStoryInput, UpdateStoryInput } from '../services/story.schemas';
 
 export function useStories() {
-  const store = useStoryStore();
-  const stories: StoryDto[] = store.order
-    .map((id) => store.storiesById[id])
+  const storiesById = useStoryStore((s) => s.storiesById);
+  const order = useStoryStore((s) => s.order);
+  const loading = useStoryStore((s) => s.loading);
+  const nextCursor = useStoryStore((s) => s.nextCursor);
+  const setLoading = useStoryStore((s) => s.setLoading);
+  const setPage = useStoryStore((s) => s.setPage);
+  const upsert = useStoryStore((s) => s.upsert);
+  const remove = useStoryStore((s) => s.remove);
+
+  const stories: StoryDto[] = order
+    .map((id) => storiesById[id])
     .filter((s): s is StoryDto => s !== undefined);
 
   const refresh = useCallback(async () => {
-    store.setLoading(true);
+    setLoading(true);
     try {
       const data = await storyApi.list(undefined, 20);
-      store.setPage(data.items, data.nextCursor, true);
+      setPage(data.items, data.nextCursor, true);
     } catch (error) {
-      store.setLoading(false);
+      setLoading(false);
       throw error;
     }
-  }, [store]);
+  }, [setLoading, setPage]);
 
   const loadMore = useCallback(async () => {
-    if (!store.nextCursor || store.loading) return;
-    store.setLoading(true);
+    if (!nextCursor || loading) return;
+    setLoading(true);
     try {
-      const data = await storyApi.list(store.nextCursor, 20);
-      store.setPage(data.items, data.nextCursor, false);
+      const data = await storyApi.list(nextCursor, 20);
+      setPage(data.items, data.nextCursor, false);
     } catch (error) {
-      store.setLoading(false);
+      setLoading(false);
       throw error;
     }
-  }, [store]);
+  }, [loading, nextCursor, setLoading, setPage]);
 
   const create = useCallback(
     async (input: CreateStoryInput): Promise<StoryDto> => {
       const result = await storyApi.create(input);
-      store.upsert(result);
+      upsert(result);
       return result;
     },
-    [store],
+    [upsert],
   );
 
   const update = useCallback(
     async (id: string, patch: UpdateStoryInput): Promise<StoryDto> => {
       const result = await storyApi.update(id, patch);
-      store.upsert(result);
+      upsert(result);
       return result;
     },
-    [store],
+    [upsert],
   );
 
   const deleteStory = useCallback(
     async (id: string): Promise<void> => {
       await storyApi.delete(id);
-      store.remove(id);
+      remove(id);
     },
-    [store],
+    [remove],
   );
 
   return {
     stories,
-    loading: store.loading,
-    nextCursor: store.nextCursor,
+    loading,
+    nextCursor,
     refresh,
     loadMore,
     create,
