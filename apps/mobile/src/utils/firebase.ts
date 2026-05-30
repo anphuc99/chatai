@@ -3,12 +3,12 @@ import { initializeAuth, inMemoryPersistence, connectAuthEmulator } from 'fireba
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyCkqBzJfQShMO6yKWvkidD1JBihLh4Asd8',
-  authDomain: 'chatai-24b76.firebaseapp.com',
-  projectId: 'chatai-24b76',
-  storageBucket: 'chatai-24b76.firebasestorage.app',
-  messagingSenderId: '44034559036',
-  appId: '1:44034559036:android:ed3695cdfa273b999dc739',
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
@@ -19,8 +19,12 @@ const auth = initializeAuth(app, {
 
 const db = getFirestore(app);
 
+// Flag để ngăn connect nhiều lần khi Fast Refresh
+let isEmulatorConnected = false;
+
 // Kết nối với Firebase Emulators khi chạy ở chế độ dev
-if (__DEV__) {
+if (__DEV__ && !isEmulatorConnected) {
+  isEmulatorConnected = true;
   const apiUrl = process.env.EXPO_PUBLIC_API_BASE_URL ?? '';
   // Trích xuất IP LAN từ API URL (ví dụ: http://192.168.1.100:3000/api/v1 -> 192.168.1.100)
   const ipMatch = apiUrl.match(/\/\/([^:/]+)/);

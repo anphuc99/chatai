@@ -14,6 +14,9 @@ export function useProfile() {
   
   // Lưu trữ các bộ hẹn giờ debounce cho từng thuộc tính cài đặt để tránh chồng chéo
   const debounceTimers = useRef<{ [key: string]: any }>({});
+  
+  // Lưu trữ giá trị cũ để revert nếu có lỗi mạng
+  const previousValues = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -36,13 +39,15 @@ export function useProfile() {
       // Clear tất cả các bộ hẹn giờ khi hook unmount
       Object.values(debounceTimers.current).forEach((timer) => clearTimeout(timer));
     };
-  }, [user?.uid, setUser]);
+  }, [user?.uid]);
 
   const updatePref = useCallback(
     async (key: string, value: any) => {
       if (!user) return;
 
-      const previousUser = { ...user };
+      // Lưu lại giá trị cũ của field bị thay đổi để revert nếu lỗi
+      previousValues.current[key] = key === 'hskLevel' ? user.hskLevel : user.preferences[key as keyof typeof user.preferences];
+
       let updatedUser: UserDto;
 
       // Xử lý optimistic update
@@ -80,8 +85,17 @@ export function useProfile() {
         } catch (error: any) {
           console.error(`[useProfile] Failed to update preference ${key}:`, error);
           Alert.alert('Lỗi', 'Không thể kết nối tới máy chủ để lưu cài đặt.');
-          // Revert lại trạng thái cũ
-          setUser(previousUser);
+          // Revert lại trạng thái cũ từ ref
+          const revertedUser = { ...useAuthStore.getState().user! };
+          if (key === 'hskLevel') {
+            revertedUser.hskLevel = previousValues.current[key];
+          } else {
+            revertedUser.preferences = {
+              ...revertedUser.preferences,
+              [key]: previousValues.current[key],
+            };
+          }
+          setUser(revertedUser);
         }
       }, 300);
     },

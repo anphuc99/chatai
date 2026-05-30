@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import * as admin from 'firebase-admin';
+import { Bucket } from '@google-cloud/storage';
 import { FIREBASE_ADMIN } from './firebase-admin.provider';
 
 export interface AvatarUrls {
@@ -9,7 +10,7 @@ export interface AvatarUrls {
 
 @Injectable()
 export class StorageService {
-  private readonly bucket: any; // admin.storage.Bucket
+  private readonly bucket: Bucket;
 
   constructor(@Inject(FIREBASE_ADMIN) private readonly adminApp: admin.app.App) {
     this.bucket = this.adminApp.storage().bucket();

@@ -1,4 +1,4 @@
-# P01.T2 — Server AuthModule (Firebase Admin SDK)
+# P01.T2 — Server AuthModule (Firebase Admin SDK) ✅ DONE
 
 ## 1. METADATA
 

@@ -9,4 +9,3 @@ import { StorageService } from './storage.service';
   exports: [FIREBASE_ADMIN, FirebaseAdminProvider, FirestoreService, StorageService],
 })
 export class FirebaseModule {}
-export { FIREBASE_ADMIN };

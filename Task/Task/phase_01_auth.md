@@ -7,7 +7,7 @@
 
 ## P1.T1 — Firebase Project Setup + Service Account
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P0.T8 (Phase 0 hoàn thành)
 
 **Mô tả chi tiết**:
@@ -35,7 +35,7 @@
 
 ## P1.T2 — Server AuthModule (Firebase Admin SDK Verify)
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T1
 
 **Mô tả chi tiết**:
@@ -80,7 +80,7 @@
 
 ## P1.T3 — Server UsersModule (Profile CRUD + Firestore Sync)
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T2
 
 **Mô tả chi tiết**:
@@ -140,7 +140,7 @@
 
 ## P1.T4 — Client: Google Sign-In Flow + AuthStore
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T2
 
 **Mô tả chi tiết**:
@@ -199,7 +199,7 @@
 
 ## P1.T5 — Client: Profile Screen + Preferences
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T3, P1.T4
 
 **Mô tả chi tiết**:
@@ -232,7 +232,7 @@
 
 ## P1.T6 — Navigation Structure (Authenticated vs Public)
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T4
 
 **Mô tả chi tiết**:
@@ -260,7 +260,7 @@
 
 ## P1.T7 — Shared Types Package (Client-Server DTO đồng bộ)
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P1.T3
 
 **Mô tả chi tiết**:

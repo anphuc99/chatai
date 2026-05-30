@@ -188,7 +188,7 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
   },
   contentContainer: {
     paddingHorizontal: theme.spacing.lg,
@@ -199,10 +199,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: theme.colors.background,
   },
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.card || '#FFFFFF',
     borderRadius: theme.radius.lg,
     padding: theme.spacing.xl,
     marginBottom: theme.spacing.xl,

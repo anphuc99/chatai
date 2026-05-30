@@ -1,4 +1,4 @@
-# P01.T1 — Firebase Project Setup
+# P01.T1 — Firebase Project Setup ✅ DONE
 
 ## 1. METADATA
 

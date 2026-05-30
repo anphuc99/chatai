@@ -5,6 +5,7 @@ import { AuthUser } from '../../shared/types/auth-user';
 import { UserDto } from '@chatai/shared-types';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UploadedFileFastify, FastifyFile } from './decorators/uploaded-file.decorator';
+import { AppException, ERR } from '../../shared/errors/app-exception';
 
 @Controller('users')
 export class UsersController {
@@ -31,7 +32,7 @@ export class UsersController {
     @UploadedFileFastify() file: FastifyFile | null,
   ): Promise<{ photoURL: string }> {
     if (!file) {
-      throw new Error('Không nhận được file upload');
+      throw new AppException(ERR.INVALID_PAYLOAD, 'Không nhận được file upload');
     }
     return this.usersService.uploadAvatar(user.uid, file);
   }

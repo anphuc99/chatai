@@ -1,4 +1,4 @@
-# P01.T4 — Client: Google Sign-In + AuthStore
+# P01.T4 — Client: Google Sign-In + AuthStore ✅ DONE
 
 ## 1. METADATA
 

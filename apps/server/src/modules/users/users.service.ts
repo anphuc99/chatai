@@ -116,7 +116,7 @@ export class UsersService {
     return { photoURL: urls.publicUrl };
   }
 
-  async invalidateCache(uid: string): Promise<void> {
+  private async invalidateCache(uid: string): Promise<void> {
     const cacheKey = REDIS_PREFIX.USER_CACHE + uid;
     await this.redis.del(cacheKey);
   }

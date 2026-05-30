@@ -15,4 +15,4 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*');
     }
   }
-}
+}

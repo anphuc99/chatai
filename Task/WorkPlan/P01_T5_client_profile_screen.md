@@ -1,4 +1,4 @@
-# P01.T5 — Client: Profile Screen + Preferences + Avatar Upload
+# P01.T5 — Client: Profile Screen + Preferences + Avatar Upload ✅ DONE
 
 ## 1. METADATA
 
