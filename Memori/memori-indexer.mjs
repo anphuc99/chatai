@@ -7,7 +7,7 @@
  * Cách dùng: node memori-indexer.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, createWriteStream } from 'fs';
 import { dirname, join, basename } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -222,16 +222,36 @@ async function indexDocuments() {
   // Đảm bảo thư mục db tồn tại
   mkdirSync(DB_DIR, { recursive: true });
 
-  // Lưu vào file JSON
-  const vectorDB = {
-    model: EMBEDDING_MODEL,
-    updatedAt: new Date().toISOString(),
-    totalChunks: finalEntries.length,
-    totalFiles: currentFiles.size,
-    entries: finalEntries,
-  };
+  console.log(`\n💾 Đang ghi dữ liệu vào chỉ mục (Stream Write)...`);
 
-  writeFileSync(VECTORS_FILE, JSON.stringify(vectorDB), 'utf-8');
+  // Lưu vào file JSON bằng write stream để tránh lỗi "Invalid string length" với file dung lượng lớn
+  const writeStream = createWriteStream(VECTORS_FILE, { encoding: 'utf-8' });
+
+  writeStream.write('{\n');
+  writeStream.write(`  "model": ${JSON.stringify(EMBEDDING_MODEL)},\n`);
+  writeStream.write(`  "updatedAt": ${JSON.stringify(new Date().toISOString())},\n`);
+  writeStream.write(`  "totalChunks": ${finalEntries.length},\n`);
+  writeStream.write(`  "totalFiles": ${currentFiles.size},\n`);
+  writeStream.write('  "entries": [\n');
+
+  for (let i = 0; i < finalEntries.length; i++) {
+    const entry = finalEntries[i];
+    writeStream.write('    ' + JSON.stringify(entry));
+    if (i < finalEntries.length - 1) {
+      writeStream.write(',\n');
+    } else {
+      writeStream.write('\n');
+    }
+  }
+
+  writeStream.write('  ]\n');
+  writeStream.write('}\n');
+
+  await new Promise((resolve, reject) => {
+    writeStream.on('finish', resolve);
+    writeStream.on('error', reject);
+    writeStream.end();
+  });
 
   console.log(`\n🎉 Đã cập nhật chỉ mục (Incremental Sync) thành công!`);
   console.log(`   📁 Tổng cộng: ${currentFiles.size} file(s) → ${finalEntries.length} chunk(s)`);

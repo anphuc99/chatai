@@ -8,11 +8,12 @@ datasource db {
 }
 
 model UsersMeta {
-  userId       String   @id @map("user_id") // Firebase UID
-  tutorialStep Int      @default(0) @map("tutorial_step")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  userId       String    @id @map("user_id") // Firebase UID
+  tutorialStep Int       @default(0) @map("tutorial_step")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
   stories      Story[]
+  sessions     Session[]
 
   @@map("users_meta")
 }
@@ -28,7 +29,7 @@ model Story {
 
   user            UsersMeta   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   characters      Character[]
-  // sessions     Session[]   // Reserved for P04
+  sessions        Session[]
 
   @@index([userId])
   @@map("stories")
@@ -46,8 +47,50 @@ model Character {
   createdAt    DateTime  @default(now()) @map("created_at")
 
   story        Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  // messages  Message[] // Reserved for P04
+  messages     Message[]
 
   @@index([storyId])
   @@map("characters")
+}
+
+model Session {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  storyId   String    @map("story_id")
+  status    String    @default("active")
+  summary   String?   @db.Text
+  startedAt BigInt    @map("started_at")
+  endedAt   BigInt?   @map("ended_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user      UsersMeta @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  story     Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([userId, storyId, status])
+  @@index([storyId, status])
+  @@map("sessions")
+}
+
+model Message {
+  id            String     @id @default(uuid())
+  sessionId     String     @map("session_id")
+  characterId   String?    @map("character_id")
+  role          String
+  characterName String?    @map("character_name")
+  text          String     @db.Text
+  translation   String?    @db.Text
+  emotion       String?
+  intensity     String?
+  words         Json?
+  shopEvent     Json?      @map("shop_event")
+  turnOrder     Int        @map("turn_order")
+  timestamp     BigInt
+
+  session       Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  character     Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, turnOrder])
+  @@index([characterId])
+  @@map("messages")
 }
