@@ -208,6 +208,9 @@ importers:
       '@prisma/client':
         specifier: ^6.2.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      axios:
+        specifier: ^1.7.0
+        version: 1.16.1
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1

@@ -1,14 +1,18 @@
-# P03.T1 — GPT-SoVITS Python Wrapper (tts-engine)
+# P03.T1 — GPT-SoVITS Python Wrapper (tts-engine) [REJECTED]
+
+> **Trạng thái**: **REJECTED (Đã hủy bỏ)**
+> **Lý do**: Mã nguồn GPT-SoVITS đã có sẵn API phục vụ. Chúng ta sử dụng trực tiếp API tích hợp sẵn trong thư mục `D:\GPT-SoVITS-v2pro-20250604\GPT-SoVITS-v2pro-20250604` (chạy qua file `api_v2.py` trên cổng 9872). Do đó, không cần viết thêm mã nguồn wrapper tự chế nào nữa.
 
 ## 1. METADATA
 
 | Field | Value |
 |-------|-------|
 | Task ID | P03.T1 |
+| Status | **REJECTED / CANCELLED** |
 | Phase | 3 — TTS |
 | Depends on | P02 hoàn thành |
-| Complexity | High |
-| Risk | High (model weights, GPU) |
+| Complexity | None (Không thực hiện) |
+| Risk | None |
 
 ---
 

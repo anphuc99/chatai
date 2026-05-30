@@ -55,4 +55,41 @@ export class StorageService {
     });
     return url;
   }
+
+  async uploadTtsAudio(cacheHash: string, buffer: Buffer): Promise<AvatarUrls> {
+    const path = `tts_audio/${cacheHash}.wav`;
+    const file = this.bucket.file(path);
+
+    await file.save(buffer, {
+      contentType: 'audio/wav',
+      resumable: false,
+      metadata: {
+        cacheControl: 'public, max-age=2592000',
+      },
+    });
+
+    try {
+      await file.makePublic();
+    } catch (error) {
+      // Ignore if uniform bucket-level access prevents updating ACLs
+    }
+
+    const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${path}`;
+    return { publicUrl, storagePath: path };
+  }
+
+  async exists(path: string): Promise<boolean> {
+    const [exists] = await this.bucket.file(path).exists();
+    return exists;
+  }
+
+  async getSignedUrl(path: string, expiresMs = 3600000): Promise<string> {
+    return this.getSignedReadUrl(path, expiresMs);
+  }
+
+  getPublicUrl(path: string): string {
+    return `https://storage.googleapis.com/${this.bucket.name}/${path}`;
+  }
 }
+
+

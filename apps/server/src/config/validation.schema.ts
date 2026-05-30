@@ -11,6 +11,7 @@ export const validationSchema = Joi.object({
   OLLAMA_MODEL_SMALL: Joi.string().default('qwen2.5:3b'),
   OLLAMA_EMBED_MODEL: Joi.string().default('bge-m3'),
   TTS_ENGINE_URL: Joi.string().uri().default('http://localhost:5000'),
+  TTS_DATASET_ABS_PATH: Joi.string().optional().allow(''),
   FIREBASE_PROJECT_ID: Joi.string().optional().allow(''),
   FIREBASE_SERVICE_ACCOUNT_PATH: Joi.string().optional().allow(''),
   FIREBASE_STORAGE_BUCKET: Joi.string().optional().allow(''),

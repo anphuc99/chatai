@@ -12,6 +12,7 @@ export interface AppConfig {
   ollamaModelSmall: string;
   ollamaEmbedModel: string;
   ttsEngineUrl: string;
+  ttsDatasetAbsPath: string;
   maxHistoryTokens: number;
 }
 
@@ -29,5 +30,6 @@ export default (): AppConfig => ({
   ollamaModelSmall: process.env.OLLAMA_MODEL_SMALL || 'qwen2.5:3b',
   ollamaEmbedModel: process.env.OLLAMA_EMBED_MODEL || 'bge-m3',
   ttsEngineUrl: process.env.TTS_ENGINE_URL || 'http://localhost:5000',
+  ttsDatasetAbsPath: process.env.TTS_DATASET_ABS_PATH || '',
   maxHistoryTokens: parseInt(process.env.MAX_HISTORY_TOKENS || '20000', 10),
 });

@@ -6,7 +6,7 @@
 |-------|-------|
 | Task ID | P03.T2 |
 | Phase | 3 |
-| Depends on | P03.T1, P02.T3 |
+| Depends on | P02.T3 |
 | Complexity | High |
 | Risk | High |
 
@@ -152,7 +152,13 @@ infer(text: string, refAudioPath: string, refText: string, language = 'zh'): Pro
 
 Logic:
   1. try {
-       res = await axios.post('/infer', { text, ref_audio_path: refAudioPath, ref_text: refText, language })
+       res = await axios.post('/tts', {
+         text,
+         text_lang: language,
+         ref_audio_path: refAudioPath,
+         prompt_text: refText,
+         prompt_lang: language
+       })
      } catch (e) {
        if e.code === 'ECONNREFUSED' || timeout → throw AppException(ERR.TTS_ENGINE_DOWN)
        if e.response?.status === 404 → throw AppException(ERR.REFERENCE_NOT_FOUND)
@@ -165,7 +171,16 @@ Retry: 1 lần với delay 1s nếu lỗi network (không retry nếu 4xx).
 
 #### `health()`
 ```
-Logic: try { res = await axios.get('/health'); return res.data.model_loaded === true } catch { return false }
+Logic:
+  - Do API gốc của GPT-SoVITS không có endpoint /health chuyên dụng mà sử dụng /tts.
+  - Ta có thể thực hiện health check bằng cách gửi request GET tới /tts và kiểm tra xem có phản hồi lỗi 400 (do thiếu tham số) hay không:
+    try {
+      await axios.get('/tts')
+      return true
+    } catch (e) {
+      if (e.response && e.response.status === 400) return true
+      return false
+    }
 ```
 
 ---

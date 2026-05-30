@@ -24,7 +24,7 @@
 **Out-of-scope**:
 - Production K8s/orchestration (phase 13).
 - Ollama (chạy local trên máy dev — không Docker theo plan).
-- GPT-SoVITS (Docker riêng ở P03.T1).
+- GPT-SoVITS (Chạy trực tiếp qua API v2 có sẵn trên cổng 9872).
 
 ---
 
