@@ -16,10 +16,8 @@ export class StorageService {
     this.bucket = this.adminApp.storage().bucket();
   }
 
-  async uploadAvatar(uid: string, buffer: Buffer, contentType: string): Promise<AvatarUrls> {
-    const ext = contentType.split('/')[1] || 'jpg';
-    const storagePath = `avatars/${uid}/${Date.now()}.${ext}`;
-    const file = this.bucket.file(storagePath);
+  async uploadToPath(path: string, buffer: Buffer, contentType: string): Promise<AvatarUrls> {
+    const file = this.bucket.file(path);
 
     await file.save(buffer, {
       contentType,
@@ -35,8 +33,14 @@ export class StorageService {
       // Ignore if uniform bucket-level access prevents updating ACLs
     }
 
-    const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${storagePath}`;
-    return { publicUrl, storagePath };
+    const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${path}`;
+    return { publicUrl, storagePath: path };
+  }
+
+  async uploadAvatar(uid: string, buffer: Buffer, contentType: string): Promise<AvatarUrls> {
+    const ext = contentType.split('/')[1] || 'jpg';
+    const storagePath = `avatars/${uid}/${Date.now()}.${ext}`;
+    return this.uploadToPath(storagePath, buffer, contentType);
   }
 
   async deleteFile(path: string): Promise<void> {

@@ -15,6 +15,8 @@ import { AuthGuard } from './shared/guards/auth.guard';
 import { FirebaseModule } from './shared/firebase/firebase.module';
 import { UsersModule } from './modules/users/users.module';
 import { StoriesModule } from './modules/stories/stories.module';
+import { OwnershipModule } from './shared/ownership/ownership.module';
+import { CharactersModule } from './modules/characters/characters.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { StoriesModule } from './modules/stories/stories.module';
     FirebaseModule,
     UsersModule,
     StoriesModule,
+    OwnershipModule,
+    CharactersModule,
   ],
 
   providers: [
