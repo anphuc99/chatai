@@ -339,13 +339,13 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] Boot app → log "Redis ready".
-- [ ] `GET /healthz` → `checks.redis === 'ok'`.
-- [ ] Stop Redis → `checks.redis === 'fail'`.
-- [ ] `acquireLock` 2 lần liên tiếp với cùng key → lần 2 trả null.
-- [ ] Lock auto-release sau TTL.
-- [ ] `releaseLock` với token sai → trả false, key vẫn còn.
-- [ ] `cacheWrap` lần 1 gọi factory, lần 2 trả cache mà không gọi.
+- [x] Boot app → log "Redis ready".
+- [x] `GET /healthz` → `checks.redis === 'ok'`.
+- [x] Stop Redis → `checks.redis === 'fail'`.
+- [x] `acquireLock` 2 lần liên tiếp với cùng key → lần 2 trả null.
+- [x] Lock auto-release sau TTL.
+- [x] `releaseLock` với token sai → trả false, key vẫn còn.
+- [x] `cacheWrap` lần 1 gọi factory, lần 2 trả cache mà không gọi.
 
 ### Unit Tests
 | Test | Assert |

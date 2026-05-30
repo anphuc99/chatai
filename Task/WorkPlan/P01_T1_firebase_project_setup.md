@@ -101,12 +101,12 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] Console hiện project với Auth/Firestore/Storage active.
-- [ ] `cat apps/server/firebase-sa.json | jq .project_id` → `chatai-dev`.
-- [ ] `.gitignore` chặn 3 file secret (`firebase-sa.json`, `google-services.json`, `GoogleService-Info.plist`).
-- [ ] `apps/server/.env.example` có 3 biến placeholder (không có giá trị thật).
-- [ ] Runbook README ghi rõ cho dev mới onboard.
+- [x] Console hiện project với Auth/Firestore/Storage active.
+- [x] `cat apps/server/firebase-sa-dev.json | jq .project_id` → `chatai-24b76`.
+- [x] `.gitignore` chặn 3 file secret (`firebase-sa-dev.json`, `google-services.json`, `GoogleService-Info.plist`).
+- [x] `apps/server/.env.example` có 3 biến placeholder (không có giá trị thật).
+- [x] Runbook README ghi rõ cho dev mới onboard.
 
 ### Manual Test
 1. `git status` sau khi đặt 3 file secret → không track.
-2. `node -e "console.log(require('./apps/server/firebase-sa.json').project_id)"` → in `chatai-dev`.
+2. `node -e "console.log(require('./apps/server/firebase-sa-dev.json').project_id)"` → in `chatai-24b76`.

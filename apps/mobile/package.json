@@ -9,7 +9,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "lint": "eslint src/",
-    "build": "echo 'Use EAS Build for production'"
+    "build": "echo 'Use EAS Build for production'",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@babel/runtime": "^7.29.7",
@@ -20,6 +21,7 @@
     "expo": "~52.0.0",
     "expo-crypto": "~14.0.0",
     "expo-status-bar": "~2.0.0",
+    "firebase": "^12.14.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.9",

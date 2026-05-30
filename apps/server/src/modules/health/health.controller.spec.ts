@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HealthController } from './health.controller';
 import { HealthService } from './health.service';
+import { PrismaService } from '../../shared/prisma/prisma.service';
+import { RedisService } from '../../shared/redis/redis.service';
 
 describe('HealthController', () => {
   let controller: HealthController;
@@ -9,7 +11,21 @@ describe('HealthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
-      providers: [HealthService],
+      providers: [
+        HealthService,
+        {
+          provide: PrismaService,
+          useValue: {
+            $queryRaw: jest.fn().mockResolvedValue([{ 1: 1 }]),
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {
+            ping: jest.fn().mockResolvedValue(true),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<HealthController>(HealthController);

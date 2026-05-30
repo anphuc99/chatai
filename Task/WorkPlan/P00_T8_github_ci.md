@@ -215,12 +215,12 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] PR mới mở → CI tự chạy.
-- [ ] CI fail nếu lint hoặc type error.
-- [ ] CI fail nếu test fail.
-- [ ] Cache hit pnpm sau lần thứ 2 (thời gian install giảm rõ).
-- [ ] `services.yml` chạy được bằng "Run workflow" manual.
-- [ ] Branch protection `main` & `develop`: require CI pass.
+- [x] PR mới mở → CI tự chạy.
+- [x] CI fail nếu lint hoặc type error.
+- [x] CI fail nếu test fail.
+- [x] Cache hit pnpm sau lần thứ 2 (thời gian install giảm rõ).
+- [x] `services.yml` chạy được bằng "Run workflow" manual.
+- [x] Branch protection `main` & `develop`: require CI pass.
 
 ### Manual Test
 1. Tạo PR test, sửa 1 file thêm `const x: number = 'a'` → CI fail typecheck.

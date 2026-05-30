@@ -355,11 +355,11 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] `pnpm --filter server dev` → server lắng nghe port 3000.
-- [ ] `curl http://localhost:3000/healthz` → 200 JSON đúng shape.
-- [ ] `curl http://localhost:3000/api/v1/healthz` → 404 (vì exclude).
-- [ ] Boot với `.env` thiếu `DATABASE_URL` → process exit với log Joi error.
-- [ ] `pnpm --filter server test` → pass.
+- [x] `pnpm --filter server dev` → server lắng nghe port 3000.
+- [x] `curl http://localhost:3000/healthz` → 200 JSON đúng shape.
+- [x] `curl http://localhost:3000/api/v1/healthz` → 404 (vì exclude).
+- [x] Boot với `.env` thiếu `DATABASE_URL` → process exit với log Joi error.
+- [x] `pnpm --filter server test` → pass.
 
 ### Unit Tests (`health.controller.spec.ts`)
 | Test | Setup | Assert |

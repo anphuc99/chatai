@@ -370,12 +370,12 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] Dev log có màu, prod log JSON.
-- [ ] Mọi response có header `X-Request-Id`.
-- [ ] `throw new AppException(ERR.NOT_FOUND)` → 404 với body chuẩn.
-- [ ] `throw new Error('boom')` → 500 với code `INTERNAL_ERROR`, log error.
-- [ ] Header `Authorization` không xuất hiện trong log (redacted).
-- [ ] Log có trường `traceId` khớp với header response.
+- [x] Dev log có màu, prod log JSON.
+- [x] Mọi response có header `X-Request-Id`.
+- [x] `throw new AppException(ERR.NOT_FOUND)` → 404 với body chuẩn.
+- [x] `throw new Error('boom')` → 500 với code `INTERNAL_ERROR`, log error.
+- [x] Header `Authorization` không xuất hiện trong log (redacted).
+- [x] Log có trường `traceId` khớp với header response.
 
 ### Unit Tests
 | Test | Assert |

@@ -166,12 +166,12 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] `pnpm docker:up` → 3 containers chạy, status `healthy`.
-- [ ] `psql postgresql://chatai:chatai_dev_pw@localhost:5432/chatai -c "SELECT 1"` → trả 1.
-- [ ] `redis-cli -h localhost -p 6379 ping` → PONG.
-- [ ] `curl http://localhost:8000/api/v1/heartbeat` → 200.
-- [ ] `pnpm docker:down` → containers tắt, volumes giữ nguyên.
-- [ ] `pnpm docker:reset` → volumes bị xoá, data sạch.
+- [x] `pnpm docker:up` → 3 containers chạy, status `healthy`.
+- [x] `psql postgresql://chatai:chatai_dev_pw@localhost:5432/chatai -c "SELECT 1"` → trả 1.
+- [x] `redis-cli -h localhost -p 6379 ping` → PONG.
+- [x] `curl http://localhost:8000/api/v1/heartbeat` → 200.
+- [x] `pnpm docker:down` → containers tắt, volumes giữ nguyên.
+- [x] `pnpm docker:reset` → volumes bị xoá, data sạch.
 
 ### Manual Test
 1. Tắt mở máy, `docker ps` → containers tự restart (do `unless-stopped`).

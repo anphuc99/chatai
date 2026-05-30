@@ -185,11 +185,11 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] `pnpm install` hoàn tất không lỗi.
-- [ ] `pnpm -r list --depth -1` liệt kê đúng 5 workspaces.
-- [ ] `pnpm lint` chạy được (kể cả no-op khi packages chưa có code).
-- [ ] `cat .gitignore` chứa các pattern bắt buộc.
-- [ ] `node -v` match `.nvmrc` (Node 20.x).
+- [x] `pnpm install` hoàn tất không lỗi.
+- [x] `pnpm -r list --depth -1` liệt kê đúng 5 workspaces.
+- [x] `pnpm lint` chạy được (kể cả no-op khi packages chưa có code).
+- [x] `cat .gitignore` chứa các pattern bắt buộc.
+- [x] `node -v` match `.nvmrc` (Node 20.x).
 
 ### Manual Test Steps
 1. Clone vào folder mới, chạy `pnpm install` → success.

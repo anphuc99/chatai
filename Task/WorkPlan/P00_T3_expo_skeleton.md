@@ -289,11 +289,11 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] `pnpm --filter mobile start` → Metro bundler ready.
-- [ ] Mở Expo Go scan QR → app khởi động, hiển thị "Hello".
-- [ ] TypeScript strict mode pass (no errors).
-- [ ] ESLint pass.
-- [ ] `apiClient` import được từ `src/features/.../**`.
+- [x] `pnpm --filter mobile start` → Metro bundler ready.
+- [x] Mở Expo Go scan QR → app khởi động, hiển thị "Hello".
+- [x] TypeScript strict mode pass (no errors).
+- [x] ESLint pass.
+- [x] `apiClient` import được từ `src/features/.../**`.
 
 ### Manual Test
 1. Start server (T2) + mobile → mở app → screen gọi `/healthz` → log "ok".

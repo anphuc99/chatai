@@ -270,13 +270,13 @@ sequenceDiagram
 ## 7. ACCEPTANCE & TEST PLAN
 
 ### Acceptance Criteria
-- [ ] `pnpm --filter server prisma:generate` → sinh `node_modules/.prisma/client`.
-- [ ] `pnpm --filter server prisma:migrate -- --name init` → tạo migration + apply.
-- [ ] Bảng `users_meta` tồn tại trong Postgres với 4 cột đúng.
-- [ ] `pnpm --filter server dev` → boot ok, log "Prisma connected".
-- [ ] `GET /healthz` trả `checks.postgres === 'ok'`.
-- [ ] Stop Postgres → `GET /healthz` trả `status: degraded`, `checks.postgres: 'fail'`, HTTP 200 (vẫn cần response cho monitor).
-- [ ] `pnpm --filter server db:seed` chạy không lỗi.
+- [x] `pnpm --filter server prisma:generate` → sinh `node_modules/.prisma/client`.
+- [x] `pnpm --filter server prisma:migrate -- --name init` → tạo migration + apply.
+- [x] Bảng `users_meta` tồn tại trong Postgres với 4 cột đúng.
+- [x] `pnpm --filter server dev` → boot ok, log "Prisma connected".
+- [x] `GET /healthz` trả `checks.postgres === 'ok'`.
+- [x] Stop Postgres → `GET /healthz` trả `status: degraded`, `checks.postgres: 'fail'`, HTTP 200 (vẫn cần response cho monitor).
+- [x] `pnpm --filter server db:seed` chạy không lỗi.
 
 ### Unit Tests
 | Test | File | Assert |

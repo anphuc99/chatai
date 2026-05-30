@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Cho phép mọi user đã đăng nhập đọc file audio
+    match /tts_audio/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false; // Chỉ Server (Admin SDK) mới được upload
+    }
+    
+    // User chỉ được upload và đọc avatar của chính họ
+    match /avatars/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+  }
+}
