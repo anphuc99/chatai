@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { authService } from './src/features/auth/services/auth.service';
 import { useAuthStore } from './src/stores/auth.store';
+import { initAudioMode } from './src/utils/audio-init';
 
 export default function App() {
   useEffect(() => {
@@ -12,6 +13,9 @@ export default function App() {
     
     // Khôi phục session người dùng từ secure storage
     useAuthStore.getState().hydrate();
+
+    // Khởi tạo Audio Mode
+    initAudioMode();
   }, []);
 
   return (

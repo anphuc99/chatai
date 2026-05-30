@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,7 @@ import { AvatarPicker } from '../../profile/components/AvatarPicker';
 import { avatarService } from '../../profile/services/avatar.service';
 import { VoiceName } from '@chatai/shared-types';
 import { theme } from '../../../theme';
+import { ttsClientService } from '../services/tts.service';
 
 type Nav = NativeStackNavigationProp<StoryStackParamList, 'CharacterEditor'>;
 type Route = RouteProp<StoryStackParamList, 'CharacterEditor'>;
@@ -43,10 +44,12 @@ export function CharacterEditorScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [localAvatarUri, setLocalAvatarUri] = useState<string | null>(character?.avatarUrl ?? null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isValid },
   } = useForm<CreateCharacterInput>({
     resolver: zodResolver(createCharacterSchema),
@@ -59,6 +62,16 @@ export function CharacterEditorScreen() {
     },
     mode: 'onChange',
   });
+
+  const formVoiceName = watch('voiceName');
+  const formPitch = watch('pitch');
+
+  // Dọn dẹp âm thanh khi đóng màn hình
+  useEffect(() => {
+    return () => {
+      ttsClientService.stop().catch(() => {});
+    };
+  }, []);
 
   const handlePickAvatar = async () => {
     try {
@@ -84,8 +97,27 @@ export function CharacterEditorScreen() {
     }
   };
 
-  const handlePreviewVoice = () => {
-    Alert.alert('Sắp ra mắt', 'Tính năng nghe thử giọng đọc sẽ có ở Phase TTS (P03.T3).');
+  const handlePreviewVoice = async () => {
+    if (previewLoading) return;
+    if (!formVoiceName) {
+      Alert.alert('Thông báo', 'Vui lòng chọn giọng nói trước');
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      const url = await ttsClientService.testVoice(formVoiceName, formPitch ?? 1.0);
+      await ttsClientService.playUrl(url);
+    } catch (err: any) {
+      if (err.code === 'TTS_ENGINE_DOWN') {
+        Alert.alert('Thông báo', 'Hệ thống TTS đang bảo trì');
+      } else if (err.code === 'RATE_LIMIT') {
+        Alert.alert('Thông báo', 'Quá nhiều yêu cầu, thử lại sau');
+      } else {
+        Alert.alert('Thông báo', err.message || 'Không phát được giọng đọc');
+      }
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const onSubmit = async (values: CreateCharacterInput) => {
@@ -235,11 +267,22 @@ export function CharacterEditorScreen() {
 
         {/* Nút nghe thử */}
         <TouchableOpacity
-          style={styles.previewBtn}
+          style={[
+            styles.previewBtn,
+            (!formVoiceName || formPitch === undefined || previewLoading) && styles.previewBtnDisabled,
+          ]}
           onPress={handlePreviewVoice}
+          disabled={!formVoiceName || formPitch === undefined || previewLoading}
           activeOpacity={0.7}
         >
-          <Text style={styles.previewBtnText}>🔊 Nghe thử giọng nói (Sắp ra mắt)</Text>
+          {previewLoading ? (
+            <View style={styles.previewBtnContent}>
+              <ActivityIndicator size="small" color={theme.colors.textMuted} style={{ marginRight: 8 }} />
+              <Text style={styles.previewBtnText}>Đang chuẩn bị giọng đọc...</Text>
+            </View>
+          ) : (
+            <Text style={styles.previewBtnText}>🔊 Nghe thử giọng nói</Text>
+          )}
         </TouchableOpacity>
 
         {/* Nút Submit */}
@@ -319,6 +362,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
+  },
+  previewBtnDisabled: {
+    opacity: 0.5,
+  },
+  previewBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   previewBtnText: {
     ...theme.typography.body,
