@@ -12,6 +12,42 @@ model UsersMeta {
   tutorialStep Int      @default(0) @map("tutorial_step")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  stories      Story[]
 
   @@map("users_meta")
+}
+
+model Story {
+  id              String      @id @default(uuid())
+  userId          String      @map("user_id")
+  title           String
+  initialSetting  String      @db.Text @map("initial_setting")
+  currentProgress String      @db.Text @default("") @map("current_progress")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  user            UsersMeta   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  characters      Character[]
+  // sessions     Session[]   // Reserved for P04
+
+  @@index([userId])
+  @@map("stories")
+}
+
+model Character {
+  id           String    @id @default(uuid())
+  storyId      String    @map("story_id")
+  name         String
+  age          Int?
+  personality  String    @db.Text
+  avatarUrl    String?   @map("avatar_url")
+  voiceName    String    @map("voice_name")
+  pitch        Float     @default(1.0)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  story        Story     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  // messages  Message[] // Reserved for P04
+
+  @@index([storyId])
+  @@map("characters")
 }

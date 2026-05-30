@@ -3,6 +3,8 @@ import { FirebaseAdminProvider, FIREBASE_ADMIN } from './firebase-admin.provider
 import { FirestoreService } from './firestore.service';
 import { StorageService } from './storage.service';
 
+export { FIREBASE_ADMIN };
+
 @Global()
 @Module({
   providers: [FirebaseAdminProvider, FirestoreService, StorageService],
