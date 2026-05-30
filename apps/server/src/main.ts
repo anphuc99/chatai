@@ -13,7 +13,7 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
-  await app.register(multipart);
+  await app.register(multipart as any);
 
   app.useLogger(app.get(Logger));
 
