@@ -1,7 +1,8 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import { FIREBASE_ADMIN } from './firebase-admin.provider';
+import { FIREBASE_ADMIN } from '../../shared/firebase/firebase.module';
+import { FirestoreService } from '../../shared/firebase/firestore.service';
 import { AppException, ERR } from '../../shared/errors/app-exception';
 import { UserDto } from './dto/user-response.dto';
 
@@ -12,6 +13,7 @@ export class AuthService {
   constructor(
     @Inject(FIREBASE_ADMIN) private readonly firebaseAdmin: admin.app.App,
     private readonly prisma: PrismaService,
+    private readonly firestore: FirestoreService,
   ) {}
 
   async verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken> {
@@ -39,21 +41,41 @@ export class AuthService {
         update: {},
       });
 
+      let existingDoc = await this.firestore.getUserDoc(uid);
+      if (!existingDoc) {
+        await this.firestore.createUserDoc(uid, {
+          email: decoded.email ?? '',
+          displayName: decoded.name ?? '',
+          photoURL: decoded.picture ?? '',
+          hskLevel: 'HSK1',
+          preferences: {
+            narratorLanguage: 'vi',
+            showPinyin: true,
+            ttsSpeed: 1.0,
+          },
+          gems: 0,
+          currentStreak: 0,
+          highestStreak: 0,
+          streakFreezeCount: 0,
+        });
+        existingDoc = await this.firestore.getUserDoc(uid);
+      }
+
+      if (!existingDoc) {
+        throw new AppException(ERR.INTERNAL_ERROR as string, 'Không thể khởi tạo user doc trong Firestore');
+      }
+
       const userDto: UserDto = {
         uid,
-        email: decoded.email ?? '',
-        displayName: decoded.name ?? '',
-        photoURL: decoded.picture ?? '',
-        hskLevel: 'HSK1',
-        preferences: {
-          narratorLanguage: 'vi',
-          showPinyin: true,
-          ttsSpeed: 1.0,
-        },
-        gems: 0,
-        currentStreak: 0,
-        highestStreak: 0,
-        streakFreezeCount: 0,
+        email: existingDoc.email,
+        displayName: existingDoc.displayName,
+        photoURL: existingDoc.photoURL,
+        hskLevel: existingDoc.hskLevel,
+        preferences: existingDoc.preferences,
+        gems: existingDoc.gems,
+        currentStreak: existingDoc.currentStreak,
+        highestStreak: existingDoc.highestStreak,
+        streakFreezeCount: existingDoc.streakFreezeCount,
         tutorialStep: row.tutorialStep,
       };
 
@@ -73,3 +95,4 @@ export class AuthService {
     }
   }
 }
+

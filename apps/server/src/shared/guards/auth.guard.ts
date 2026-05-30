@@ -3,7 +3,7 @@ import { Reflector } from '@nestjs/core';
 import * as admin from 'firebase-admin';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { AppException, ERR } from '../errors/app-exception';
-import { FIREBASE_ADMIN } from '../../modules/auth/firebase-admin.provider';
+import { FIREBASE_ADMIN } from '../firebase/firebase.module';
 import { AuthUser } from '../types/auth-user';
 
 @Injectable()

@@ -12,6 +12,8 @@ import { TraceInterceptor } from './shared/tracing/trace.interceptor';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuthGuard } from './shared/guards/auth.guard';
+import { FirebaseModule } from './shared/firebase/firebase.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -25,7 +27,10 @@ import { AuthGuard } from './shared/guards/auth.guard';
     RedisModule,
     HealthModule,
     AuthModule,
+    FirebaseModule,
+    UsersModule,
   ],
+
   providers: [
     TraceContextService,
     {

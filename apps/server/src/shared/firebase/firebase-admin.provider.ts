@@ -20,7 +20,6 @@ export const FirebaseAdminProvider: Provider = {
       const saJson = JSON.parse(fs.readFileSync(saPath, 'utf8'));
       credential = admin.credential.cert(saJson);
     } else {
-      // If no file exists, we might be in emulator mode or we let it use default application credentials
       credential = admin.credential.applicationDefault();
     }
 

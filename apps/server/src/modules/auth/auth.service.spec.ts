@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
-import { FIREBASE_ADMIN } from './firebase-admin.provider';
+import { FIREBASE_ADMIN } from '../../shared/firebase/firebase.module';
+import { FirestoreService } from '../../shared/firebase/firestore.service';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { AppException, ERR } from '../../shared/errors/app-exception';
 
@@ -8,6 +9,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let firebaseAdminMock: any;
   let prismaMock: any;
+  let firestoreMock: any;
 
   beforeEach(async () => {
     firebaseAdminMock = {
@@ -23,6 +25,11 @@ describe('AuthService', () => {
       },
     };
 
+    firestoreMock = {
+      getUserDoc: jest.fn(),
+      createUserDoc: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -33,6 +40,10 @@ describe('AuthService', () => {
         {
           provide: PrismaService,
           useValue: prismaMock,
+        },
+        {
+          provide: FirestoreService,
+          useValue: firestoreMock,
         },
       ],
     }).compile();
@@ -75,9 +86,23 @@ describe('AuthService', () => {
   });
 
   describe('upsertUser', () => {
-    it('upsertUser creates row when none', async () => {
-      const decodedMock = { uid: 'uid123', email: 'test@abc.com', name: 'Test' };
+    it('upsertUser creates row and firestore doc when none exist', async () => {
+      const decodedMock = { uid: 'uid123', email: 'test@abc.com', name: 'Test', picture: 'pic' };
       prismaMock.usersMeta.upsert.mockResolvedValue({ userId: 'uid123', tutorialStep: 0 });
+      
+      firestoreMock.getUserDoc
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          email: 'test@abc.com',
+          displayName: 'Test',
+          photoURL: 'pic',
+          hskLevel: 'HSK1',
+          preferences: { narratorLanguage: 'vi', showPinyin: true, ttsSpeed: 1.0 },
+          gems: 0,
+          currentStreak: 0,
+          highestStreak: 0,
+          streakFreezeCount: 0,
+        });
 
       const result = await service.upsertUser(decodedMock as any);
       expect(prismaMock.usersMeta.upsert).toHaveBeenCalledWith({
@@ -85,9 +110,50 @@ describe('AuthService', () => {
         create: { userId: 'uid123', tutorialStep: 0 },
         update: {},
       });
+      expect(firestoreMock.createUserDoc).toHaveBeenCalledWith('uid123', {
+        email: 'test@abc.com',
+        displayName: 'Test',
+        photoURL: 'pic',
+        hskLevel: 'HSK1',
+        preferences: { narratorLanguage: 'vi', showPinyin: true, ttsSpeed: 1.0 },
+        gems: 0,
+        currentStreak: 0,
+        highestStreak: 0,
+        streakFreezeCount: 0,
+      });
       expect(result.uid).toBe('uid123');
       expect(result.email).toBe('test@abc.com');
       expect(result.displayName).toBe('Test');
+      expect(result.tutorialStep).toBe(0);
+    });
+
+    it('upsertUser reads from firestore doc when exists', async () => {
+      const decodedMock = { uid: 'uid123', email: 'test@abc.com', name: 'Test', picture: 'pic' };
+      prismaMock.usersMeta.upsert.mockResolvedValue({ userId: 'uid123', tutorialStep: 0 });
+      
+      const firestoreUser = {
+        email: 'existing@abc.com',
+        displayName: 'Existing Name',
+        photoURL: 'existing_pic',
+        hskLevel: 'HSK2',
+        preferences: { narratorLanguage: 'en', showPinyin: false, ttsSpeed: 1.1 },
+        gems: 10,
+        currentStreak: 2,
+        highestStreak: 5,
+        streakFreezeCount: 1,
+      };
+      
+      firestoreMock.getUserDoc.mockResolvedValue(firestoreUser);
+
+      const result = await service.upsertUser(decodedMock as any);
+      expect(firestoreMock.createUserDoc).not.toHaveBeenCalled();
+      expect(result.uid).toBe('uid123');
+      expect(result.email).toBe('existing@abc.com');
+      expect(result.displayName).toBe('Existing Name');
+      expect(result.photoURL).toBe('existing_pic');
+      expect(result.hskLevel).toBe('HSK2');
+      expect(result.preferences.narratorLanguage).toBe('en');
+      expect(result.gems).toBe(10);
       expect(result.tutorialStep).toBe(0);
     });
   });
@@ -100,3 +166,4 @@ describe('AuthService', () => {
     });
   });
 });
+

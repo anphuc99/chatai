@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
+import multipart from '@fastify/multipart';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -12,7 +13,10 @@ async function bootstrap() {
     { bufferLogs: true },
   );
 
+  await app.register(multipart);
+
   app.useLogger(app.get(Logger));
+
 
   app.setGlobalPrefix('api/v1', { exclude: ['healthz'] });
 
