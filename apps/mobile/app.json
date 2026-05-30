@@ -18,6 +18,9 @@
     "android": {
       "package": "com.chatai.app"
     },
-    "plugins": []
+    "plugins": [
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin"
+    ]
   }
 }
