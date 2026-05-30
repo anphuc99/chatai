@@ -1,6 +1,7 @@
 import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { UpdateStoryDto as IUpdateStoryDto } from '@chatai/shared-types';
 
-export class UpdateStoryDto {
+export class UpdateStoryDto implements IUpdateStoryDto {
   @IsOptional()
   @IsString({ message: 'Tiêu đề phải là chuỗi ký tự' })
   @MaxLength(100, { message: 'Tiêu đề không được vượt quá 100 ký tự' })

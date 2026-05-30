@@ -1,7 +1,8 @@
 import { IsString, IsOptional, IsInt, Min, Max, IsIn, IsNumber } from 'class-validator';
+import { UpdateCharacterDto as IUpdateCharacterDto } from '@chatai/shared-types';
 import { VOICES, VoiceName } from '../voice.constants';
 
-export class UpdateCharacterDto {
+export class UpdateCharacterDto implements IUpdateCharacterDto {
   @IsOptional()
   @IsString()
   name?: string;

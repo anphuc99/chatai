@@ -1,13 +1,7 @@
-export type Gender = 'male' | 'female' | 'neutral';
+import { VoiceName } from '@chatai/shared-types';
+export type { VoiceName };
 
-export type VoiceName =
-  | 'Achernar'
-  | 'Aoede'
-  | 'Charon'
-  | 'Fenrir'
-  | 'Kore'
-  | 'Leda'
-  | 'Zephyr';
+export type Gender = 'male' | 'female' | 'neutral';
 
 export interface VoiceMeta {
   name: VoiceName;

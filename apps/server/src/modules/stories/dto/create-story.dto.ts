@@ -1,6 +1,7 @@
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { CreateStoryDto as ICreateStoryDto } from '@chatai/shared-types';
 
-export class CreateStoryDto {
+export class CreateStoryDto implements ICreateStoryDto {
   @IsString({ message: 'Tiêu đề phải là chuỗi ký tự' })
   @IsNotEmpty({ message: 'Tiêu đề không được để trống' })
   @MaxLength(100, { message: 'Tiêu đề không được vượt quá 100 ký tự' })

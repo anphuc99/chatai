@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { VOICES, VoiceName } from '../constants/voices';
+import { VOICES, VoiceName } from '@chatai/shared-types';
 
-const voiceNames = VOICES.map((v) => v.name) as [VoiceName, ...VoiceName[]];
+const voiceNames = VOICES as unknown as [VoiceName, ...VoiceName[]];
 
 export const createCharacterSchema = z.object({
   name: z

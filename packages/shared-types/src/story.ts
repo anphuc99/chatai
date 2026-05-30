@@ -9,3 +9,10 @@ export type StoryDto = {
   createdAt: string; // ISO string
   updatedAt: string; // ISO string;
 };
+
+export type CreateStoryDto = {
+  title: string;
+  initialSetting: string;
+};
+
+export type UpdateStoryDto = Partial<CreateStoryDto>;

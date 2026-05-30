@@ -1,7 +1,8 @@
 import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsIn, IsNumber } from 'class-validator';
+import { CreateCharacterDto as ICreateCharacterDto } from '@chatai/shared-types';
 import { VOICES, VoiceName } from '../voice.constants';
 
-export class CreateCharacterDto {
+export class CreateCharacterDto implements ICreateCharacterDto {
   @IsString()
   @IsNotEmpty()
   name!: string;
