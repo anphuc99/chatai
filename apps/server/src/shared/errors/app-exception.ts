@@ -20,7 +20,7 @@ interface ErrorMeta {
   defaultMessage: string;
 }
 
-const REGISTRY: Record<string, ErrorMeta> = {
+const REGISTRY = {
   INVALID_TOKEN: { status: HttpStatus.UNAUTHORIZED, defaultMessage: 'Token không hợp lệ' },
   USER_DISABLED: { status: HttpStatus.FORBIDDEN, defaultMessage: 'Tài khoản đã bị vô hiệu hoá' },
   NOT_FOUND: { status: HttpStatus.NOT_FOUND, defaultMessage: 'Không tìm thấy' },
@@ -69,10 +69,10 @@ const REGISTRY: Record<string, ErrorMeta> = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     defaultMessage: 'Lỗi máy chủ',
   },
-};
+} satisfies Record<string, ErrorMeta>;
 
 export function getMeta(code: string): ErrorMeta {
-  const meta = REGISTRY[code];
+  const meta = (REGISTRY as Record<string, ErrorMeta>)[code];
   if (!meta) {
     return { status: HttpStatus.INTERNAL_SERVER_ERROR, defaultMessage: 'Unknown error' };
   }
@@ -81,4 +81,4 @@ export function getMeta(code: string): ErrorMeta {
 
 export const ERR = Object.fromEntries(
   Object.keys(REGISTRY).map((k) => [k, k]),
-) as Record<keyof typeof REGISTRY, string>;
+) as { readonly [K in keyof typeof REGISTRY]: K };

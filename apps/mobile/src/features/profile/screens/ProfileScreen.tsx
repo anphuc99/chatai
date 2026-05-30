@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   card: {
-    backgroundColor: theme.colors.card || '#FFFFFF',
+    backgroundColor: theme.colors.surface || '#FFFFFF',
     borderRadius: theme.radius.lg,
     padding: theme.spacing.xl,
     marginBottom: theme.spacing.xl,
