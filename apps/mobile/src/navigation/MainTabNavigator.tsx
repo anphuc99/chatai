@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { MainTabParamList } from './types';
 import { HomeScreen } from '../features/home/screens/HomeScreen';
-import { StoryListScreen } from '../features/story/screens/StoryListScreen';
+import { StoryStack } from './StoryStack';
 import { JournalListScreen } from '../features/journal/screens/JournalListScreen';
 import { ProfileScreen } from '../features/profile/screens/ProfileScreen';
 import { theme } from '../theme';
@@ -72,7 +72,7 @@ export function MainTabNavigator() {
       />
       <Tab.Screen 
         name="Stories" 
-        component={StoryListScreen} 
+        component={StoryStack} 
         options={{ title: 'Truyện AI' }}
       />
       <Tab.Screen 
