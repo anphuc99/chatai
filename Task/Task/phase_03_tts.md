@@ -7,7 +7,7 @@
 
 ## P3.T1 — GPT-SoVITS Python Wrapper (tts-engine)
 
-**Status**: `[ ]`  
+**Status**: `[REJECTED]` — Dùng trực tiếp `api_v2.py` của GPT-SoVITS (port 9872), không cần wrapper.  
 **Depends on**: P2.T6 (Phase 2 hoàn thành)
 
 **Mô tả chi tiết**:
@@ -79,7 +79,7 @@
 
 ## P3.T2 — Server: TtsModule — ReferenceIndexManager + CacheHash
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P3.T1
 
 **Mô tả chi tiết**:
@@ -137,7 +137,7 @@
 
 ## P3.T3 — Server: TTS Controller Endpoints
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P3.T2
 
 **Mô tả chi tiết**:
@@ -189,7 +189,7 @@
 
 ## P3.T4 — Client: TtsService + Wire "Nghe thử" ở CharacterEditor
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P3.T3, P2.T5
 
 **Mô tả chi tiết**:
@@ -229,7 +229,7 @@
 
 ## P3.T5 — Firebase Storage Rules cho TTS Audio
 
-**Status**: `[ ]`  
+**Status**: `[x]` ✅ DONE  
 **Depends on**: P3.T2
 
 **Mô tả chi tiết**:

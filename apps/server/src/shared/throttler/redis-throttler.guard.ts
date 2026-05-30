@@ -52,8 +52,8 @@ export class RedisThrottlerGuard implements CanActivate {
       if (error instanceof AppException) {
         throw error;
       }
-      this.logger.error(`Failed to execute rate limit guard: ${error instanceof Error ? error.message : String(error)}`);
-      // Fail-open to avoid service downtime if Redis fails
+      // Fail-open: nếu Redis down, bỏ qua rate limit để tránh service outage hoàn toàn
+      this.logger.error(`Rate limit guard failed: ${error instanceof Error ? error.message : String(error)}`);
       return true;
     }
   }

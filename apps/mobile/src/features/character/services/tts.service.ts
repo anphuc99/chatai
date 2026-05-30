@@ -4,9 +4,7 @@ import { apiClient } from '../../../api/client';
 let currentSound: Audio.Sound | null = null;
 
 export const ttsClientService = {
-  /**
-   * Gọi API nghe thử giọng nói từ Server
-   */
+
   async testVoice(voiceName: string, pitch: number, sampleText?: string): Promise<string> {
     try {
       const response = await apiClient.post<{ audioUrl: string }>('/tts/test-voice', {
@@ -21,9 +19,7 @@ export const ttsClientService = {
     }
   },
 
-  /**
-   * Tải và phát âm thanh từ URL
-   */
+
   async playUrl(url: string): Promise<Audio.Sound> {
     // 1. Nếu có âm thanh đang phát, hãy dừng nó trước
     await this.stop();
@@ -57,9 +53,7 @@ export const ttsClientService = {
     return sound;
   },
 
-  /**
-   * Dừng và giải phóng tài nguyên âm thanh hiện tại
-   */
+
   async stop(): Promise<void> {
     if (currentSound) {
       try {

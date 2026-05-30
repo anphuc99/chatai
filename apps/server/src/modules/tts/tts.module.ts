@@ -19,5 +19,4 @@ import { TtsController } from './tts.controller';
   exports: [TtsService],
 })
 export class TtsModule {}
-// Force IDE re-index
 

@@ -28,7 +28,7 @@ describe('TtsService', () => {
     const mockStorage = {
       exists: jest.fn(),
       uploadTtsAudio: jest.fn(),
-      getPublicUrl: jest.fn(),
+      getSignedUrl: jest.fn(),
     };
     const mockRedis = {
       acquireLock: jest.fn(),
@@ -82,7 +82,7 @@ describe('TtsService', () => {
 
     it('should return cached URL directly on cache hit', async () => {
       storage.exists.mockResolvedValue(true);
-      storage.getPublicUrl.mockReturnValue('https://storage/cached.wav');
+      storage.getSignedUrl.mockResolvedValue('https://storage/cached.wav');
 
       const result = await service.synthesize(defaultReq);
 
@@ -98,9 +98,9 @@ describe('TtsService', () => {
       redis.acquireLock.mockResolvedValue({ key: 'lockKey', token: 'token' });
       sovits.infer.mockResolvedValue(Buffer.from('raw_audio'));
       storage.uploadTtsAudio.mockResolvedValue({
-        publicUrl: 'https://storage/new.wav',
         storagePath: 'tts_audio/hash.wav',
       });
+      storage.getSignedUrl.mockResolvedValue('https://storage/new.wav');
 
       const result = await service.synthesize(defaultReq);
 
@@ -119,9 +119,9 @@ describe('TtsService', () => {
       sovits.infer.mockResolvedValue(Buffer.from('raw_audio'));
       ffmpeg.adjustPitch.mockResolvedValue(Buffer.from('pitched_audio'));
       storage.uploadTtsAudio.mockResolvedValue({
-        publicUrl: 'https://storage/pitched.wav',
         storagePath: 'tts_audio/hash.wav',
       });
+      storage.getSignedUrl.mockResolvedValue('https://storage/pitched.wav');
 
       const result = await service.synthesize(pitchReq);
 
@@ -133,7 +133,7 @@ describe('TtsService', () => {
       storage.exists.mockResolvedValueOnce(false);
       redis.acquireLock.mockResolvedValueOnce(null);
       storage.exists.mockResolvedValueOnce(true);
-      storage.getPublicUrl.mockReturnValue('https://storage/resolved_by_other.wav');
+      storage.getSignedUrl.mockResolvedValue('https://storage/resolved_by_other.wav');
 
       const result = await service.synthesize(defaultReq);
 

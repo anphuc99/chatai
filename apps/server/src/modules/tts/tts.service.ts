@@ -25,6 +25,7 @@ export interface SynthResult {
 @Injectable()
 export class TtsService {
   private readonly logger = new Logger(TtsService.name);
+  private readonly TTS_SIGNED_URL_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
   constructor(
     private readonly refIndex: ReferenceIndexManager,
@@ -58,7 +59,7 @@ export class TtsService {
 
     while (!lock && retryCount < 3) {
       this.logger.log(`TTS request is locked by another caller. Waiting 1s... (Retry ${retryCount + 1}/3)`);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await this.sleep(1000);
       
       // Check cache again after wait
       const afterWaitCached = await this.checkCache(hash);
@@ -95,9 +96,9 @@ export class TtsService {
       }
 
       // Upload and cache
-      const { publicUrl } = await this.storage.uploadTtsAudio(hash, audioBuf);
+      const url = await this.uploadAndCache(hash, audioBuf);
 
-      return { url: publicUrl, fromCache: false, cacheHash: hash };
+      return { url, fromCache: false, cacheHash: hash };
     } finally {
       await this.redis.releaseLock(lockKey, lock.token);
     }
@@ -127,6 +128,15 @@ export class TtsService {
     if (!exists) {
       return null;
     }
-    return this.storage.getPublicUrl(path);
+    return this.storage.getSignedUrl(path, this.TTS_SIGNED_URL_TTL_MS);
+  }
+
+  private async uploadAndCache(hash: string, buffer: Buffer): Promise<string> {
+    await this.storage.uploadTtsAudio(hash, buffer);
+    return this.storage.getSignedUrl(`tts_audio/${hash}.wav`, this.TTS_SIGNED_URL_TTL_MS);
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

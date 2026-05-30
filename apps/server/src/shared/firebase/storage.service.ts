@@ -8,6 +8,10 @@ export interface AvatarUrls {
   storagePath: string;
 }
 
+export interface StorageUploadResult {
+  storagePath: string;
+}
+
 @Injectable()
 export class StorageService {
   private readonly bucket: Bucket;
@@ -56,9 +60,9 @@ export class StorageService {
     return url;
   }
 
-  async uploadTtsAudio(cacheHash: string, buffer: Buffer): Promise<AvatarUrls> {
-    const path = `tts_audio/${cacheHash}.wav`;
-    const file = this.bucket.file(path);
+  async uploadTtsAudio(cacheHash: string, buffer: Buffer): Promise<StorageUploadResult> {
+    const storagePath = `tts_audio/${cacheHash}.wav`;
+    const file = this.bucket.file(storagePath);
 
     await file.save(buffer, {
       contentType: 'audio/wav',
@@ -68,14 +72,7 @@ export class StorageService {
       },
     });
 
-    try {
-      await file.makePublic();
-    } catch (error) {
-      // Ignore if uniform bucket-level access prevents updating ACLs
-    }
-
-    const publicUrl = `https://storage.googleapis.com/${this.bucket.name}/${path}`;
-    return { publicUrl, storagePath: path };
+    return { storagePath };
   }
 
   async exists(path: string): Promise<boolean> {

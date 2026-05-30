@@ -11,19 +11,27 @@ export interface RefPick {
   refText: string;
 }
 
+interface ReferenceIndexEntry {
+  voice: string;
+  emotion: string;
+  intensity: string;
+  file: string;
+  text?: string;
+}
+
 @Injectable()
 export class ReferenceIndexManager implements OnModuleInit {
   private readonly logger = new Logger(ReferenceIndexManager.name);
   private datasetRoot = '';
   private index: Record<string, Record<string, Record<string, string[]>>> = {};
-  private sourceIndex: any[] = [];
+  private sourceIndex: ReferenceIndexEntry[] = [];
 
   constructor(private readonly config: ConfigService) {}
 
   async onModuleInit() {
     this.datasetRoot = this.config.get<string>('ttsDatasetAbsPath') || '';
     
-    let loadedIndex: any[] = [];
+    let loadedIndex: ReferenceIndexEntry[] = [];
     if (this.datasetRoot) {
       const indexFilePath = path.join(this.datasetRoot, 'reference_index.json');
       if (fs.existsSync(indexFilePath)) {
@@ -42,7 +50,7 @@ export class ReferenceIndexManager implements OnModuleInit {
     }
 
     if (loadedIndex.length === 0) {
-      loadedIndex = referenceIndex as any[];
+      loadedIndex = referenceIndex as ReferenceIndexEntry[];
       this.logger.log(`Using static fallback reference index from @chatai/prompts`);
     }
 
@@ -50,7 +58,7 @@ export class ReferenceIndexManager implements OnModuleInit {
     this.logger.log(`Loaded voices reference index. Voice count: ${Object.keys(this.index).length}`);
   }
 
-  private buildIndex(sourceIndex: any[]) {
+  private buildIndex(sourceIndex: ReferenceIndexEntry[]) {
     this.sourceIndex = sourceIndex;
     this.index = {};
     for (const item of sourceIndex) {
@@ -81,10 +89,7 @@ export class ReferenceIndexManager implements OnModuleInit {
     if (!emoBlock) {
       const keys = Object.keys(voiceBlock);
       if (keys.length > 0) {
-        const firstKey = keys[0];
-        if (firstKey) {
-          emoBlock = voiceBlock[firstKey];
-        }
+        emoBlock = voiceBlock[keys[0]!];
       }
     }
 

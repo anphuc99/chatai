@@ -64,11 +64,10 @@ describe('TtsController', () => {
         intensity: 'medium',
         pitch: 1.0,
       };
-      const user = { uid: 'user123', email: 'test@example.com' };
       const mockResult = { url: 'http://audio.wav', fromCache: true, cacheHash: 'hash123' };
       ttsService.synthesize.mockResolvedValue(mockResult);
 
-      const result = await controller.synthesize(user, dto);
+      const result = await controller.synthesize(dto);
 
       expect(ttsService.synthesize).toHaveBeenCalledWith(dto);
       expect(result).toEqual({ audioUrl: 'http://audio.wav', cached: true });
@@ -82,11 +81,10 @@ describe('TtsController', () => {
         pitch: 1.2,
         sampleText: 'Thử nghiệm giọng',
       };
-      const user = { uid: 'user123', email: 'test@example.com' };
       const mockResult = { url: 'http://test-audio.wav', fromCache: false, cacheHash: 'hash456' };
       ttsService.testVoice.mockResolvedValue(mockResult);
 
-      const result = await controller.testVoice(user, dto);
+      const result = await controller.testVoice(dto);
 
       expect(ttsService.testVoice).toHaveBeenCalledWith('Kore', 1.2, 'Thử nghiệm giọng');
       expect(result).toEqual({ audioUrl: 'http://test-audio.wav' });

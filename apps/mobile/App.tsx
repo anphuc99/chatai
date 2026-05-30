@@ -15,7 +15,7 @@ export default function App() {
     useAuthStore.getState().hydrate();
 
     // Khởi tạo Audio Mode
-    initAudioMode();
+    initAudioMode().catch((e) => console.error('[App] Audio init failed', e));
   }, []);
 
   return (
