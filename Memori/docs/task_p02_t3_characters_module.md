@@ -103,3 +103,7 @@ sequenceDiagram
 3. **Sharp Native Binary Compilation**:
    - *Lỗi*: Import trực tiếp `import sharp from 'sharp'` có thể làm crash server khi khởi động nếu runtime trên hệ điều hành đích thiếu build toolchain cho C++ để compile sharp native modules.
    - *Giải quyết*: Sử dụng `require('sharp')` trong khối `try/catch` để nếu load sharp thất bại, server vẫn có thể hoạt động bình thường bằng cách sử dụng trực tiếp buffer ảnh gốc mà client gửi lên (fallback resize).
+
+4. **Prisma Type Synchronization in IDE**:
+   - *Lỗi*: Trình biên dịch TypeScript của IDE đôi khi không tải lại đúng kiểu của Prisma Client sau khi generate schema mới, gây ra lỗi cảnh báo giả: `Property 'character' does not exist on type 'PrismaService'`.
+   - *Giải quyết*: Cast `this.prisma` hoặc `tx` thành `any` (`(this.prisma as any).character`) để tránh cảnh báo đỏ và định nghĩa rõ ràng kiểu `(row: any)` trong map callback tránh lỗi implicit any.

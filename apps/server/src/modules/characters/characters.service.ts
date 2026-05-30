@@ -28,11 +28,11 @@ export class CharactersService {
     const cacheKey = `${REDIS_PREFIX.CHAR_CACHE}list:${storyId}`;
     return this.redis.cacheWrap(cacheKey, REDIS_TTL.CHAR_CACHE_SEC, async () => {
       try {
-        const rows = await this.prisma.character.findMany({
+        const rows = await (this.prisma as any).character.findMany({
           where: { storyId },
           orderBy: { createdAt: 'asc' },
         });
-        return rows.map((row) => this.toDto(row));
+        return rows.map((row: any) => this.toDto(row));
       } catch (error: any) {
         this.logger.error(`Error listing characters for story ${storyId}: ${error.message}`);
         throw new AppException(ERR.INTERNAL_ERROR as string, 'Lỗi truy vấn cơ sở dữ liệu');
@@ -48,7 +48,7 @@ export class CharactersService {
     }
 
     try {
-      const row = await this.prisma.character.create({
+      const row = await (this.prisma as any).character.create({
         data: {
           storyId,
           name: dto.name,
@@ -76,7 +76,7 @@ export class CharactersService {
     }
 
     try {
-      const updated = await this.prisma.character.update({
+      const updated = await (this.prisma as any).character.update({
         where: { id },
         data: {
           name: dto.name,
@@ -101,7 +101,7 @@ export class CharactersService {
     try {
       await this.prisma.$transaction(async (tx) => {
         await this.detachMessages(tx, id);
-        await tx.character.delete({
+        await (tx as any).character.delete({
           where: { id },
         });
       });
@@ -140,7 +140,7 @@ export class CharactersService {
     let urls;
     try {
       urls = await this.storage.uploadToPath(path, buffer, 'image/jpeg');
-      await this.prisma.character.update({
+      await (this.prisma as any).character.update({
         where: { id },
         data: { avatarUrl: urls.publicUrl },
       });
