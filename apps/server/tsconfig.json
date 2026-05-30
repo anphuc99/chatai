@@ -4,7 +4,6 @@
     "module": "Node16",
     "moduleResolution": "node16",
     "outDir": "./dist",
-    "rootDir": "./src",
     "target": "ES2022",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

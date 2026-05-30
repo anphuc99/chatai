@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_FILTER, APP_INTERCEPTOR, APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation.schema';
 import { HealthModule } from './modules/health/health.module';
@@ -10,6 +10,8 @@ import { LoggerModule } from './shared/logger/logger.module';
 import { TraceContextService } from './shared/tracing/trace-context.service';
 import { TraceInterceptor } from './shared/tracing/trace.interceptor';
 import { GlobalExceptionFilter } from './shared/filters/global-exception.filter';
+import { AuthModule } from './modules/auth/auth.module';
+import { AuthGuard } from './shared/guards/auth.guard';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { GlobalExceptionFilter } from './shared/filters/global-exception.filter'
     PrismaModule,
     RedisModule,
     HealthModule,
+    AuthModule,
   ],
   providers: [
     TraceContextService,
@@ -32,6 +35,10 @@ import { GlobalExceptionFilter } from './shared/filters/global-exception.filter'
     {
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
   ],
 })

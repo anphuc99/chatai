@@ -14,8 +14,9 @@ Sau khi tính năng đã chạy ổn định và được người dùng chấp 
 - Bạn **PHẢI** tạo một file markdown mới trong thư mục `Memori/docs/` (ví dụ: `Memori/docs/task_login_api.md`).
 - Nội dung file bao gồm:
   1. Mô tả ngắn gọn tính năng vừa làm.
-  2. Biểu đồ Mermaid cho Data Flow hoặc Class Diagram (nếu có).
-  3. **Lưu ý quan trọng**: Những lỗi đã gặp trong quá trình làm (gotchas, bugs) và cách giải quyết.
+  2. Viết rõ ràng chi tiết tính năng từng hàm.
+  3. Biểu đồ Mermaid cho Data Flow hoặc Class Diagram (nếu có).
+  4. **Lưu ý quan trọng**: Những lỗi đã gặp trong quá trình làm (gotchas, bugs) và cách giải quyết.
 - Sau khi tạo file, thông báo cho người dùng hoặc tự động chạy lệnh `npm run memori:sync` để cập nhật dữ liệu vào VectorDB.
 
 Tuân thủ nghiêm ngặt quy trình này sẽ giúp dự án bền vững.
