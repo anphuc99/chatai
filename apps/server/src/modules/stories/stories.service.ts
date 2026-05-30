@@ -52,7 +52,8 @@ export class StoriesService {
 
       const hasMore = rows.length > limit;
       const items = (hasMore ? rows.slice(0, limit) : rows).map((row) => this.toDto(row));
-      const nextCursor = hasMore ? items[items.length - 1].id : undefined;
+      const lastItem = items[items.length - 1];
+      const nextCursor = hasMore && lastItem ? lastItem.id : undefined;
 
       return { items, nextCursor };
     } catch (error: any) {
