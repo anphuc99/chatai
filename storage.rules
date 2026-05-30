@@ -1,18 +1,25 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    // Cho phép user đã đăng nhập đọc file audio của chính họ
-    match /tts_audio/{userId}/{file=**} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow write: if false;
-    }
-    
-    // Bất kỳ user đã đăng nhập nào cũng đọc được avatar của người khác, nhưng chỉ chủ sở hữu được ghi và phải giới hạn size/type
-    match /avatars/{userId}/{file=**} {
+
+    // Avatars: user A → mình A
+    match /avatars/{uid}/{file=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId
+      allow write: if request.auth != null && request.auth.uid == uid
         && request.resource.size < 2 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
+    }
+
+    // Character avatars: chỉ server upload (Admin SDK bypass)
+    match /characters/{charId}/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // TTS audio: cache server-side; client chỉ read
+    match /tts_audio/{file=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
     }
   }
 }

@@ -231,7 +231,7 @@ async function indexDocuments() {
     entries: finalEntries,
   };
 
-  writeFileSync(VECTORS_FILE, JSON.stringify(vectorDB, null, 2), 'utf-8');
+  writeFileSync(VECTORS_FILE, JSON.stringify(vectorDB), 'utf-8');
 
   console.log(`\n🎉 Đã cập nhật chỉ mục (Incremental Sync) thành công!`);
   console.log(`   📁 Tổng cộng: ${currentFiles.size} file(s) → ${finalEntries.length} chunk(s)`);
