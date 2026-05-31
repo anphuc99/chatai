@@ -41,6 +41,10 @@ const REGISTRY = {
     status: HttpStatus.SERVICE_UNAVAILABLE,
     defaultMessage: 'LLM tạm không khả dụng',
   },
+  LLM_TIMEOUT: {
+    status: HttpStatus.GATEWAY_TIMEOUT,
+    defaultMessage: 'LLM phản hồi quá thời gian quy định',
+  },
   TTS_ENGINE_DOWN: {
     status: HttpStatus.SERVICE_UNAVAILABLE,
     defaultMessage: 'TTS engine tạm không khả dụng',
