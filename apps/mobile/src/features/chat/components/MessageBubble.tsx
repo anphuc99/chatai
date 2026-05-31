@@ -34,7 +34,7 @@ export function MessageBubble({ msg, avatarUrl }: MessageBubbleProps) {
         </View>
       );
 
-    case 'assistant':
+    case 'assistant': {
       const hasWords = msg.words && msg.words.length > 0;
       return (
         <View style={styles.assistantContainer}>
@@ -119,6 +119,7 @@ export function MessageBubble({ msg, avatarUrl }: MessageBubbleProps) {
           </View>
         </View>
       );
+    }
 
     case 'persistent_ooc':
       return (

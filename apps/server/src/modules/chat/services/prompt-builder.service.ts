@@ -126,6 +126,14 @@ export class PromptBuilderService implements OnModuleInit {
           });
           break;
         }
+        case 'character_toggle': {
+          const action = (entry.data as any).on ? 'vừa xuất hiện' : 'vừa rời khỏi cảnh';
+          messages.push({
+            role: 'system',
+            content: `[Thông báo: ${(entry.data as any).name} ${action}]`,
+          });
+          break;
+        }
         case 'persistent_ooc':
         case 'ephemeral_ooc':
         case 'system':

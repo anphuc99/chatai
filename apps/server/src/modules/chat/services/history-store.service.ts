@@ -167,9 +167,7 @@ export class HistoryStoreService implements OnModuleInit {
           this.logger.error(`Failed to delete history file for session: ${sid}`, error);
           throw error;
         }
-      }
     });
-    this.writeLocks.delete(sid);
   }
 
   /**

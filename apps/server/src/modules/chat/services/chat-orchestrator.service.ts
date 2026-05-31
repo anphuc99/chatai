@@ -10,8 +10,9 @@ import { HistoryStoreService } from './history-store.service';
 import { OocService } from './ooc.service';
 import { PromptBuilderService } from './prompt-builder.service';
 import { LlmService } from './llm.service';
-import { AssistantBatchSchema } from '../schemas/assistant-batch.schema';
+import { AssistantBatchSchema, AssistantMessage } from '../schemas/assistant-batch.schema';
 import { ChatContext } from '../types/chat-context';
+import { Character, Prisma } from '@prisma/client';
 
 @Injectable()
 export class ChatOrchestratorService {
@@ -60,7 +61,7 @@ export class ChatOrchestratorService {
 
       // 4. Active characters + temporary characters
       const activeCharIds = await this.ooc.getActiveCharacters(ctx.sessionId);
-      const characters = activeCharIds.length > 0
+      const characters: Character[] = activeCharIds.length > 0
         ? await this.prisma.character.findMany({
             where: { id: { in: activeCharIds } },
           })
@@ -85,7 +86,7 @@ export class ChatOrchestratorService {
           initialSetting: story.initialSetting,
           currentProgress: story.currentProgress ?? '',
         },
-        activeCharacters: characters as any,
+        activeCharacters: characters,
         temporaryCharacters: tempChars,
         hskLevel,
         narratorLanguage,
@@ -118,14 +119,12 @@ export class ChatOrchestratorService {
       });
 
       // 10. Persist to DB
-      const startOrder = await this.getNextTurnOrder(ctx.sessionId);
       const insertedAssistantMessages = await this.persistMessages(
         ctx.sessionId,
         userMessage,
         ephemeralOOC,
         llmResp.content,
         characters,
-        startOrder,
       );
 
       // 11. Emit events
@@ -142,7 +141,7 @@ export class ChatOrchestratorService {
       });
 
       // 12. Transform to DTO
-      return this.transformToDto(insertedAssistantMessages);
+      return this.transformToDto(insertedAssistantMessages, llmResp.triggerMemory ?? false);
     } catch (error: any) {
       this.logger.error(`Failed to handle user turn for session ${ctx.sessionId}: ${error.message}`, error.stack);
       throw error;
@@ -165,23 +164,20 @@ export class ChatOrchestratorService {
     });
   }
 
-  private async getNextTurnOrder(sessionId: string): Promise<number> {
-    const max = await this.prisma.message.aggregate({
-      where: { sessionId },
-      _max: { turnOrder: true },
-    });
-    return (max._max.turnOrder ?? 0) + 1;
-  }
-
   private async persistMessages(
     sessionId: string,
     userText: string,
     ephemeralOOC: string | undefined,
-    assistantMsgs: Array<any>,
-    characters: Array<any>,
-    startOrder: number,
-  ) {
+    assistantMsgs: AssistantMessage[],
+    characters: Character[],
+  ): Promise<Prisma.MessageGetPayload<{}>[]> {
     return this.prisma.$transaction(async (tx) => {
+      const maxAgg = await tx.message.aggregate({
+        where: { sessionId },
+        _max: { turnOrder: true },
+      });
+      const startOrder = (maxAgg._max.turnOrder ?? 0) + 1;
+
       // User message
       await tx.message.create({
         data: {
@@ -253,7 +249,7 @@ export class ChatOrchestratorService {
     });
   }
 
-  private transformToDto(records: any[]): AssistantBatchDto {
+  private transformToDto(records: Prisma.MessageGetPayload<{}>[], triggerMemory: boolean): AssistantBatchDto {
     return {
       messages: records.map((r) => ({
         id: r.id,
@@ -263,11 +259,11 @@ export class ChatOrchestratorService {
         translation: r.translation,
         emotion: r.emotion,
         intensity: r.intensity,
-        words: r.words,
-        shopEvent: r.shopEvent,
+        words: r.words as any,
+        shopEvent: r.shopEvent as any,
         timestamp: Number(r.timestamp),
       })),
-      triggerMemory: false,
+      triggerMemory,
     };
   }
 }

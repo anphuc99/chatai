@@ -47,10 +47,15 @@ export class LlmService {
     while (attempt <= this.maxRetries) {
       attempt++;
       if (lastError && attempt > 1) {
-        workingMessages.push({
-          role: 'system',
+        const correctionMsg = {
+          role: 'system' as const,
           content: `Lần trước response KHÔNG hợp lệ JSON schema. Lỗi: ${lastError}. CHỈ trả về JSON đúng schema, không markdown, không text thừa.`,
-        });
+        };
+        const lastIdx = workingMessages.findLastIndex(
+          (m) => m.role === 'system' && m.content.includes('Lần trước response KHÔNG hợp lệ JSON schema')
+        );
+        if (lastIdx >= 0) workingMessages.splice(lastIdx, 1);
+        workingMessages.push(correctionMsg);
       }
 
       let ollamaResp: OllamaResponse;

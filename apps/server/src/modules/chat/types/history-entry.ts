@@ -4,7 +4,8 @@ export type EntryType =
   | 'persistent_ooc'
   | 'ephemeral_ooc'
   | 'checkpoint'
-  | 'system';
+  | 'system'
+  | 'character_toggle';
 
 export interface AssistantMessage {
   characterName: string;
@@ -30,4 +31,5 @@ export type HistoryEntry =
       timestamp: number;
       data: { summary: string; tokensBefore: number; entriesCovered: number };
     }
-  | { type: 'system'; timestamp: number; data: { storyId: string; activeCharacters: string[]; note?: string } };
+  | { type: 'system'; timestamp: number; data: { storyId: string; activeCharacters: string[]; note?: string } }
+  | { type: 'character_toggle'; timestamp: number; data: { characterId: string; name: string; on: boolean } };

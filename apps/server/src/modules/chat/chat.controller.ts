@@ -7,6 +7,8 @@ import {
   UseGuards,
   ParseUUIDPipe,
   ConflictException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ChatSessionService } from './services/chat-session.service';
 import { ChatOrchestratorService } from './services/chat-orchestrator.service';
@@ -87,6 +89,7 @@ export class ChatController {
   }
 
   @Post('sessions/:sid/ooc')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle(30, 60)
   async setOoc(
     @CurrentUser() u: AuthUser,
@@ -109,10 +112,10 @@ export class ChatController {
         data: { text: dto.text },
       });
     }
-    return { status: 'ok' };
   }
 
   @Post('sessions/:sid/character-toggle')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Throttle(30, 60)
   async toggleCharacter(
     @CurrentUser() u: AuthUser,
@@ -139,12 +142,10 @@ export class ChatController {
     }
 
     await this.historyStore.append(sid, {
-      type: 'persistent_ooc',
+      type: 'character_toggle',
       timestamp: Date.now(),
-      data: { text: `[Toggle] ${char.name} ${dto.on ? 'on' : 'off'}` },
+      data: { characterId: dto.characterId, name: char.name, on: dto.on },
     });
-
-    return { status: 'ok' };
   }
 
   @Post('sessions/:sid/temp-character')

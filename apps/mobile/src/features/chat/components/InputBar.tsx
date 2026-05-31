@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { CHAT_LIMITS } from '@chatai/shared-types';
 import { theme } from '../../../theme';
 
 interface InputBarProps {
@@ -52,7 +53,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
             placeholder="Ví dụ: (Mình đang đứng dưới mưa/Có tiếng gõ cửa...)"
             placeholderTextColor={theme.colors.textMuted}
             multiline
-            maxLength={200}
+            maxLength={CHAT_LIMITS.EPHEMERAL_OOC_MAX_LENGTH}
           />
         </View>
       ) : null}
@@ -78,7 +79,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
           placeholder={disabled ? 'Đang chờ phản hồi...' : 'Gõ tin nhắn bằng tiếng Trung...'}
           placeholderTextColor={theme.colors.textMuted}
           multiline
-          maxLength={1000}
+          maxLength={CHAT_LIMITS.USER_MESSAGE_MAX_LENGTH}
           editable={!disabled}
         />
 

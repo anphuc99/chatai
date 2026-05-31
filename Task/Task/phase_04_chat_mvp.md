@@ -7,7 +7,7 @@
 
 ## P4.T1 — Database: Sessions + Messages Tables
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P3.T5 (Phase 3 hoàn thành)
 
 **Mô tả chi tiết**:
@@ -64,7 +64,7 @@
 
 ## P4.T2 — Server: HistoryStoreService (.jsonl Adapter)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T1
 
 **Mô tả chi tiết**:
@@ -123,7 +123,7 @@
 
 ## P4.T3 — Server: OocService (Redis-backed)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T1, P0.T6
 
 **Mô tả chi tiết**:
@@ -179,7 +179,7 @@
 
 ## P4.T4 — Server: PromptBuilder Service
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T3
 
 **Mô tả chi tiết**:
@@ -234,7 +234,7 @@
 
 ## P4.T5 — Server: LlmService (Ollama JSON Mode + Retry)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T4
 
 **Mô tả chi tiết**:
@@ -303,7 +303,7 @@
 
 ## P4.T6 — Server: ChatOrchestrator (handleUserTurn)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T2, P4.T3, P4.T4, P4.T5
 
 **Mô tả chi tiết**:
@@ -386,7 +386,7 @@
 
 ## P4.T7 — Server: ChatController (Endpoints)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T6
 
 **Mô tả chi tiết**:
@@ -465,7 +465,7 @@
 
 ## P4.T8 — Client: ChatStore + ChatRoom Screen (Minimal)
 
-**Status**: `[ ]`  
+**Status**: `[done]`  
 **Depends on**: P4.T7
 
 **Mô tả chi tiết**:

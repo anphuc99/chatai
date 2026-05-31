@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { StoryStackParamList } from '../../../navigation/types';
+import { useChatStore } from '../store/chat.store';
 import { useChat } from '../hooks/useChat';
 import { useStoryStore } from '../../story/store/story.store';
 import { MessageBubble } from '../components/MessageBubble';
@@ -132,17 +133,17 @@ export function ChatRoomScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Banner báo lỗi nếu có */}
-      {error && messages.length === 0 ? (
+      {error ? (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>
             ⚠️ Kết nối bị gián đoạn: {error?.message || 'Lỗi không xác định'}
           </Text>
           <TouchableOpacity
             style={styles.retryBtn}
-            onPress={loadHistory}
+            onPress={() => useChatStore.setState({ error: null })}
             activeOpacity={0.7}
           >
-            <Text style={styles.retryText}>Thử lại</Text>
+            <Text style={styles.retryText}>✕</Text>
           </TouchableOpacity>
         </View>
       ) : null}

@@ -1,40 +1,26 @@
+import { useShallow } from 'zustand/react/shallow';
 import { useChatStore } from '../store/chat.store';
 
 export function useChat() {
-  const sessionId = useChatStore((state) => state.sessionId);
-  const storyId = useChatStore((state) => state.storyId);
-  const messages = useChatStore((state) => state.messages);
-  const activeCharacters = useChatStore((state) => state.activeCharacters);
-  const persistentOOC = useChatStore((state) => state.persistentOOC);
-  const inputLocked = useChatStore((state) => state.inputLocked);
-  const loading = useChatStore((state) => state.loading);
-  const error = useChatStore((state) => state.error);
-
-  const startSession = useChatStore((state) => state.startSession);
-  const loadHistory = useChatStore((state) => state.loadHistory);
-  const sendMessage = useChatStore((state) => state.sendMessage);
-  const setPersistentOOC = useChatStore((state) => state.setPersistentOOC);
-  const toggleCharacter = useChatStore((state) => state.toggleCharacter);
-  const addTempCharacter = useChatStore((state) => state.addTempCharacter);
-  const reset = useChatStore((state) => state.reset);
-
-  return {
-    sessionId,
-    storyId,
-    messages,
-    activeCharacters,
-    persistentOOC,
-    inputLocked,
-    loading,
-    error,
-    startSession,
-    loadHistory,
-    sendMessage,
-    setPersistentOOC,
-    toggleCharacter,
-    addTempCharacter,
-    reset,
-  };
+  return useChatStore(
+    useShallow((state) => ({
+      sessionId: state.sessionId,
+      storyId: state.storyId,
+      messages: state.messages,
+      activeCharacters: state.activeCharacters,
+      persistentOOC: state.persistentOOC,
+      inputLocked: state.inputLocked,
+      loading: state.loading,
+      error: state.error,
+      startSession: state.startSession,
+      loadHistory: state.loadHistory,
+      sendMessage: state.sendMessage,
+      setPersistentOOC: state.setPersistentOOC,
+      toggleCharacter: state.toggleCharacter,
+      addTempCharacter: state.addTempCharacter,
+      reset: state.reset,
+    }))
+  );
 }
 
 export default useChat;

@@ -28,6 +28,7 @@ export class ChatSessionService {
     if (activeSession) {
       let activeCharIds = await this.ooc.getActiveCharacters(activeSession.id);
       if (activeCharIds.length === 0) {
+        this.logger.warn(`Session ${activeSession.id} Redis chars expired, rehydrating from story`);
         // Redis may have expired (24h TTL) → rehydrate from story characters
         const allChars = await this.prisma.character.findMany({
           where: { storyId },
