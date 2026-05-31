@@ -6,6 +6,8 @@ export function useChat() {
   const messages = useChatStore((state) => state.messages);
   const activeCharacters = useChatStore((state) => state.activeCharacters);
   const persistentOOC = useChatStore((state) => state.persistentOOC);
+  const temporaryCharacters = useChatStore((state) => state.temporaryCharacters);
+  const charactersFull = useChatStore((state) => state.charactersFull);
   const inputLocked = useChatStore((state) => state.inputLocked);
   const loading = useChatStore((state) => state.loading);
   const error = useChatStore((state) => state.error);
@@ -15,6 +17,7 @@ export function useChat() {
   const sendMessage = useChatStore((state) => state.sendMessage);
   const setPersistentOOC = useChatStore((state) => state.setPersistentOOC);
   const toggleCharacter = useChatStore((state) => state.toggleCharacter);
+  const loadStoryCharacters = useChatStore((state) => state.loadStoryCharacters);
   const addTempCharacter = useChatStore((state) => state.addTempCharacter);
   const pushEphemeralOOC = useChatStore((state) => state.pushEphemeralOOC);
   const reset = useChatStore((state) => state.reset);
@@ -25,6 +28,8 @@ export function useChat() {
     messages,
     activeCharacters,
     persistentOOC,
+    temporaryCharacters,
+    charactersFull,
     inputLocked,
     loading,
     error,
@@ -33,6 +38,7 @@ export function useChat() {
     sendMessage,
     setPersistentOOC,
     toggleCharacter,
+    loadStoryCharacters,
     addTempCharacter,
     pushEphemeralOOC,
     reset,

@@ -90,7 +90,9 @@ export function ChatRoomScreen() {
         await startSession(storyId);
         
         // Tải danh sách nhân vật để cấu hình PlaybackQueueManager
-        const characters = await characterApi.listByStory(storyId);
+        const { loadStoryCharacters } = useChatStore.getState();
+        await loadStoryCharacters();
+        const characters = useChatStore.getState().charactersFull;
         const charMap = new Map(
           (characters || []).map((c) => [
             c.id,
@@ -211,9 +213,6 @@ export function ChatRoomScreen() {
       <OocPanel
         visible={showOocPanel}
         onClose={() => setShowOocPanel(false)}
-        persistentOOC={persistentOOC}
-        onSavePersistentOOC={setPersistentOOC}
-        onAddTempCharacter={addTempCharacter}
       />
 
       {/* Sheet toggle trạng thái nhân vật trong cốt truyện */}

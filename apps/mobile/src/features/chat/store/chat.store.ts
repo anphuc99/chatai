@@ -1,7 +1,8 @@
 import { create } from 'zustand';
-import { MessageDto } from '@chatai/shared-types';
+import { MessageDto, CharacterDto } from '@chatai/shared-types';
 import { ChatMessage } from '../types/message';
 import { chatService } from '../services/chat.service';
+import { characterApi } from '../../character/services/character.api';
 import { getPlaybackManagerSingleton } from '../services/playback-queue.manager';
 
 export interface ChatState {
@@ -10,6 +11,8 @@ export interface ChatState {
   messages: ChatMessage[];
   activeCharacters: string[];
   persistentOOC: string;
+  temporaryCharacters: Array<{ tempId: string; name: string; description: string }>;
+  charactersFull: CharacterDto[];
   inputLocked: boolean;
   loading: boolean;
   error: any | null;
@@ -19,6 +22,7 @@ export interface ChatState {
   sendMessage: (text: string, ephemeralOOC?: string) => Promise<void>;
   setPersistentOOC: (text: string) => Promise<void>;
   toggleCharacter: (charId: string, on: boolean) => Promise<void>;
+  loadStoryCharacters: () => Promise<void>;
   addTempCharacter: (name: string, desc: string) => Promise<string | undefined>;
   setInputLocked: (v: boolean) => void;
   appendAssistantBubble: (msg: ChatMessage) => void;
@@ -75,6 +79,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   activeCharacters: [],
   persistentOOC: '',
+  temporaryCharacters: [],
+  charactersFull: [],
   inputLocked: false,
   loading: false,
   error: null,
@@ -253,12 +259,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  loadStoryCharacters: async () => {
+    const storyId = get().storyId;
+    if (!storyId) return;
+    try {
+      const chars = await characterApi.listByStory(storyId);
+      set({ charactersFull: chars || [] });
+    } catch (e: any) {
+      console.error('Failed to load story characters:', e);
+      throw e;
+    }
+  },
+
   addTempCharacter: async (name: string, desc: string) => {
     const sid = get().sessionId;
     if (!sid) return;
     try {
       const res = await chatService.addTempCharacter(sid, name, desc);
       set((state) => ({
+        temporaryCharacters: [
+          ...state.temporaryCharacters,
+          { tempId: res.tempId, name, description: desc },
+        ],
         messages: [
           ...state.messages,
           {
@@ -283,6 +305,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
       messages: [],
       activeCharacters: [],
       persistentOOC: '',
+      temporaryCharacters: [],
+      charactersFull: [],
       inputLocked: false,
       loading: false,
       error: null,
