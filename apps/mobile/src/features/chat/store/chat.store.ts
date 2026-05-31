@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { MessageDto, CharacterDto } from '@chatai/shared-types';
+import { MessageDto, JournalMessageDto, CharacterDto } from '@chatai/shared-types';
 import { ChatMessage } from '../types/message';
 import { chatService } from '../services/chat.service';
 import { characterApi } from '../../character/services/character.api';
@@ -32,8 +32,8 @@ export interface ChatState {
 }
 
 // Helper mapping từ MessageDto của server sang ChatMessage của client
-export function mapDtoToChatMessage(dto: MessageDto, index: number): ChatMessage {
-  const baseId = `${dto.role}_${dto.timestamp || Date.now()}_${index}`;
+export function mapDtoToChatMessage(dto: MessageDto | JournalMessageDto, index: number): ChatMessage {
+  const baseId = ('id' in dto && typeof dto.id === 'string' && dto.id) ? dto.id : `${dto.role}_${dto.timestamp || Date.now()}_${index}`;
   
   if (dto.role === 'user') {
     return {
@@ -46,7 +46,7 @@ export function mapDtoToChatMessage(dto: MessageDto, index: number): ChatMessage
     return {
       kind: 'assistant',
       id: baseId,
-      characterId: null, // DTO lịch sử không trả về characterId
+      characterId: 'characterId' in dto ? (dto.characterId ?? null) : null,
       characterName: dto.characterName ?? 'Nhân vật',
       text: dto.text,
       translation: dto.translation,

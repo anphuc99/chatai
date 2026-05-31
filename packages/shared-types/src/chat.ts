@@ -64,3 +64,10 @@ export interface SessionResultDto {
   initialActiveCharacters: string[];
 }
 
+export interface EndChatResultDto {
+  journalSessionId: string;
+  summary: string;
+  messageCount: number;
+  alreadyEnded: boolean;
+}
+

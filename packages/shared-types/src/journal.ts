@@ -11,8 +11,14 @@ export interface SessionSummaryDto {
   wordCount: number;
 }
 
+export interface JournalMessageDto extends MessageDto {
+  id: string;
+  characterId: string | null;
+  turnOrder: number;
+}
+
 export interface SessionDetailDto extends SessionSummaryDto {
-  messages: MessageDto[];
+  messages: JournalMessageDto[];
 }
 
 export interface ListSessionsResponseDto {

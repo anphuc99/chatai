@@ -3,24 +3,29 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { AppException, ERR } from '../../shared/errors/app-exception';
 import { ListSessionsDto } from './dto/list-sessions.dto';
 import { SessionSummaryDto } from './dto/session-summary.dto';
-import { SessionDetailDto, MessageDto } from './dto/session-detail.dto';
+import { SessionDetailDto } from './dto/session-detail.dto';
+import { JournalMessageDto } from '@chatai/shared-types';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class JournalService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private encodeCursor(ms: number): string {
-    return Buffer.from(String(ms)).toString('base64url');
+  private encodeCursor(ms: number, id: string): string {
+    const data = JSON.stringify({ endedAt: ms, id });
+    return Buffer.from(data).toString('base64url');
   }
 
-  private decodeCursor(c: string): number {
+  private decodeCursor(c: string): { endedAt: number; id: string } | null {
     try {
       const decoded = Buffer.from(c, 'base64url').toString('utf8');
-      const val = parseInt(decoded, 10);
-      return isNaN(val) ? 0 : val;
+      const obj = JSON.parse(decoded);
+      if (typeof obj.endedAt === 'number' && typeof obj.id === 'string') {
+        return obj;
+      }
+      return null;
     } catch {
-      return 0;
+      return null;
     }
   }
 
@@ -34,13 +39,18 @@ export class JournalService {
     };
 
     if (cursor) {
-      const decodedMs = this.decodeCursor(cursor);
-      whereBase.endedAt = { lt: BigInt(decodedMs) };
+      const decoded = this.decodeCursor(cursor);
+      if (decoded) {
+        whereBase.OR = [
+          { endedAt: { lt: BigInt(decoded.endedAt) } },
+          { endedAt: BigInt(decoded.endedAt), id: { lt: decoded.id } },
+        ];
+      }
     }
 
     const sessions = await this.prisma.session.findMany({
       where: whereBase,
-      orderBy: { endedAt: 'desc' },
+      orderBy: [{ endedAt: 'desc' }, { id: 'desc' }],
       take: limit + 1,
       include: {
         story: {
@@ -95,7 +105,7 @@ export class JournalService {
 
     const lastSession = page[page.length - 1];
     const nextCursor = hasMore && lastSession && lastSession.endedAt
-      ? this.encodeCursor(Number(lastSession.endedAt))
+      ? this.encodeCursor(Number(lastSession.endedAt), lastSession.id)
       : null;
 
     return { items, nextCursor };
@@ -131,7 +141,7 @@ export class JournalService {
     const msgCount = messages.length;
     const wordCount = messages.filter((m) => m.words !== null).length;
 
-    const messageDtos: MessageDto[] = messages.map((m) => ({
+    const messageDtos: JournalMessageDto[] = messages.map((m) => ({
       id: m.id,
       role: m.role,
       characterId: m.characterId,
@@ -140,8 +150,8 @@ export class JournalService {
       translation: m.translation,
       emotion: m.emotion,
       intensity: m.intensity,
-      words: m.words,
-      shopEvent: m.shopEvent,
+      words: m.words as any,
+      shopEvent: m.shopEvent as any,
       turnOrder: m.turnOrder,
       timestamp: Number(m.timestamp),
     }));

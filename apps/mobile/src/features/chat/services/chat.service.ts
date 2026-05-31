@@ -2,6 +2,7 @@ import {
   SessionResultDto,
   HydratedHistoryDto,
   AssistantBatchDto,
+  EndChatResultDto,
 } from '@chatai/shared-types';
 import { apiClient } from '../../../api/client';
 
@@ -52,7 +53,7 @@ export const chatService = {
   endSession: (
     sid: string,
     idempotencyKey: string,
-  ): Promise<{ journalSessionId: string; summary: string; msgCount: number }> =>
+  ): Promise<EndChatResultDto> =>
     apiClient.post(
       `/chat/sessions/${sid}/end`,
       {},

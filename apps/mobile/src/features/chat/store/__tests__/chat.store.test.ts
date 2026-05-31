@@ -248,7 +248,7 @@ describe('ChatStore', () => {
 
   it('nên appendAssistantBubble thêm tin nhắn assistant vào mảng messages', () => {
     useChatStore.setState({ messages: [] });
-    const mockMsg = { kind: 'assistant' as const, id: 'msg-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 };
+    const mockMsg = { kind: 'assistant' as const, id: 'msg-1', characterId: 'char-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 };
     
     useChatStore.getState().appendAssistantBubble(mockMsg);
     
@@ -261,7 +261,7 @@ describe('ChatStore', () => {
     };
     setPlaybackManagerSingleton(mockManager as any);
 
-    const mockMsgs = [{ kind: 'assistant' as const, id: 'msg-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 }];
+    const mockMsgs = [{ kind: 'assistant' as const, id: 'msg-1', characterId: 'char-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 }];
     useChatStore.getState().enqueueAssistantBatch(mockMsgs);
 
     expect(mockManager.enqueueBatch).toHaveBeenCalledWith(mockMsgs);

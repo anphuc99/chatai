@@ -16,8 +16,7 @@ export function MessageBubble({ msg }: MessageBubbleProps) {
       return <UserBubble msg={msg} />;
 
     case 'assistant':
-      // Nếu tên nhân vật là Narrator hoặc không có characterId thì là NarratorBubble
-      if (msg.characterName === 'Narrator' || msg.characterId == null) {
+      if (msg.characterName === 'Narrator') {
         return <NarratorBubble msg={msg} />;
       }
       return <CharacterBubble msg={msg} />;

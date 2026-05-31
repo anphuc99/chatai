@@ -9,7 +9,7 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StoryStackParamList } from '../../../navigation/types';
 import { useChatStore } from '../store/chat.store';
 import { useChat } from '../hooks/useChat';
@@ -87,13 +87,23 @@ export function ChatRoomScreen() {
       const idempKey = `end-${sessionId}-${Date.now()}`;
       const result = await chatService.endSession(sessionId, idempKey);
 
-      (navigation as any).navigate('Main', {
-        screen: 'Journal',
-        params: {
-          screen: 'JournalDetail',
-          params: { sessionId: result.journalSessionId },
-        },
-      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: {
+                screen: 'Journal',
+                params: {
+                  screen: 'JournalDetail',
+                  params: { sessionId: result.journalSessionId },
+                },
+              },
+            },
+          ],
+        })
+      );
     } catch (e: any) {
       if (e?.code === 'SESSION_LOCKED') {
         Alert.alert('Thất bại', 'Phiên chat đang được xử lý, vui lòng chờ.');
@@ -247,6 +257,13 @@ export function ChatRoomScreen() {
         </View>
       ) : null}
 
+      {ending && (
+        <View style={[StyleSheet.absoluteFill, styles.blockingOverlay]}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Đang lưu phiên học...</Text>
+        </View>
+      )}
+
       {/* Danh sách tin nhắn */}
       <FlatList
         data={invertedMessages}
@@ -268,7 +285,7 @@ export function ChatRoomScreen() {
       />
 
       {/* Thanh nhập liệu */}
-      <InputBar onSend={handleSend} disabled={inputLocked} />
+      <InputBar onSend={handleSend} disabled={inputLocked || ending} />
 
       {/* Modal chỉnh sửa OOC & nhân vật tạm thời */}
       <OocPanel
@@ -289,6 +306,12 @@ export function ChatRoomScreen() {
 }
 
 const styles = StyleSheet.create({
+  blockingOverlay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',

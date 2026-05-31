@@ -7,7 +7,7 @@ import { EVENTS } from '../../../shared/events/event-names';
 import { HistoryStoreService } from './history-store.service';
 import { OocService } from './ooc.service';
 import { LlmService } from './llm.service';
-import { EndChatResult } from '../types/end-chat-result';
+import { EndChatResultDto as EndChatResult } from '@chatai/shared-types';
 import { HistoryEntry } from '../types/history-entry';
 
 @Injectable()
@@ -49,8 +49,13 @@ export class EndChatService {
         }
 
         const entries = await this.historyStore.readAll(sid);
+        const msgCount = await this.prisma.message.count({ where: { sessionId: sid } });
 
-        if (entries.length === 0) {
+        const hasConversation = entries.some(
+          (e) => e.type === 'user' || e.type === 'assistant_batch',
+        );
+
+        if (!hasConversation && msgCount === 0) {
           // Empty session edge case
           await this.prisma.session.update({
             where: { id: sid },
@@ -60,7 +65,17 @@ export class EndChatService {
               endedAt: BigInt(Date.now()),
             },
           });
-          await this.oocService.cleanupSession(sid);
+          
+          await this.cleanup(sid);
+
+          const ts = Date.now();
+          this.eventEmitter.emit(EVENTS.SESSION_ENDED, {
+            sessionId: sid,
+            userId: uid,
+            storyId: session.storyId,
+            endedAt: ts,
+          });
+          // Note: Intentionally skipping MEMORY_TRIGGER for empty sessions
 
           const result: EndChatResult = {
             journalSessionId: sid,

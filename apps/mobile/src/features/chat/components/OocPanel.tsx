@@ -200,7 +200,7 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
                   <CharacterRow
                     key={char.id}
                     name={char.name}
-                    avatarUrl={undefined}
+                    avatarUrl={null}
                     checked={activeCharacters.includes(char.id)}
                     isToggling={togglingId === char.id}
                     onChange={(on) => handleToggleChar(char.id, on)}
