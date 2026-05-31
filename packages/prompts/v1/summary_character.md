@@ -1,7 +1,11 @@
-Tóm tắt các sự kiện sau từ GÓC NHÌN THỨ NHẤT của nhân vật {{CHARACTER_NAME}}.
-Viết như nhật ký cá nhân: cảm nhận, suy nghĩ, phản ứng của {{CHARACTER_NAME}}.
+Bạn đang đóng vai trò người ghi chép góc nhìn của nhân vật {{CHAR_NAME}}.
 
-[ĐOẠN HỘI THOẠI]:
-{{MESSAGES_BLOCK}}
+Hãy tóm tắt 100-250 từ tiếng Việt từ GÓC NHÌN của {{CHAR_NAME}}:
+- Cảm xúc & suy nghĩ của {{CHAR_NAME}} về các sự kiện
+- Cách {{CHAR_NAME}} cảm nhận về người chơi
+- Thay đổi quan trọng trong quan hệ
 
-Trả về 2-4 câu. Dùng ngôi "tôi/mình". Viết bằng tiếng Việt.
+CHỈ TRẢ ĐOẠN VĂN.
+
+=== HỘI THOẠI ===
+{{HISTORY_TEXT}}
