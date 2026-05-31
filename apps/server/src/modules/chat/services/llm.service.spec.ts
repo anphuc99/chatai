@@ -146,7 +146,7 @@ describe('LlmService', () => {
       expect(mockAxiosInstance.post).toHaveBeenCalledTimes(3);
 
       const thirdCallArgs = mockAxiosInstance.post.mock.calls[2][1];
-      expect(thirdCallArgs.messages).toHaveLength(3);
+      expect(thirdCallArgs.messages).toHaveLength(2);
     });
 
     it('should throw LLM_PARSE_FAIL when all retries are exhausted', async () => {

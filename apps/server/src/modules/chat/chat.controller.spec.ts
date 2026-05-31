@@ -213,9 +213,9 @@ describe('ChatController', () => {
       expect(ooc.addActive).toHaveBeenCalledWith(sid, charId);
       expect(ooc.pushEphemeral).toHaveBeenCalledWith(sid, 'Alice vừa xuất hiện trong cảnh.');
       expect(historyStore.append).toHaveBeenCalledWith(sid, {
-        type: 'persistent_ooc',
+        type: 'character_toggle',
         timestamp: expect.any(Number),
-        data: { text: '[Toggle] Alice on' },
+        data: { characterId: charId, name: 'Alice', on: true },
       });
     });
 
@@ -228,9 +228,9 @@ describe('ChatController', () => {
       expect(ooc.removeActive).toHaveBeenCalledWith(sid, charId);
       expect(ooc.pushEphemeral).toHaveBeenCalledWith(sid, 'Alice vừa rời khỏi cảnh.');
       expect(historyStore.append).toHaveBeenCalledWith(sid, {
-        type: 'persistent_ooc',
+        type: 'character_toggle',
         timestamp: expect.any(Number),
-        data: { text: '[Toggle] Alice off' },
+        data: { characterId: charId, name: 'Alice', on: false },
       });
     });
   });

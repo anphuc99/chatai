@@ -8,6 +8,7 @@ import { ChatSessionService } from './services/chat-session.service';
 import { ChatController } from './chat.controller';
 import { TokenCounterService } from './services/token-counter.service';
 import { ChatConfig } from '../../config/chat.config';
+import { CheckpointService } from './services/checkpoint.service';
 
 @Module({
   controllers: [ChatController],
@@ -20,6 +21,7 @@ import { ChatConfig } from '../../config/chat.config';
     ChatSessionService,
     TokenCounterService,
     ChatConfig,
+    CheckpointService,
   ],
   exports: [
     HistoryStoreService,
@@ -30,6 +32,7 @@ import { ChatConfig } from '../../config/chat.config';
     ChatSessionService,
     TokenCounterService,
     ChatConfig,
+    CheckpointService,
   ],
 })
 export class ChatModule {}

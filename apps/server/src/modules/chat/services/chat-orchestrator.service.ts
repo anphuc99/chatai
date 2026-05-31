@@ -10,6 +10,7 @@ import { HistoryStoreService } from './history-store.service';
 import { OocService } from './ooc.service';
 import { PromptBuilderService } from './prompt-builder.service';
 import { LlmService } from './llm.service';
+import { CheckpointService } from './checkpoint.service';
 import { AssistantBatchSchema, AssistantMessage } from '../schemas/assistant-batch.schema';
 import { ChatContext } from '../types/chat-context';
 import { Character, Prisma } from '@prisma/client';
@@ -27,6 +28,7 @@ export class ChatOrchestratorService {
     private readonly firestore: FirestoreService,
     private readonly redis: RedisService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly checkpointService: CheckpointService,
   ) {}
 
   async handleUserTurn(
@@ -86,7 +88,7 @@ export class ChatOrchestratorService {
           initialSetting: story.initialSetting,
           currentProgress: story.currentProgress ?? '',
         },
-        activeCharacters: characters,
+        activeCharacters: characters as any,
         temporaryCharacters: tempChars,
         hskLevel,
         narratorLanguage,
@@ -139,6 +141,9 @@ export class ChatOrchestratorService {
         batch: llmResp,
         triggerMemory: llmResp.triggerMemory ?? false,
       });
+
+      // Trigger checkpoint check asynchronously
+      this.checkpointService.maybeTriggerAsync(ctx.sessionId);
 
       // 12. Transform to DTO
       return this.transformToDto(insertedAssistantMessages, llmResp.triggerMemory ?? false);
@@ -214,7 +219,7 @@ export class ChatOrchestratorService {
 
       // Assistant messages
       for (let i = 0; i < assistantMsgs.length; i++) {
-        const m = assistantMsgs[i];
+        const m = assistantMsgs[i]!;
         const matchedChar = characters.find((c) => c.name === m.characterName);
         const characterId = matchedChar ? matchedChar.id : null;
 

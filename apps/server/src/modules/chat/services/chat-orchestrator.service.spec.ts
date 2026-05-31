@@ -11,6 +11,7 @@ import { RedisService } from '../../../shared/redis/redis.service';
 import { AppException, ERR } from '../../../shared/errors/app-exception';
 import { EVENTS } from '../../../shared/events/event-names';
 import { ChatContext } from '../types/chat-context';
+import { CheckpointService } from './checkpoint.service';
 
 describe('ChatOrchestratorService', () => {
   let service: ChatOrchestratorService;
@@ -22,6 +23,7 @@ describe('ChatOrchestratorService', () => {
   let firestoreMock: any;
   let redisMock: any;
   let eventEmitterMock: any;
+  let checkpointMock: any;
 
   const ctx: ChatContext = {
     sessionId: '00000000-0000-0000-0000-000000000001',
@@ -32,6 +34,9 @@ describe('ChatOrchestratorService', () => {
   const mockPrismaTx = {
     message: {
       create: jest.fn().mockResolvedValue({}),
+      aggregate: jest.fn().mockResolvedValue({
+        _max: { turnOrder: 5 },
+      }),
       findMany: jest.fn().mockResolvedValue([
         {
           id: 'msg-assistant-1',
@@ -151,6 +156,10 @@ describe('ChatOrchestratorService', () => {
       emit: jest.fn(),
     };
 
+    checkpointMock = {
+      maybeTriggerAsync: jest.fn(),
+    };
+
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -164,6 +173,7 @@ describe('ChatOrchestratorService', () => {
         { provide: FirestoreService, useValue: firestoreMock },
         { provide: RedisService, useValue: redisMock },
         { provide: EventEmitter2, useValue: eventEmitterMock },
+        { provide: CheckpointService, useValue: checkpointMock },
       ],
     }).compile();
 
@@ -240,6 +250,9 @@ describe('ChatOrchestratorService', () => {
         },
         triggerMemory: false,
       });
+
+      // Verify checkpoint check was triggered
+      expect(checkpointMock.maybeTriggerAsync).toHaveBeenCalledWith(ctx.sessionId);
     });
 
     it('should throw INVALID_PAYLOAD if userMessage is empty or too long', async () => {

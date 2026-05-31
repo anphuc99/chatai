@@ -51,9 +51,14 @@ export class LlmService {
           role: 'system' as const,
           content: `Lần trước response KHÔNG hợp lệ JSON schema. Lỗi: ${lastError}. CHỈ trả về JSON đúng schema, không markdown, không text thừa.`,
         };
-        const lastIdx = workingMessages.findLastIndex(
-          (m) => m.role === 'system' && m.content.includes('Lần trước response KHÔNG hợp lệ JSON schema')
-        );
+        let lastIdx = -1;
+        for (let i = workingMessages.length - 1; i >= 0; i--) {
+          const m = workingMessages[i];
+          if (m && m.role === 'system' && m.content.includes('Lần trước response KHÔNG hợp lệ JSON schema')) {
+            lastIdx = i;
+            break;
+          }
+        }
         if (lastIdx >= 0) workingMessages.splice(lastIdx, 1);
         workingMessages.push(correctionMsg);
       }
