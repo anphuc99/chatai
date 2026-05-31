@@ -17,15 +17,15 @@ Cập nhật `PromptBuilderService` để hỗ trợ trích xuất checkpoint (t
 
 ```mermaid
 graph TD
-    A[Bắt đầu buildLlmMessages] --> B[Tạo Composite System Message]
-    B --> C{workingHistory[0] là checkpoint?}
-    C -- Đúng --> D[Trích xuất summary và push System Message 'TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ']
-    D --> E[workingHistory.shift]
-    C -- Sai --> F[Duyệt qua các History Entry]
+    A["Bắt đầu buildLlmMessages"] --> B["Tạo Composite System Message"]
+    B --> C{"workingHistory[0] là checkpoint?"}
+    C -- "Đúng" --> D["Trích xuất summary và push System Message 'TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ'"]
+    D --> E["workingHistory.shift()"]
+    C -- "Sai" --> F["Duyệt qua các History Entry"]
     E --> F
-    F --> G[Xử lý từng entry: user, assistant_batch, checkpoint phụ...]
-    G --> H[Thêm tin nhắn User cuối kèm Ephemeral OOC]
-    H --> I[Trả về LlmMessage[]]
+    F --> G["Xử lý từng entry: user, assistant_batch, checkpoint phụ..."]
+    G --> H["Thêm tin nhắn User cuối kèm Ephemeral OOC"]
+    H --> I["Trả về LlmMessage[]"]
 ```
 
 ## 4. Lưu Ý Quan Trọng (Gotchas & Bugs)
