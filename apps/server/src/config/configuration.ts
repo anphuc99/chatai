@@ -14,6 +14,7 @@ export interface AppConfig {
   ttsEngineUrl: string;
   ttsDatasetAbsPath: string;
   maxHistoryTokens: number;
+  checkpointTriggerRatio: number;
   historyStoreBasePath: string;
 }
 
@@ -32,6 +33,7 @@ export default (): AppConfig => ({
   ollamaEmbedModel: process.env.OLLAMA_EMBED_MODEL || 'bge-m3',
   ttsEngineUrl: process.env.TTS_ENGINE_URL || 'http://localhost:5000',
   ttsDatasetAbsPath: process.env.TTS_DATASET_ABS_PATH || '',
-  maxHistoryTokens: parseInt(process.env.MAX_HISTORY_TOKENS || '20000', 10),
+  maxHistoryTokens: parseInt(process.env.MAX_HISTORY_TOKENS || '6000', 10),
+  checkpointTriggerRatio: parseFloat(process.env.CHECKPOINT_TRIGGER_RATIO || '0.8'),
   historyStoreBasePath: process.env.HISTORY_STORE_BASE_PATH || './data/chat-cache',
 });

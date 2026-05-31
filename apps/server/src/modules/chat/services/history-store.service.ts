@@ -4,6 +4,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { AppException, ERR } from '../../../shared/errors/app-exception';
 import { HistoryEntry } from '../types/history-entry';
+import { TokenCounterService } from './token-counter.service';
 
 @Injectable()
 export class HistoryStoreService implements OnModuleInit {
@@ -11,7 +12,10 @@ export class HistoryStoreService implements OnModuleInit {
   private basePath!: string;
   private readonly writeLocks = new Map<string, Promise<void>>();
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly tokenCounter: TokenCounterService,
+  ) {}
 
   async onModuleInit() {
     this.basePath = this.config.get<string>('historyStoreBasePath') || './data/chat-cache';
@@ -116,42 +120,10 @@ export class HistoryStoreService implements OnModuleInit {
 
   /**
    * Estimate the token usage for the entries since the last checkpoint.
-   * Logic matches requirements: s.length / 2 for characters.
    */
   async estimateTokens(sid: string): Promise<number> {
     const entries = await this.readSinceLastCheckpoint(sid);
-    let total = 0;
-
-    const zhEstimate = (s?: string | null) => {
-      if (!s) return 0;
-      return s.length / 2;
-    };
-
-    for (const entry of entries) {
-      switch (entry.type) {
-        case 'user':
-          total += zhEstimate(entry.data.text) + zhEstimate(entry.data.ephemeralOOC);
-          break;
-        case 'assistant_batch':
-          if (entry.data.messages) {
-            for (const msg of entry.data.messages) {
-              total += zhEstimate(msg.text) + zhEstimate(msg.translation);
-            }
-          }
-          break;
-        case 'persistent_ooc':
-        case 'ephemeral_ooc':
-          total += zhEstimate(entry.data.text);
-          break;
-        case 'checkpoint':
-        case 'system':
-        default:
-          // Skip checkpoint and system entries for token calculations (or zero values)
-          break;
-      }
-    }
-
-    return Math.ceil(total);
+    return this.tokenCounter.estimateHistoryTokens(entries);
   }
 
   /**
@@ -167,6 +139,7 @@ export class HistoryStoreService implements OnModuleInit {
           this.logger.error(`Failed to delete history file for session: ${sid}`, error);
           throw error;
         }
+      }
     });
   }
 

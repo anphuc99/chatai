@@ -6,6 +6,8 @@ import { LlmService } from './services/llm.service';
 import { ChatOrchestratorService } from './services/chat-orchestrator.service';
 import { ChatSessionService } from './services/chat-session.service';
 import { ChatController } from './chat.controller';
+import { TokenCounterService } from './services/token-counter.service';
+import { ChatConfig } from '../../config/chat.config';
 
 @Module({
   controllers: [ChatController],
@@ -16,6 +18,8 @@ import { ChatController } from './chat.controller';
     LlmService,
     ChatOrchestratorService,
     ChatSessionService,
+    TokenCounterService,
+    ChatConfig,
   ],
   exports: [
     HistoryStoreService,
@@ -24,6 +28,8 @@ import { ChatController } from './chat.controller';
     LlmService,
     ChatOrchestratorService,
     ChatSessionService,
+    TokenCounterService,
+    ChatConfig,
   ],
 })
 export class ChatModule {}

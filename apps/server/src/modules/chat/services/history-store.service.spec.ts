@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { HistoryStoreService } from './history-store.service';
+import { TokenCounterService } from './token-counter.service';
 import { HistoryEntry } from '../types/history-entry';
 import { AppException } from '../../../shared/errors/app-exception';
 import * as fs from 'fs/promises';
@@ -29,6 +30,7 @@ describe('HistoryStoreService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         HistoryStoreService,
+        TokenCounterService,
         {
           provide: ConfigService,
           useValue: mockConfigService,
@@ -154,16 +156,16 @@ describe('HistoryStoreService', () => {
     // format UUID correct
     const validSid = 'abcdefab-abcd-abcd-abcd-abcdefabcdef';
     
-    // User entry: "Hello" (length 5) -> zhEstimate = 2.5
-    // with ephemeralOOC: "World" (length 5) -> zhEstimate = 2.5
-    // Total User = 5
+    // User entry: "Hello" (length 5) -> ceil(5/4) = 2
+    // with ephemeralOOC: "World" (length 5) -> ceil(5/4) = 2
+    // Total User = 4
     const userEntry: HistoryEntry = {
       type: 'user',
       timestamp: Date.now(),
       data: { text: 'Hello', ephemeralOOC: 'World' }
     };
 
-    // Assistant entry: Mimi "Hi" (length 2, zhEstimate = 1) & trans "Vi" (length 2, zhEstimate = 1) -> Total msg = 2
+    // Assistant entry: Mimi "Hi" (length 2) -> ceil(2/4) = 1 & trans "Vi" (length 2) -> ceil(2/4) = 1 -> Total assistant = 2
     const assistantEntry: HistoryEntry = {
       type: 'assistant_batch',
       timestamp: Date.now(),
@@ -174,7 +176,7 @@ describe('HistoryStoreService', () => {
       }
     };
 
-    // Persistent OOC: "Test" (length 4, zhEstimate = 2)
+    // Persistent OOC: "Test" (length 4) -> ceil(4/4) = 1
     const oocEntry: HistoryEntry = {
       type: 'persistent_ooc',
       timestamp: Date.now(),
@@ -186,8 +188,8 @@ describe('HistoryStoreService', () => {
     await service.append(validSid, oocEntry);
 
     const tokens = await service.estimateTokens(validSid);
-    // Expected: 2.5 (Hello) + 2.5 (World) + 1 (Hi) + 1 (Vi) + 2 (Test) = 9 tokens
-    expect(tokens).toBe(9);
+    // Expected: 2 (Hello) + 2 (World) + 1 (Hi) + 1 (Vi) + 1 (Test) = 7 tokens
+    expect(tokens).toBe(7);
   });
 
   it('should cleanup history and locks successfully', async () => {
