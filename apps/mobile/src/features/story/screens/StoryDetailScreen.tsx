@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StoryStackParamList } from '../../../navigation/types';
 import { StoryDto } from '@chatai/shared-types';
@@ -17,6 +17,7 @@ import { useStoryStore } from '../store/story.store';
 import { theme } from '../../../theme';
 import { CharacterListSection } from '../../character/components/CharacterListSection';
 import { useCharacterStore } from '../../character/store/character.store';
+import { StoryProgressSection } from '../components/StoryProgressSection';
 
 type Nav = NativeStackNavigationProp<StoryStackParamList>;
 type Route = RouteProp<StoryStackParamList, 'Detail'>;
@@ -31,6 +32,12 @@ export function StoryDetailScreen() {
   const [loading, setLoading] = useState(!cachedStory);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (cachedStory) {
+      setStory(cachedStory);
+    }
+  }, [cachedStory]);
+
   const characters = useCharacterStore((s) => s.byStory[id]);
   const characterCount = characters !== undefined ? characters.length : (story?.characterCount ?? 0);
 
@@ -40,6 +47,7 @@ export function StoryDetailScreen() {
     try {
       const data = await storyApi.getById(id);
       setStory(data);
+      useStoryStore.getState().upsert(data);
     } catch (e: any) {
       setError(e?.message ?? 'Không thể tải Story');
     } finally {
@@ -47,9 +55,11 @@ export function StoryDetailScreen() {
     }
   }, [id]);
 
-  useEffect(() => {
-    loadDetail();
-  }, [loadDetail]);
+  useFocusEffect(
+    useCallback(() => {
+      loadDetail();
+    }, [loadDetail])
+  );
 
   const handleEdit = useCallback(() => {
     if (!story) return;
@@ -125,14 +135,10 @@ export function StoryDetailScreen() {
         </View>
 
         {/* Current Progress */}
-        {story.currentProgress ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>🗺️ Tiến độ hiện tại</Text>
-            <View style={[styles.settingCard, styles.progressCard]}>
-              <Text style={styles.settingText}>{story.currentProgress}</Text>
-            </View>
-          </View>
-        ) : null}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>🗺️ Tiến độ hiện tại</Text>
+          <StoryProgressSection progress={story.currentProgress} />
+        </View>
 
         {/* Characters Stub (P02.T5) */}
         <CharacterListSection storyId={id} />

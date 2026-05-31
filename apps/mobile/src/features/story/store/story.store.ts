@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { StoryDto } from '@chatai/shared-types';
+import { storyApi } from '../services/story.api';
 
 interface StoryState {
   storiesById: Record<string, StoryDto>;
@@ -11,6 +12,7 @@ interface StoryState {
   upsert: (story: StoryDto) => void;
   remove: (id: string) => void;
   setLoading: (loading: boolean) => void;
+  refetchStory: (id: string) => Promise<void>;
 }
 
 export const useStoryStore = create<StoryState>((set) => ({
@@ -67,4 +69,15 @@ export const useStoryStore = create<StoryState>((set) => ({
   },
 
   setLoading: (loading) => set({ loading }),
+
+  refetchStory: async (id) => {
+    try {
+      const story = await storyApi.getById(id);
+      set((state) => ({
+        storiesById: { ...state.storiesById, [id]: story },
+      }));
+    } catch (error) {
+      console.error(`Failed to refetch story ${id}:`, error);
+    }
+  },
 }));

@@ -6,6 +6,7 @@ import { useJournalStore } from '../store/journal.store';
 import { mapDtoToChatMessage } from '../../chat/store/chat.store';
 import { MessageBubble } from '../../chat/components/MessageBubble';
 import { theme } from '../../../theme';
+import { useStoryStore } from '../../story/store/story.store';
 
 type Route = RouteProp<JournalStackParamList, 'JournalDetail'>;
 
@@ -21,14 +22,32 @@ export function JournalDetailScreen() {
     loadDetail(sessionId);
   }, [sessionId]);
 
-  // Cập nhật title header là Story Title nếu load xong
+  // Cập nhật title header là Story Title nếu load xong và thêm nút Xem truyện
   useEffect(() => {
     if (currentDetail?.storyTitle) {
       navigation.setOptions({
         headerTitle: currentDetail.storyTitle,
+        headerRight: () => (
+          <TouchableOpacity
+            style={styles.headerBtn}
+            onPress={() => {
+              useStoryStore.getState().refetchStory(currentDetail.storyId);
+              navigation.navigate('Main', {
+                screen: 'Stories',
+                params: {
+                  screen: 'Detail',
+                  params: { id: currentDetail.storyId },
+                },
+              });
+            }}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.headerBtnText}>Xem truyện</Text>
+          </TouchableOpacity>
+        ),
       });
     }
-  }, [currentDetail?.storyTitle]);
+  }, [currentDetail, navigation]);
 
   if (loading && !currentDetail) {
     return (
@@ -188,5 +207,17 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 1,
     backgroundColor: theme.colors.border,
+  },
+  headerBtn: {
+    marginRight: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.sm,
+  },
+  headerBtnText: {
+    ...theme.typography.small,
+    color: '#fff',
+    fontWeight: '700',
   },
 });
