@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ChromaClient } from './chroma.client';
@@ -17,7 +17,7 @@ import { SlidingWindow } from './services/sliding-window';
     LoggerModule,
     RedisModule,
     PrismaModule,
-    ChatModule,
+    forwardRef(() => ChatModule),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (cfg: ConfigService) => {

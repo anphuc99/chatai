@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { HistoryStoreService } from './services/history-store.service';
 import { OocService } from './services/ooc.service';
 import { PromptBuilderService } from './services/prompt-builder.service';
@@ -11,8 +11,10 @@ import { ChatConfig } from '../../config/chat.config';
 import { CheckpointService } from './services/checkpoint.service';
 import { EndChatService } from './services/end-chat.service';
 import { IdempotencyInterceptor } from '../../shared/idempotency/idempotency.interceptor';
+import { MemoryModule } from '../memory/memory.module';
 
 @Module({
+  imports: [forwardRef(() => MemoryModule)],
   controllers: [ChatController],
   providers: [
     HistoryStoreService,

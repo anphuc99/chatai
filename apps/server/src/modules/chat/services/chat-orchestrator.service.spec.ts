@@ -12,6 +12,7 @@ import { AppException, ERR } from '../../../shared/errors/app-exception';
 import { EVENTS } from '../../../shared/events/event-names';
 import { ChatContext } from '../types/chat-context';
 import { CheckpointService } from './checkpoint.service';
+import { MemoryService } from '../../memory/memory.service';
 
 describe('ChatOrchestratorService', () => {
   let service: ChatOrchestratorService;
@@ -24,6 +25,7 @@ describe('ChatOrchestratorService', () => {
   let redisMock: any;
   let eventEmitterMock: any;
   let checkpointMock: any;
+  let memoryMock: any;
 
   const ctx: ChatContext = {
     sessionId: '00000000-0000-0000-0000-000000000001',
@@ -160,6 +162,10 @@ describe('ChatOrchestratorService', () => {
       maybeTriggerAsync: jest.fn(),
     };
 
+    memoryMock = {
+      retrieveContext: jest.fn().mockResolvedValue('Long-term memory context: Mimi likes apples.'),
+    };
+
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -174,6 +180,7 @@ describe('ChatOrchestratorService', () => {
         { provide: RedisService, useValue: redisMock },
         { provide: EventEmitter2, useValue: eventEmitterMock },
         { provide: CheckpointService, useValue: checkpointMock },
+        { provide: MemoryService, useValue: memoryMock },
       ],
     }).compile();
 
@@ -200,7 +207,20 @@ describe('ChatOrchestratorService', () => {
 
       expect(promptBuilderMock.buildSystemPrompt).toHaveBeenCalled();
       expect(historyStoreMock.readSinceLastCheckpoint).toHaveBeenCalledWith(ctx.sessionId);
-      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalled();
+      expect(memoryMock.retrieveContext).toHaveBeenCalledWith(
+        ctx.userId,
+        ctx.storyId,
+        'Hello there',
+        ['Mimi'],
+      );
+      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalledWith(
+        'Builded System Prompt',
+        expect.any(Array),
+        'Hello there',
+        'Persistent OOC Content',
+        expect.any(Array),
+        'Long-term memory context: Mimi likes apples.',
+      );
       expect(llmMock.chatJson).toHaveBeenCalled();
 
       // Verify transaction persisted user & assistant
@@ -301,6 +321,27 @@ describe('ChatOrchestratorService', () => {
           hskLevel: 'HSK3',
           narratorLanguage: 'vi',
         }),
+      );
+    });
+
+    it('should degrade gracefully if memory retrieval fails', async () => {
+      memoryMock.retrieveContext.mockRejectedValue(new Error('Chroma DB connection error'));
+
+      const result = await service.handleUserTurn(ctx, 'Hello there', 'ephemeral OOC');
+
+      // Test still completes successfully
+      expect(result).toBeDefined();
+      expect(historyStoreMock.readSinceLastCheckpoint).toHaveBeenCalledWith(ctx.sessionId);
+      expect(memoryMock.retrieveContext).toHaveBeenCalled();
+      
+      // promptBuilder should receive null as memoryContext
+      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalledWith(
+        'Builded System Prompt',
+        expect.any(Array),
+        'Hello there',
+        'Persistent OOC Content',
+        expect.any(Array),
+        null,
       );
     });
   });
