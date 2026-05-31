@@ -4,7 +4,7 @@
 
 | Field | Value |
 |-------|-------|
-| Task ID | P05.T2 |
+| Task ID | P05.T2 ✅ DONE |
 | Phase | 5 |
 | Depends on | P05.T1 |
 | Complexity | Medium |

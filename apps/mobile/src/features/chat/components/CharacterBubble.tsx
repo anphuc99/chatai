@@ -3,8 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Pressable,
-  Image,
   Platform,
   ToastAndroid,
   Alert,
@@ -19,7 +17,7 @@ import { TappableChineseText } from './TappableChineseText';
 import { WordTooltip } from './WordTooltip';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useChatStore } from '../store/chat.store';
-import { useCharactersMap } from '../hooks/useCharactersMap';
+import { WordPinyinRow } from './WordPinyinRow';
 import { theme } from '../../../theme';
 
 const showToast = (message: string) => {
@@ -41,11 +39,8 @@ export function CharacterBubble({ msg }: CharacterBubbleProps) {
     (s) => s.user?.preferences?.showPinyin ?? true
   );
 
-  const storyId = useChatStore((s) => s.storyId);
-  const charMap = useCharactersMap(storyId);
-
-  const char = msg.characterId ? charMap.get(msg.characterId) : undefined;
-  const avatarUrl = char?.avatarUrl;
+  const charactersFull = useChatStore((s) => s.charactersFull);
+  const char = msg.characterId ? charactersFull.find((c) => c.id === msg.characterId) : undefined;
   const displayName = char?.name || msg.characterName || 'Nhân vật';
 
   const words = msg.words || [];
@@ -58,15 +53,11 @@ export function CharacterBubble({ msg }: CharacterBubbleProps) {
     >
       {/* Avatar đại diện */}
       <View style={styles.avatarContainer}>
-        {avatarUrl ? (
-          <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarPlaceholderText}>
-              {displayName.charAt(0)}
-            </Text>
-          </View>
-        )}
+        <View style={styles.avatarPlaceholder}>
+          <Text style={styles.avatarPlaceholderText}>
+            {displayName.charAt(0)}
+          </Text>
+        </View>
       </View>
 
       {/* Bong bóng thoại */}
@@ -77,29 +68,17 @@ export function CharacterBubble({ msg }: CharacterBubbleProps) {
         </View>
 
         <View style={styles.bubble}>
-          {showPinyinGlobal && hasWords ? (
-            <View style={styles.wordsRow}>
-              {words.map((w, idx) => (
-                <Pressable
-                  key={idx}
-                  style={styles.wordBlock}
-                  onPress={() => setSelectedWord(w)}
-                >
-                  <Text style={styles.pinyinText}>{w.py}</Text>
-                  <Text style={styles.hanziText}>{w.hz}</Text>
-                </Pressable>
-              ))}
-            </View>
-          ) : (
-            <View>
-              <TappableChineseText
-                text={msg.text}
-                words={msg.words}
-                onWordTap={setSelectedWord}
-                baseStyle={styles.assistantText}
-              />
-              {showPinyinGlobal && !hasWords && <PinyinRow text={msg.text} />}
-            </View>
+          <TappableChineseText
+            text={msg.text}
+            words={msg.words}
+            onWordTap={setSelectedWord}
+            baseStyle={styles.assistantText}
+          />
+
+          {showPinyinGlobal && (
+            hasWords
+              ? <WordPinyinRow words={words} onWordTap={setSelectedWord} />
+              : <PinyinRow text={msg.text} />
           )}
 
           {/* Nút dịch nhỏ ở góc dưới */}
@@ -147,11 +126,6 @@ const styles = StyleSheet.create({
     marginRight: theme.spacing.md,
     marginTop: 4,
   },
-  avatarImage: {
-    width: 40,
-    height: 40,
-    borderRadius: theme.radius.full,
-  },
   avatarPlaceholder: {
     width: 40,
     height: 40,
@@ -193,32 +167,6 @@ const styles = StyleSheet.create({
     ...theme.typography.body,
     color: theme.colors.text,
     lineHeight: 24,
-  },
-  wordsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-end',
-    rowGap: 8,
-    columnGap: 4,
-    marginVertical: 4,
-  },
-  wordBlock: {
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    minWidth: 26,
-    paddingHorizontal: 2,
-  },
-  pinyinText: {
-    fontSize: 11,
-    color: theme.colors.textMuted,
-    textAlign: 'center',
-    marginBottom: 2,
-  },
-  hanziText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: theme.colors.text,
-    textAlign: 'center',
   },
   translateToggle: {
     alignSelf: 'flex-end',

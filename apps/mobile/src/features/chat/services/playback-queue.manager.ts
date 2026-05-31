@@ -57,7 +57,6 @@ export class PlaybackQueueManager {
     this.queue.push(...msgs);
     if (!this.isPlaying) {
       this.isPlaying = true;
-      this.isStopped = false; // Reset stop status if enqueuing new batch
       void this.playNext();
     }
   }

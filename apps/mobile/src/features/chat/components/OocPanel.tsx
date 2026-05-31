@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -8,10 +8,15 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
-  Animated,
-  Dimensions,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
+import Animated, {
+  useSharedValue,
+  withTiming,
+  useAnimatedStyle,
+  runOnJS,
+} from 'react-native-reanimated';
 import { theme } from '../../../theme';
 import { useChatStore } from '../store/chat.store';
 import { CharacterRow } from './CharacterRow';
@@ -21,9 +26,6 @@ interface OocPanelProps {
   visible: boolean;
   onClose: () => void;
 }
-
-const { width: windowWidth } = Dimensions.get('window');
-const PANEL_WIDTH = windowWidth * 0.8;
 
 export function OocPanel({ visible, onClose }: OocPanelProps) {
   const {
@@ -37,22 +39,36 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
     addTempCharacter,
   } = useChatStore();
 
+  const { width } = useWindowDimensions();
+  const panelWidth = width * 0.8;
+
   const [localOoc, setLocalOoc] = useState(persistentOOC);
   const [savingOoc, setSavingOoc] = useState(false);
   const [clearingOoc, setClearingOoc] = useState(false);
   const [loadingChars, setLoadingChars] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
-
-  // Quản lý animation
-  const translateX = useRef(new Animated.Value(PANEL_WIDTH)).current;
   const [modalVisible, setModalVisible] = useState(false);
+
+  const translateX = useSharedValue(panelWidth);
+
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const handleClose = () => {
+    translateX.value = withTiming(panelWidth, { duration: 250 }, (finished) => {
+      if (finished) {
+        runOnJS(setModalVisible)(false);
+        runOnJS(onClose)();
+      }
+    });
+  };
 
   useEffect(() => {
     if (visible) {
       setModalVisible(true);
       setLocalOoc(persistentOOC);
-      
-      // Load story characters nếu chưa có
+
       if (charactersFull.length === 0) {
         setLoadingChars(true);
         loadStoryCharacters()
@@ -60,36 +76,20 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
           .finally(() => setLoadingChars(false));
       }
 
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
+      translateX.value = withTiming(0, { duration: 300 });
     } else {
-      // Khi component cha set visible = false trực tiếp (nếu có)
-      // Ta đảm bảo đồng bộ đóng modal cục bộ
       handleClose();
     }
   }, [visible]);
-
-  const handleClose = () => {
-    Animated.timing(translateX, {
-      toValue: PANEL_WIDTH,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      setModalVisible(false);
-      onClose();
-    });
-  };
 
   const handleSaveOoc = async () => {
     setSavingOoc(true);
     try {
       await setPersistentOOC(localOoc.trim());
       Alert.alert('Thành công', 'Đã lưu bối cảnh cốt truyện.');
-    } catch (e: any) {
-      Alert.alert('Lỗi', e?.message || 'Không thể lưu bối cảnh.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Không thể lưu bối cảnh.';
+      Alert.alert('Lỗi', msg);
     } finally {
       setSavingOoc(false);
     }
@@ -101,8 +101,9 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
       await setPersistentOOC('');
       setLocalOoc('');
       Alert.alert('Thành công', 'Đã xóa bối cảnh cốt truyện.');
-    } catch (e: any) {
-      Alert.alert('Lỗi', e?.message || 'Không thể xóa bối cảnh.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Không thể xóa bối cảnh.';
+      Alert.alert('Lỗi', msg);
     } finally {
       setClearingOoc(false);
     }
@@ -112,8 +113,9 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
     setTogglingId(charId);
     try {
       await toggleCharacter(charId, on);
-    } catch (e: any) {
-      Alert.alert('Lỗi', e?.message || 'Không thể thay đổi trạng thái nhân vật.');
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Không thể thay đổi trạng thái nhân vật.';
+      Alert.alert('Lỗi', msg);
     } finally {
       setTogglingId(null);
     }
@@ -126,7 +128,7 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
         <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose} />
 
         {/* Panel Sidebar trượt từ phải */}
-        <Animated.View style={[styles.container, { transform: [{ translateX }] }]}>
+        <Animated.View style={[styles.container, animStyle]}>
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>⚙️ Bối cảnh & Nhân vật</Text>
@@ -154,7 +156,7 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
               <View style={styles.charCountContainer}>
                 <Text style={styles.charCountText}>{localOoc.length}/200</Text>
               </View>
-              
+
               <View style={styles.oocBtnRow}>
                 <TouchableOpacity
                   style={[styles.saveBtn, savingOoc && styles.btnDisabled]}
@@ -198,7 +200,7 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
                   <CharacterRow
                     key={char.id}
                     name={char.name}
-                    avatarUrl={char.avatarUrl}
+                    avatarUrl={undefined}
                     checked={activeCharacters.includes(char.id)}
                     isToggling={togglingId === char.id}
                     onChange={(on) => handleToggleChar(char.id, on)}
@@ -213,8 +215,7 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
               <Text style={styles.sectionDesc}>
                 Nhân vật dùng một lần xuất hiện trong phiên chat hiện tại.
               </Text>
-              
-              {/* Danh sách nhân vật tạm thời */}
+
               {temporaryCharacters.length > 0 ? (
                 <View style={styles.tempList}>
                   {temporaryCharacters.map((temp) => (
@@ -228,7 +229,6 @@ export function OocPanel({ visible, onClose }: OocPanelProps) {
                 <Text style={styles.emptyText}>Chưa có nhân vật tạm thời nào.</Text>
               )}
 
-              {/* Form thêm mới */}
               <TempCharacterForm onAdd={addTempCharacter} />
             </View>
           </ScrollView>
@@ -245,10 +245,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   backdrop: {
-    flex: 2, // Chiếm khoảng 20% màn hình
+    flex: 2,
   },
   container: {
-    flex: 8, // Chiếm khoảng 80% màn hình
+    flex: 8,
     backgroundColor: '#FFFFFF',
     height: '100%',
     shadowColor: '#000',
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
-    marginTop: 20, // Dự phòng cho Safe Area trên iOS
+    marginTop: 20,
   },
   title: {
     ...theme.typography.h3,
