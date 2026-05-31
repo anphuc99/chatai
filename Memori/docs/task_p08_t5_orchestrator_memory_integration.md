@@ -1,29 +1,33 @@
-# Memori Document — P08.T5: Wire Memory vào ChatOrchestrator
+# Memori Document â€” P08.T5: Wire Memory vÃ o ChatOrchestrator
 
-Tài liệu thiết kế và lưu ý kỹ thuật khi tích hợp dịch vụ **MemoryService** vào **ChatOrchestratorService** nhằm cung cấp bối cảnh trí nhớ dài hạn (Plot & Character Memory) cho mô hình ngôn ngữ lớn (LLM).
+TÃ i liá»‡u thiáº¿t káº¿ vÃ  lÆ°u Ã½ ká»¹ thuáº­t khi tÃ­ch há»£p dá»‹ch vá»¥ **MemoryService** vÃ o **ChatOrchestratorService** nháº±m cung cáº¥p bá»‘i cáº£nh trÃ­ nhá»› dÃ i háº¡n (Plot & Character Memory) cho mÃ´ hÃ¬nh ngÃ´n ngá»¯ lá»›n (LLM).
 
-## 1. Mô tả tính năng
-Để giúp nhân vật AI nhớ lại các sự kiện đã xảy ra trong quá khứ sau khi một session kết thúc, chúng ta kết nối dịch vụ RAG dài hạn (`MemoryService`) vào luồng điều phối hội thoại chính (`ChatOrchestratorService`):
-- **Parallel Querying**: Truy vấn bối cảnh bộ nhớ dài hạn song song với quá trình đọc lịch sử hội thoại gần đây từ JSONL (`HistoryStore`) để tối ưu hóa latency.
-- **Context Injection**: Trí nhớ dài hạn sau khi lấy ra sẽ được định dạng và đưa vào phương thức `promptBuilder.buildLlmMessages` dưới dạng block `[TRÍ NHỚ DÀI HẠN]`.
-- **Graceful degradation**: Nếu bộ nhớ dài hạn gặp lỗi hoặc ChromaDB bị mất kết nối, hệ thống sẽ tự động hạ cấp xuống chuỗi rỗng `""` và tiếp tục cuộc trò chuyện bình thường thay vì gây crash.
-- **Telemetry logging**: Log chi tiết thời gian truy xuất (`retrievalTimeMs`) và độ dài của bối cảnh (`contextLength`) để giám sát hiệu năng.
+## 1. MÃ´ táº£ tÃ­nh nÄƒng
 
-## 2. Chi tiết các hàm
+Äá»ƒ giÃºp nhÃ¢n váº­t AI nhá»› láº¡i cÃ¡c sá»± kiá»‡n Ä‘Ã£ xáº£y ra trong quÃ¡ khá»© sau khi má»™t session káº¿t thÃºc, chÃºng ta káº¿t ná»‘i dá»‹ch vá»¥ RAG dÃ i háº¡n (`MemoryService`) vÃ o luá»“ng Ä‘iá»u phá»‘i há»™i thoáº¡i chÃ­nh (`ChatOrchestratorService`):
+
+- **Parallel Querying**: Truy váº¥n bá»‘i cáº£nh bá»™ nhá»› dÃ i háº¡n song song vá»›i quÃ¡ trÃ¬nh Ä‘á»c lá»‹ch sá»­ há»™i thoáº¡i gáº§n Ä‘Ã¢y tá»« JSONL (`HistoryStore`) Ä‘á»ƒ tá»‘i Æ°u hÃ³a latency.
+- **Context Injection**: TrÃ­ nhá»› dÃ i háº¡n sau khi láº¥y ra sáº½ Ä‘Æ°á»£c Ä‘á»‹nh dáº¡ng vÃ  Ä‘Æ°a vÃ o phÆ°Æ¡ng thá»©c `promptBuilder.buildLlmMessages` dÆ°á»›i dáº¡ng block `[TRÃ NHá»š DÃ€I Háº N]`.
+- **Graceful degradation**: Náº¿u bá»™ nhá»› dÃ i háº¡n gáº·p lá»—i hoáº·c ChromaDB bá»‹ máº¥t káº¿t ná»‘i, há»‡ thá»‘ng sáº½ tá»± Ä‘á»™ng háº¡ cáº¥p xuá»‘ng chuá»—i rá»—ng `""` vÃ  tiáº¿p tá»¥c cuá»™c trÃ² chuyá»‡n bÃ¬nh thÆ°á»ng thay vÃ¬ gÃ¢y crash.
+- **Telemetry logging**: Log chi tiáº¿t thá»i gian truy xuáº¥t (`retrievalTimeMs`) vÃ  Ä‘á»™ dÃ i cá»§a bá»‘i cáº£nh (`contextLength`) Ä‘á»ƒ giÃ¡m sÃ¡t hiá»‡u nÄƒng.
+
+## 2. Chi tiáº¿t cÃ¡c hÃ m
 
 ### 2.1. `ChatOrchestratorService.handleUserTurn`
-- Nhận tin nhắn mới từ người dùng, lưu vào JSONL.
-- Gọi song song hai tác vụ qua `Promise.all`:
-  1. `historyStore.readSinceLastCheckpoint(ctx.sessionId)` (Đọc lịch sử hội thoại).
-  2. `safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames)` (Truy vấn bộ nhớ dài hạn).
-- Đưa kết quả `memoryContext` vào `promptBuilder.buildLlmMessages(...)` để dựng prompt gửi lên LLM.
+
+- Nháº­n tin nháº¯n má»›i tá»« ngÆ°á»i dÃ¹ng, lÆ°u vÃ o JSONL.
+- Gá»i song song hai tÃ¡c vá»¥ qua `Promise.all`:
+  1. `historyStore.readSinceLastCheckpoint(ctx.sessionId)` (Äá»c lá»‹ch sá»­ há»™i thoáº¡i).
+  2. `safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames)` (Truy váº¥n bá»™ nhá»› dÃ i háº¡n).
+- ÄÆ°a káº¿t quáº£ `memoryContext` vÃ o `promptBuilder.buildLlmMessages(...)` Ä‘á»ƒ dá»±ng prompt gá»­i lÃªn LLM.
 
 ### 2.2. `ChatOrchestratorService.safeRetrieveMemory`
+
 - **Signature**: `private async safeRetrieveMemory(userId: string, storyId: string, userMessage: string, activeCharNames: string[]): Promise<string>`
-- Thực thi gọi `memoryService.retrieveContext(...)`.
-- Bọc toàn bộ trong khối `try-catch`:
-  - **Success**: Ghi nhận log debug telemetry dạng `{ msg: 'Memory context retrieved successfully', retrievalTimeMs, contextLength }` và trả về context.
-  - **Failure**: Bắt mọi lỗi xảy ra, ghi nhận log warning kèm thông tin lỗi và duration, sau đó trả về chuỗi rỗng `""`.
+- Thá»±c thi gá»i `memoryService.retrieveContext(...)`.
+- Bá»c toÃ n bá»™ trong khá»‘i `try-catch`:
+  - **Success**: Ghi nháº­n log debug telemetry dáº¡ng `{ msg: 'Memory context retrieved successfully', retrievalTimeMs, contextLength }` vÃ  tráº£ vá» context.
+  - **Failure**: Báº¯t má»i lá»—i xáº£y ra, ghi nháº­n log warning kÃ¨m thÃ´ng tin lá»—i vÃ  duration, sau Ä‘Ã³ tráº£ vá» chuá»—i rá»—ng `""`.
 
 ## 3. Data Flow Diagram
 
@@ -36,35 +40,35 @@ sequenceDiagram
     participant LLM as LlmService
 
     Orch->>HS: append(userMessage)
-    Note over Orch, Mem: Chạy song song (Parallel) để giảm latency
+    Note over Orch, Mem: Cháº¡y song song (Parallel) Ä‘á»ƒ giáº£m latency
     par Read History
         Orch->>HS: readSinceLastCheckpoint(sessionId)
         HS-->>Orch: history
     and Retrieve Long-term Memory
         Orch->>Orch: safeRetrieveMemory(uid, sid, msg, charNames)
         Orch->>Mem: retrieveContext(uid, sid, msg, charNames)
-        alt RAG thành công
+        alt RAG thÃ nh cÃ´ng
             Mem-->>Orch: memoryContext
             Orch->>Orch: Log debug telemetry
-        else RAG gặp lỗi
+        else RAG gáº·p lá»—i
             Mem--XOrch: Error
-            Orch->>Orch: Log warning & trả về ""
+            Orch->>Orch: Log warning & tráº£ vá» ""
         end
     end
     Orch->>PB: buildSystemPrompt(...)
     Orch->>PB: buildLlmMessages(sysPrompt, history, msg, persOOC, ephOOC, memoryContext)
-    PB-->>Orch: llmMessages (chứa block [TRÍ NHỚ DÀI HẠN])
+    PB-->>Orch: llmMessages (chá»©a block [TRÃ NHá»š DÃ€I Háº N])
     Orch->>LLM: chatJson(llmMessages)
     LLM-->>Orch: assistantBatch
     Orch->>HS: append(assistantBatch)
     Orch-->>Orch: persist & emit events
 ```
 
-## 4. Lưu ý quan trọng & Gotchas
+## 4. LÆ°u Ã½ quan trá»ng & Gotchas
 
-- **Circular Dependency (Phụ thuộc vòng)**: 
-  `MemoryModule` cần `ChatModule` (để dùng `LlmService`), trong khi `ChatModule` lại cần `MemoryModule` (để dùng `MemoryService`).
-  - *Giải pháp*: Sử dụng `forwardRef(() => MemoryModule)` trong `chat.module.ts` và `forwardRef(() => ChatModule)` trong `memory.module.ts` của NestJS.
-  - Tại constructor của `ChatOrchestratorService`, ta bắt buộc phải inject bằng `@Inject(forwardRef(() => MemoryService))`.
+- **Circular Dependency (Phá»¥ thuá»™c vÃ²ng)**:
+  `MemoryModule` cáº§n `ChatModule` (Ä‘á»ƒ dÃ¹ng `LlmService`), trong khi `ChatModule` láº¡i cáº§n `MemoryModule` (Ä‘á»ƒ dÃ¹ng `MemoryService`).
+  - _Giáº£i phÃ¡p_: Sá»­ dá»¥ng `forwardRef(() => MemoryModule)` trong `chat.module.ts` vÃ  `forwardRef(() => ChatModule)` trong `memory.module.ts` cá»§a NestJS.
+  - Táº¡i constructor cá»§a `ChatOrchestratorService`, ta báº¯t buá»™c pháº£i inject báº±ng `@Inject(forwardRef(() => MemoryService))`.
 - **Latency Control**:
-  RAG đòi hỏi việc sinh query bằng LLM, tạo embedding và tìm kiếm vector trên ChromaDB. Bằng cách chạy song song việc gọi RAG và đọc file JSONL (I/O), chúng ta tiết kiệm được đáng kể tổng thời gian xử lý một lượt chat của người dùng.
+  RAG Ä‘Ã²i há»i viá»‡c sinh query báº±ng LLM, táº¡o embedding vÃ  tÃ¬m kiáº¿m vector trÃªn ChromaDB. Báº±ng cÃ¡ch cháº¡y song song viá»‡c gá»i RAG vÃ  Ä‘á»c file JSONL (I/O), chÃºng ta tiáº¿t kiá»‡m Ä‘Æ°á»£c Ä‘Ã¡ng ká»ƒ tá»•ng thá»i gian xá»­ lÃ½ má»™t lÆ°á»£t chat cá»§a ngÆ°á»i dÃ¹ng.

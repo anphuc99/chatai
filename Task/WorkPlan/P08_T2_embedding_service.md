@@ -1,5 +1,7 @@
 # P08.T2 — EmbeddingService (Ollama bge-m3 + Redis Cache)
 
+> **Review**: DONE — xem `Task/WorkPlan/P08_R_review_refactor.md`
+
 ## 1. METADATA
 
 | Field | Value |

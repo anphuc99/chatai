@@ -74,47 +74,18 @@ export class MemoryService {
     });
   }
 
-  async getLastChunkIndex(
+  async getNextChunkIndex(
     userId: string,
     storyId: string,
     type: 'plot' | 'character',
   ): Promise<number> {
-    const cacheKey = `mem:lastidx:${userId}:${storyId}:${type}`;
+    const counterKey = `mem:idx:${userId}:${storyId}:${type}`;
 
     try {
-      const cached = await this.redis.get(cacheKey);
-      if (cached !== null && cached !== undefined) {
-        return parseInt(cached, 10);
-      }
+      return await this.redis.incr(counterKey);
     } catch (e: any) {
-      this.logger.warn(`Redis get cache failed for last chunk index: ${e.message}`);
-    }
-
-    // Workaround: bge-m3 embedding model size is 1024. Query Chroma with a zeroVector.
-    const zeroVector = new Array(1024).fill(0);
-    const filter = {
-      user_id: userId,
-      story_id: storyId,
-      memory_type: type,
-    };
-
-    try {
-      const chunks = await this.chroma.query(zeroVector, filter, 200);
-      let maxIdx = 0;
-      if (chunks.length > 0) {
-        maxIdx = Math.max(...chunks.map((c) => c.metadata.chunk_index));
-      }
-
-      try {
-        await this.redis.set(cacheKey, maxIdx.toString(), 60); // 60s TTL
-      } catch (e: any) {
-        this.logger.warn(`Redis set cache failed for last chunk index: ${e.message}`);
-      }
-
-      return maxIdx;
-    } catch (e: any) {
-      this.logger.error(`Chroma query failed in getLastChunkIndex: ${e.message}`);
-      throw e;
+      this.logger.error(`Redis incr failed for chunk index: ${e.message}`);
+      throw new Error(`Failed to generate chunk index: ${e.message}`);
     }
   }
 

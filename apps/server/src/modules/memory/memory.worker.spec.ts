@@ -7,13 +7,6 @@ import { ChromaClient } from './chroma.client';
 import { MemoryService } from './memory.service';
 import { Job } from 'bullmq';
 import { MemoryJob } from './types/memory-job';
-import { TemplateLoader } from '@chatai/prompts';
-
-jest.mock('@chatai/prompts', () => ({
-  TemplateLoader: {
-    loadTemplate: jest.fn(() => 'Mock character prompt template {{CHAR_NAME}} {{HISTORY_TEXT}}'),
-  },
-}));
 
 describe('MemoryWorker', () => {
   let worker: MemoryWorker;
@@ -38,13 +31,13 @@ describe('MemoryWorker', () => {
   };
 
   const mockChroma = {
-    query: jest.fn(),
+    getByIds: jest.fn(),
     addDocuments: jest.fn(),
   };
 
   const mockMemoryService = {
     formatMessagesForSummary: jest.fn(),
-    getLastChunkIndex: jest.fn(),
+    getNextChunkIndex: jest.fn(),
     getActiveCharactersInSession: jest.fn(),
   };
 
@@ -97,27 +90,31 @@ describe('MemoryWorker', () => {
         where: { sessionId: 'session-123' },
         orderBy: { turnOrder: 'asc' },
       });
-      expect(chroma.query).not.toHaveBeenCalled();
+      expect(chroma.getByIds).not.toHaveBeenCalled();
     });
 
-    it('should skip processing if memory already exists in Chroma (idempotency check)', async () => {
+    it('should skip plot but process characters if plot already exists', async () => {
       const mockMessages = [{ id: 'msg-1', turnOrder: 1, role: 'user', text: 'hello' }];
+      const mockCharacters = [{ id: 'char-1', name: 'Garen' }];
       mockPrisma.message.findMany.mockResolvedValue(mockMessages);
-      mockChroma.query.mockResolvedValue([{ id: 'existing-plot' }]); // already exists
+      mockMemoryService.formatMessagesForSummary.mockReturnValue('hello');
+      mockMemoryService.getActiveCharactersInSession.mockResolvedValue(mockCharacters);
+      mockChroma.getByIds.mockImplementation(async (ids) => {
+        if (ids[0] === 'session-123_plot') return [{ id: 'session-123_plot' }]; // Plot exists
+        if (ids[0] === 'session-123_char_char-1') return []; // Char does not exist
+        return [];
+      });
+
+      mockLlmService.summarize.mockResolvedValue('char memory');
+      mockEmbeddingService.embed.mockResolvedValue([0.1]);
+      mockMemoryService.getNextChunkIndex.mockResolvedValue(3);
 
       await worker.process(mockJob);
 
-      expect(chroma.query).toHaveBeenCalledWith(
-        expect.any(Array),
-        {
-          user_id: 'user-456',
-          story_id: 'story-789',
-          session_id: 'session-123',
-          memory_type: 'plot',
-        },
-        1,
-      );
-      expect(memoryService.getLastChunkIndex).not.toHaveBeenCalled();
+      expect(chroma.getByIds).toHaveBeenCalledWith(['session-123_plot']);
+      expect(chroma.getByIds).toHaveBeenCalledWith(['session-123_char_char-1']);
+      expect(memoryService.getNextChunkIndex).toHaveBeenCalledWith('user-456', 'story-789', 'character');
+      expect(chroma.addDocuments).toHaveBeenCalledTimes(1); // Only character memory was added
     });
 
     it('should process plot and character memories successfully', async () => {
@@ -130,9 +127,9 @@ describe('MemoryWorker', () => {
       const mockEmbedding = [0.1, 0.2, 0.3];
 
       mockPrisma.message.findMany.mockResolvedValue(mockMessages);
-      mockChroma.query.mockResolvedValue([]); // cache miss for idempotency check
+      mockChroma.getByIds.mockResolvedValue([]); // cache miss for idempotency check (both plot & char)
       mockMemoryService.formatMessagesForSummary.mockReturnValue(formattedText);
-      mockMemoryService.getLastChunkIndex.mockResolvedValue(2); // last chunk index is 2
+      mockMemoryService.getNextChunkIndex.mockResolvedValue(3); // mock next index
       mockLlmService.summarize.mockImplementation((text, mode) => {
         if (mode === 'plot') return Promise.resolve('Plot summary content');
         if (mode === 'character') return Promise.resolve('Character memory content');
@@ -143,8 +140,9 @@ describe('MemoryWorker', () => {
 
       await worker.process(mockJob);
 
-      // Verify plot index retrieval
-      expect(memoryService.getLastChunkIndex).toHaveBeenCalledWith('user-456', 'story-789', 'plot');
+      // Verify index retrieval called for both types
+      expect(memoryService.getNextChunkIndex).toHaveBeenCalledWith('user-456', 'story-789', 'plot');
+      expect(memoryService.getNextChunkIndex).toHaveBeenCalledWith('user-456', 'story-789', 'character');
 
       // Verify plot summary + embedding
       expect(llmService.summarize).toHaveBeenCalledWith(formattedText, 'plot');
@@ -153,10 +151,9 @@ describe('MemoryWorker', () => {
       // Verify character active retrieval
       expect(memoryService.getActiveCharactersInSession).toHaveBeenCalledWith(mockMessages);
 
-      // Verify character prompt building
-      expect(TemplateLoader.loadTemplate).toHaveBeenCalledWith('summary_character');
+      // Verify character llm directly with raw text
       expect(llmService.summarize).toHaveBeenCalledWith(
-        expect.stringContaining('Garen'),
+        formattedText,
         'character',
         { CHAR_NAME: 'Garen' },
       );
@@ -175,7 +172,7 @@ describe('MemoryWorker', () => {
             user_id: 'user-456',
             story_id: 'story-789',
             session_id: 'session-123',
-            chunk_index: 3, // next index (lastIdx + 1)
+            chunk_index: 3,
             memory_type: 'plot',
             turn_start: 1,
             turn_end: 2,
@@ -206,9 +203,9 @@ describe('MemoryWorker', () => {
     it('should skip character memories if no active characters', async () => {
       const mockMessages = [{ id: 'msg-1', turnOrder: 1, role: 'user', text: 'Hello' }];
       mockPrisma.message.findMany.mockResolvedValue(mockMessages);
-      mockChroma.query.mockResolvedValue([]);
+      mockChroma.getByIds.mockResolvedValue([]);
       mockMemoryService.formatMessagesForSummary.mockReturnValue('User: Hello');
-      mockMemoryService.getLastChunkIndex.mockResolvedValue(0);
+      mockMemoryService.getNextChunkIndex.mockResolvedValue(1);
       mockLlmService.summarize.mockResolvedValue('Plot summary only');
       mockEmbeddingService.embed.mockResolvedValue([0.1]);
       mockMemoryService.getActiveCharactersInSession.mockResolvedValue([]); // no active chars

@@ -7,7 +7,6 @@ import { EmbeddingService } from './embedding.service';
 import { ChromaClient } from './chroma.client';
 import { MemoryService } from './memory.service';
 import { MemoryJob } from './types/memory-job';
-import { TemplateLoader } from '@chatai/prompts';
 
 @Processor('memory-write')
 export class MemoryWorker extends WorkerHost {
@@ -39,41 +38,19 @@ export class MemoryWorker extends WorkerHost {
         return;
       }
 
-      // 2. Idempotency check in Chroma
-      const zeroVector = new Array(1024).fill(0);
-      const existingPlot = await this.chroma.query(
-        zeroVector,
-        {
-          user_id: payload.userId,
-          story_id: payload.storyId,
-          session_id: payload.sessionId,
-          memory_type: 'plot',
-        },
-        1,
-      );
-
-      if (existingPlot.length > 0) {
-        this.logger.log(`Memory already written for session ${payload.sessionId}. Skipping.`);
-        return;
-      }
-
-      // 3. Format text
+      // 2. Format text
       const text = this.memoryService.formatMessagesForSummary(messages);
 
-      // 4. Get chunk index baseline
-      const lastIdx = await this.memoryService.getLastChunkIndex(payload.userId, payload.storyId, 'plot');
-      const nextIdx = lastIdx + 1;
+      // 3. Plot summary + embed + write
+      await this.writePlot(payload, messages, text);
 
-      // 5. Plot summary + embed + write
-      await this.writePlot(payload, messages, text, nextIdx);
-
-      // 6. Character memories
+      // 4. Character memories
       const characters = await this.memoryService.getActiveCharactersInSession(messages);
       if (characters.length > 0) {
-        await this.writeCharacterMemories(payload, messages, text, characters, nextIdx);
+        await this.writeCharacterMemories(payload, messages, text, characters);
       }
 
-      this.logger.log(`Successfully completed memory write for session ${payload.sessionId}. Next chunk index: ${nextIdx}`);
+      this.logger.log(`Successfully completed memory write for session ${payload.sessionId}.`);
     } catch (error: any) {
       this.logger.error(`Failed to process memory-write job for session ${payload.sessionId}: ${error.message}`);
       throw error; // Rethrow to let BullMQ handle retry mechanism
@@ -84,8 +61,14 @@ export class MemoryWorker extends WorkerHost {
     payload: MemoryJob,
     messages: any[],
     text: string,
-    chunkIdx: number,
   ): Promise<void> {
+    const docId = `${payload.sessionId}_plot`;
+    const existing = await this.chroma.getByIds([docId]);
+    if (existing.length > 0) {
+      this.logger.log(`Plot memory already written for session ${payload.sessionId}. Skipping plot generation.`);
+      return;
+    }
+
     this.logger.log(`Summarizing and embedding plot for session ${payload.sessionId}`);
 
     let summary = await this.llmService.summarize(text, 'plot');
@@ -96,10 +79,11 @@ export class MemoryWorker extends WorkerHost {
     const embedding = await this.embeddingService.embed(summary);
     const turnStart = messages[0].turnOrder;
     const turnEnd = messages[messages.length - 1].turnOrder;
+    const chunkIdx = await this.memoryService.getNextChunkIndex(payload.userId, payload.storyId, 'plot');
 
     await this.chroma.addDocuments([
       {
-        id: `${payload.sessionId}_plot`,
+        id: docId,
         content: summary,
         embedding,
         metadata: {
@@ -122,7 +106,6 @@ export class MemoryWorker extends WorkerHost {
     messages: any[],
     text: string,
     characters: any[],
-    chunkIdx: number,
   ): Promise<void> {
     this.logger.log(`Processing character memories for ${characters.length} characters in session ${payload.sessionId}`);
     const turnStart = messages[0].turnOrder;
@@ -130,10 +113,16 @@ export class MemoryWorker extends WorkerHost {
 
     // Process characters sequentially to avoid overloading Ollama
     for (const char of characters) {
+      const docId = `${payload.sessionId}_char_${char.id}`;
+      const existing = await this.chroma.getByIds([docId]);
+      if (existing.length > 0) {
+        this.logger.log(`Character memory already written for ${char.name} in session ${payload.sessionId}. Skipping.`);
+        continue;
+      }
+
       this.logger.log(`Generating memory for character ${char.name} (ID: ${char.id})`);
 
-      const prompt = this.buildCharacterPrompt(text, char);
-      const summaryRaw = await this.llmService.summarize(prompt, 'character', { CHAR_NAME: char.name });
+      const summaryRaw = await this.llmService.summarize(text, 'character', { CHAR_NAME: char.name });
 
       let summary = summaryRaw;
       if (summary.length > 1500) {
@@ -141,10 +130,11 @@ export class MemoryWorker extends WorkerHost {
       }
 
       const embedding = await this.embeddingService.embed(summary);
+      const chunkIdx = await this.memoryService.getNextChunkIndex(payload.userId, payload.storyId, 'character');
 
       await this.chroma.addDocuments([
         {
-          id: `${payload.sessionId}_char_${char.id}`,
+          id: docId,
           content: summary,
           embedding,
           metadata: {
@@ -161,15 +151,5 @@ export class MemoryWorker extends WorkerHost {
         },
       ]);
     }
-  }
-
-  private buildCharacterPrompt(text: string, character: any): string {
-    const template = TemplateLoader.loadTemplate('summary_character');
-    let prompt = template;
-    prompt = prompt.replace(/{{CHAR_NAME}}/g, character.name);
-    prompt = prompt.replace(/{{CHARACTER_NAME}}/g, character.name);
-    prompt = prompt.replace(/{{HISTORY_TEXT}}/g, text);
-    prompt = prompt.replace(/{{MESSAGES_BLOCK}}/g, text);
-    return prompt;
   }
 }

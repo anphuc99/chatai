@@ -27,9 +27,10 @@ describe('ChromaClient', () => {
   let mockChromaClientInstance: any;
 
   beforeEach(async () => {
-    // Tắt log trong test
+    // Táº¯t log trong test
     jest.spyOn(Logger.prototype, 'log').mockImplementation(() => undefined);
     jest.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+    jest.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
     mockCollection = {
       add: jest.fn(),
       query: jest.fn(),
@@ -55,7 +56,7 @@ describe('ChromaClient', () => {
     const { ChromaClient: MockChromaClient } = require('chromadb');
     mockChromaClientInstance = new MockChromaClient();
     mockGetOrCreateCollection.mockResolvedValue(mockCollection);
-    
+
     // override internal client instance property for tests
     (client as any).client = mockChromaClientInstance;
     (client as any).collection = mockCollection;
@@ -76,12 +77,32 @@ describe('ChromaClient', () => {
       expect(Logger.prototype.log).toHaveBeenCalled();
     });
 
-    it('should throw CHROMA_UNAVAILABLE on connection error', async () => {
+    it('should log warning and not throw on connection error', async () => {
       mockGetOrCreateCollection.mockRejectedValue(new Error('Connection refused'));
-      await expect(client.onModuleInit()).rejects.toThrow(AppException);
-      await expect(client.onModuleInit()).rejects.toMatchObject({
-        code: 'CHROMA_UNAVAILABLE',
-      });
+
+      await expect(client.onModuleInit()).resolves.not.toThrow();
+      expect(Logger.prototype.warn).toHaveBeenCalled();
+    });
+  });
+
+  describe('ensureCollection lazy init', () => {
+    it('should fetch collection on first operation if down on boot', async () => {
+      // Simulate boot failure
+      (client as any).collection = undefined;
+      mockCollection.get.mockResolvedValue({ ids: [] });
+
+      await client.count({});
+
+      expect(mockGetOrCreateCollection).toHaveBeenCalled();
+      expect(mockCollection.get).toHaveBeenCalled();
+    });
+
+    it('should throw CHROMA_UNAVAILABLE if still down', async () => {
+      (client as any).collection = undefined;
+      mockGetOrCreateCollection.mockRejectedValue(new Error('still down'));
+
+      await expect(client.count({})).rejects.toThrow(AppException);
+      await expect(client.count({})).rejects.toMatchObject({ code: 'CHROMA_UNAVAILABLE' });
     });
   });
 
@@ -172,16 +193,32 @@ describe('ChromaClient', () => {
       });
 
       await client.getByIndexRange({ user_id: 'u1' }, 1, 5);
-      
+
       expect(mockCollection.get).toHaveBeenCalledWith({
         where: {
-          $and: [
-            { user_id: 'u1' },
-            { chunk_index: { $gte: 1 } },
-            { chunk_index: { $lte: 5 } },
-          ],
+          $and: [{ user_id: 'u1' }, { chunk_index: { $gte: 1 } }, { chunk_index: { $lte: 5 } }],
         },
       });
+    });
+  });
+
+  describe('getByIds', () => {
+    it('should call collection.get with ids', async () => {
+      mockCollection.get.mockResolvedValue({
+        ids: ['doc1'],
+        documents: ['content'],
+        metadatas: [{}],
+      });
+
+      const res = await client.getByIds(['doc1']);
+      expect(mockCollection.get).toHaveBeenCalledWith({ ids: ['doc1'] });
+      expect(res).toHaveLength(1);
+    });
+
+    it('should return empty if ids empty', async () => {
+      const res = await client.getByIds([]);
+      expect(res).toEqual([]);
+      expect(mockCollection.get).not.toHaveBeenCalled();
     });
   });
 

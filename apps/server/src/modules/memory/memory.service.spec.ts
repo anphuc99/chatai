@@ -39,6 +39,7 @@ describe('MemoryService', () => {
   const mockRedis = {
     get: jest.fn(),
     set: jest.fn(),
+    incr: jest.fn(),
   };
 
   const mockEmbeddingService = {
@@ -85,10 +86,26 @@ describe('MemoryService', () => {
     jest.clearAllMocks();
   });
 
+  describe('getNextChunkIndex', () => {
+    it('should call redis.incr and return value', async () => {
+      mockRedis.incr.mockResolvedValue(2);
+      const res = await service.getNextChunkIndex('user1', 'story1', 'plot');
+      expect(mockRedis.incr).toHaveBeenCalledWith('mem:idx:user1:story1:plot');
+      expect(res).toBe(2);
+    });
+
+    it('should throw Error if redis.incr fails', async () => {
+      mockRedis.incr.mockRejectedValue(new Error('Redis down'));
+      await expect(service.getNextChunkIndex('user1', 'story1', 'plot')).rejects.toThrow(
+        'Failed to generate chunk index: Redis down',
+      );
+    });
+  });
+
   describe('retrieveContext', () => {
     const userId = 'user-123';
     const storyId = 'story-456';
-    const userMessage = 'Hành trình đi săn quái thú';
+    const userMessage = 'HÃ nh trÃ¬nh Ä‘i sÄƒn quÃ¡i thÃº';
     const activeChars = ['Linh'];
 
     const mockEmbeddings = [
@@ -106,7 +123,7 @@ describe('MemoryService', () => {
       // 3. Setup Chroma query results
       const plotChunk: MemoryChunk = {
         id: 'chunk-plot-1',
-        content: 'Chúng tôi bắt đầu đi săn ở rừng sâu.',
+        content: 'ChÃºng tÃ´i báº¯t Ä‘áº§u Ä‘i sÄƒn á»Ÿ rá»«ng sÃ¢u.',
         metadata: {
           user_id: userId,
           story_id: storyId,
@@ -122,7 +139,7 @@ describe('MemoryService', () => {
 
       const charChunk: MemoryChunk = {
         id: 'chunk-char-1',
-        content: 'Linh tỏ ra rất lo lắng trước chuyến đi.',
+        content: 'Linh tá» ra ráº¥t lo láº¯ng trÆ°á»›c chuyáº¿n Ä‘i.',
         metadata: {
           user_id: userId,
           story_id: storyId,
@@ -149,7 +166,7 @@ describe('MemoryService', () => {
       // 4. Setup sliding window expansion (return same seeds + some neighbors)
       const neighborChunk: MemoryChunk = {
         id: 'chunk-plot-0',
-        content: 'Rừng sâu là nơi nguy hiểm.',
+        content: 'Rá»«ng sÃ¢u lÃ  nÆ¡i nguy hiá»ƒm.',
         metadata: {
           user_id: userId,
           story_id: storyId,
@@ -171,7 +188,7 @@ describe('MemoryService', () => {
       // Verifications
       expect(multiQueryGenerator.generate).toHaveBeenCalledWith(userMessage);
       expect(embeddingService.embedBatch).toHaveBeenCalledWith(['q1', 'q2', 'q3'], 3);
-      
+
       // Plot query: 3 queries x 1 call = 3 calls
       // Character Linh query: 3 queries x 1 character x 1 call = 3 calls
       expect(chroma.query).toHaveBeenCalledTimes(6);
@@ -183,11 +200,11 @@ describe('MemoryService', () => {
 
       // Result should be sorted: Plot first, then Character Linh, ordered by chunk_index
       // Index 0 Plot -> Index 1 Plot -> Index 2 Linh
-      const expectedText = 
-        `[#0 Plot] Rừng sâu là nơi nguy hiểm.\n\n` +
-        `[#1 Plot] Chúng tôi bắt đầu đi săn ở rừng sâu.\n\n` +
-        `[#2 Linh] Linh tỏ ra rất lo lắng trước chuyến đi.`;
-      
+      const expectedText =
+        `[#0 Plot] Rá»«ng sÃ¢u lÃ  nÆ¡i nguy hiá»ƒm.\n\n` +
+        `[#1 Plot] ChÃºng tÃ´i báº¯t Ä‘áº§u Ä‘i sÄƒn á»Ÿ rá»«ng sÃ¢u.\n\n` +
+        `[#2 Linh] Linh tá» ra ráº¥t lo láº¯ng trÆ°á»›c chuyáº¿n Ä‘i.`;
+
       expect(result).toBe(expectedText);
       expect(llmService.summarize).not.toHaveBeenCalled();
     });
@@ -238,15 +255,12 @@ describe('MemoryService', () => {
 
       chroma.query.mockResolvedValue([longChunk]);
       slidingWindow.expand.mockResolvedValue([longChunk]);
-      llmService.summarize.mockResolvedValue('Tóm tắt ngắn gọn dưới 3000 kí tự.');
+      llmService.summarize.mockResolvedValue('TÃ³m táº¯t ngáº¯n gá»n dÆ°á»›i 3000 kÃ­ tá»±.');
 
       const result = await service.retrieveContext(userId, storyId, userMessage, activeChars);
 
-      expect(llmService.summarize).toHaveBeenCalledWith(
-        `[#1 Plot] ${longContent}`,
-        'session',
-      );
-      expect(result).toBe('Tóm tắt ngắn gọn dưới 3000 kí tự.');
+      expect(llmService.summarize).toHaveBeenCalledWith(`[#1 Plot] ${longContent}`, 'session');
+      expect(result).toBe('TÃ³m táº¯t ngáº¯n gá»n dÆ°á»›i 3000 kÃ­ tá»±.');
     });
 
     it('should gracefully degrade and return empty string if ChromaClient fails', async () => {
