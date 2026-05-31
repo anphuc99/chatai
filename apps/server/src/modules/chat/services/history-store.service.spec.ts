@@ -151,6 +151,34 @@ describe('HistoryStoreService', () => {
     expect(result).toHaveLength(2);
   });
 
+  it('should readSinceLastCheckpoint using coveredUntilTimestamp to filter out covered entries', async () => {
+    const sid = '99999999-8888-7777-6666-555555555555';
+    const e1 = { type: 'user', timestamp: 1000, data: { text: 'User 1' } } as HistoryEntry;
+    const e2 = { type: 'assistant_batch', timestamp: 2000, data: { messages: [{ characterName: 'Mimi', text: 'Hi 1' }] } } as HistoryEntry;
+    const e3 = { type: 'user', timestamp: 3000, data: { text: 'User 2' } } as HistoryEntry;
+    const e4 = { type: 'assistant_batch', timestamp: 4000, data: { messages: [{ characterName: 'Mimi', text: 'Hi 2' }] } } as HistoryEntry;
+    const eCheckpoint = {
+      type: 'checkpoint',
+      timestamp: 5000,
+      data: { summary: 'Summary of 1 & 2', tokensBefore: 50, entriesCovered: 2, coveredUntilTimestamp: 2000 },
+    } as HistoryEntry;
+    const e5 = { type: 'user', timestamp: 6000, data: { text: 'User 3' } } as HistoryEntry;
+
+    await service.append(sid, e1);
+    await service.append(sid, e2);
+    await service.append(sid, e3);
+    await service.append(sid, e4);
+    await service.append(sid, eCheckpoint);
+    await service.append(sid, e5);
+
+    const result = await service.readSinceLastCheckpoint(sid);
+    expect(result).toHaveLength(4);
+    expect(result[0]!.type).toBe('checkpoint');
+    expect(result[1]!.timestamp).toBe(3000);
+    expect(result[2]!.timestamp).toBe(4000);
+    expect(result[3]!.timestamp).toBe(6000);
+  });
+
   it('should compute estimateTokens correctly', async () => {
     const sid = 'aaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
     // format UUID correct

@@ -42,11 +42,14 @@ export class TokenCounterService {
         case 'checkpoint':
           sum += this.estimateTokens(e.data.summary);
           break;
+        case 'character_toggle':
+          sum += this.estimateTokens(e.data.name) + 8;
+          break;
         case 'system':
           sum += 50; // fixed overhead for system messages
           break;
         default:
-          // Skip other entry types such as character_toggle
+          // Skip other entry types
           break;
       }
     }

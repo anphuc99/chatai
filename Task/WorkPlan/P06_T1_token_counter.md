@@ -1,5 +1,7 @@
 # P06.T1 — TokenCounterService + Threshold Config
 
+> **Review**: DONE — xem `Task/WorkPlan/P06_R_review_refactor.md`
+
 ## 1. METADATA
 
 | Field | Value |

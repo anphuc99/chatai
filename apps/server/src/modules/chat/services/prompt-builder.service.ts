@@ -90,11 +90,11 @@ export class PromptBuilderService implements OnModuleInit {
 
     // 1. System block
     let fullSystem = systemPrompt;
-    if (persistentOOC) {
-      fullSystem += `\n\n## BỐI CẢNH CỐ ĐỊNH\n${persistentOOC}`;
-    }
     if (memoryContext) {
       fullSystem += `\n\n## KÝ ỨC LIÊN QUAN\n${memoryContext}`;
+    }
+    if (persistentOOC) {
+      fullSystem += `\n\n## BỐI CẢNH CỐ ĐỊNH\n${persistentOOC}`;
     }
     messages.push({ role: 'system', content: fullSystem });
 

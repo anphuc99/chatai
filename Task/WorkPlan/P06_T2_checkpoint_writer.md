@@ -1,5 +1,7 @@
 # P06.T2 — Checkpoint Writer (Small AI Summarize)
 
+> **Review**: DONE — xem `Task/WorkPlan/P06_R_review_refactor.md`
+
 ## 1. METADATA
 
 | Field | Value |

@@ -29,7 +29,7 @@ export type HistoryEntry =
   | {
       type: 'checkpoint';
       timestamp: number;
-      data: { summary: string; tokensBefore: number; entriesCovered: number };
+      data: { summary: string; tokensBefore: number; entriesCovered: number; coveredUntilTimestamp?: number };
     }
   | { type: 'system'; timestamp: number; data: { storyId: string; activeCharacters: string[]; note?: string } }
   | { type: 'character_toggle'; timestamp: number; data: { characterId: string; name: string; on: boolean } };

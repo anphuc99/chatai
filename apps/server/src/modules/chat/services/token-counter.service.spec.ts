@@ -80,9 +80,18 @@ describe('TokenCounterService', () => {
             activeCharacters: ['Mimi'],
           },
         }, // total = 50 (fixed)
+        {
+          type: 'character_toggle',
+          timestamp: Date.now(),
+          data: {
+            characterId: 'char-1',
+            name: 'Mimi', // 4 other -> ceil(4/4) = 1. Plus 8 overhead -> total = 9
+            on: true,
+          },
+        }, // total = 9
       ];
 
-      expect(service.estimateHistoryTokens(entries)).toBe(4 + 2 + 1 + 2 + 50);
+      expect(service.estimateHistoryTokens(entries)).toBe(4 + 2 + 1 + 2 + 50 + 9);
     });
   });
 

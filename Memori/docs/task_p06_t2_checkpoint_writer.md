@@ -48,27 +48,27 @@ sequenceDiagram
     Orch->>Ckpt: maybeTriggerAsync(sid)
     Note over Ckpt: Chạy bất đồng bộ qua setImmediate
     Orch-->>Client: Trả về phản hồi lượt chat hiện tại
-    
+
     Ckpt->>HS: estimateTokens(sid)
     HS-->>Ckpt: Trả về token count (ví dụ: 5000)
     Note over Ckpt: 5000 >= 4800 (Threshold) -> Bắt đầu lock
-    
+
     Ckpt->>R: withLock("chat:ckpt-lock:sid", 120_000, callback)
     R-->>Ckpt: Lock thành công
-    
+
     Ckpt->>HS: estimateTokens(sid) (Double-check)
     HS-->>Ckpt: Trả về 5000
-    
+
     Ckpt->>HS: readSinceLastCheckpoint(sid)
     HS-->>Ckpt: Danh sách các HistoryEntry
-    
+
     Note over Ckpt: formatHistoryForSummary()
     Ckpt->>LLM: summarize(historyText, 'session')
     LLM-->>Ckpt: Đoạn văn bản tóm tắt mới
-    
+
     Ckpt->>HS: append(sid, { type: 'checkpoint', data: { summary, ... } })
     HS-->>Ckpt: Hoàn tất ghi file
-    
+
     Ckpt->>R: Giải phóng Lock
 ```
 

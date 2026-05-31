@@ -115,6 +115,15 @@ export class HistoryStoreService implements OnModuleInit {
       return all;
     }
 
+    const last = all[lastCheckpointIndex];
+    if (last && last.type === 'checkpoint' && last.data.coveredUntilTimestamp !== undefined) {
+      const coveredUntil = last.data.coveredUntilTimestamp;
+      return [
+        last,
+        ...all.filter((e) => e.timestamp > coveredUntil && e.type !== 'checkpoint'),
+      ];
+    }
+
     return all.slice(lastCheckpointIndex);
   }
 

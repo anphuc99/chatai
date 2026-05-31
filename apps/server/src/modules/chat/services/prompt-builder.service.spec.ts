@@ -279,9 +279,16 @@ describe('PromptBuilderService', () => {
 
       // 1. Combined System Message
       expect(messages[0]!.role).toBe('system');
-      expect(messages[0]!.content).toContain('Đây là system prompt mẫu.');
-      expect(messages[0]!.content).toContain('## BỐI CẢNH CỐ ĐỊNH\nBối cảnh OOC cố định');
-      expect(messages[0]!.content).toContain('## KÝ ỨC LIÊN QUAN\nKý ức cũ');
+      const content = messages[0]!.content;
+      const sysIndex = content.indexOf('Đây là system prompt mẫu.');
+      const memoryIndex = content.indexOf('## KÝ ỨC LIÊN QUAN\nKý ức cũ');
+      const oocIndex = content.indexOf('## BỐI CẢNH CỐ ĐỊNH\nBối cảnh OOC cố định');
+
+      expect(sysIndex).not.toBe(-1);
+      expect(memoryIndex).not.toBe(-1);
+      expect(oocIndex).not.toBe(-1);
+      expect(sysIndex).toBeLessThan(memoryIndex);
+      expect(memoryIndex).toBeLessThan(oocIndex);
 
       // 2. Checkpoint Summary
       expect(messages[1]!.role).toBe('system');
