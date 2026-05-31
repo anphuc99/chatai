@@ -4,7 +4,7 @@
 
 | Field | Value |
 |-------|-------|
-| Task ID | P05.T1 |
+| Task ID | P05.T1 ✅ DONE |
 | Phase | 5 — Chat UI & Playback |
 | Depends on | P04.T8, P03.T4 |
 | Complexity | High |

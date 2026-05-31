@@ -19,6 +19,13 @@ import { InputBar } from '../components/InputBar';
 import { OocPanel } from '../components/OocPanel';
 import { CharacterToggleSheet } from '../components/CharacterToggleSheet';
 import { theme } from '../../../theme';
+import { characterApi } from '../../character/services/character.api';
+import {
+  PlaybackQueueManager,
+  setPlaybackManagerSingleton,
+  getPlaybackManagerSingleton,
+} from '../services/playback-queue.manager';
+import { useChatStore } from '../store/chat.store';
 
 type Route = RouteProp<StoryStackParamList, 'ChatRoom'>;
 
@@ -82,7 +89,27 @@ export function ChatRoomScreen() {
     async function init() {
       try {
         await startSession(storyId);
+        
+        // Tải danh sách nhân vật để cấu hình PlaybackQueueManager
+        const { loadStoryCharacters } = useChatStore.getState();
+        await loadStoryCharacters();
+        const characters = useChatStore.getState().charactersFull;
+        const charMap = new Map(
+          (characters || []).map((c) => [
+            c.id,
+            { voiceName: c.voiceName, pitch: c.pitch },
+          ])
+        );
+
         if (active) {
+          const mgr = new PlaybackQueueManager({
+            onBubbleShow: (msg) => useChatStore.getState().appendAssistantBubble(msg),
+            onQueueFinished: () => useChatStore.getState().setInputLocked(false),
+            onError: (e) => console.warn('[PlaybackQueueManager]', e),
+            charactersVoice: charMap,
+          });
+          setPlaybackManagerSingleton(mgr);
+
           await loadHistory();
         }
       } catch (e: any) {
@@ -100,13 +127,25 @@ export function ChatRoomScreen() {
 
     return () => {
       active = false;
+      const mgr = getPlaybackManagerSingleton();
+      if (mgr) {
+        mgr.stop();
+        setPlaybackManagerSingleton(null);
+      }
       reset(); // Reset store state khi đóng màn hình
     };
   }, [storyId]);
 
   const handleSend = async (text: string, ephemeralOOC?: string) => {
     try {
-      await sendMessage(text, ephemeralOOC);
+      if (text === '' && ephemeralOOC) {
+        // Gửi OOC inline
+        const { pushEphemeralOOC } = useChatStore.getState();
+        await pushEphemeralOOC(ephemeralOOC);
+      } else {
+        // Gửi tin nhắn thường
+        await sendMessage(text, ephemeralOOC);
+      }
     } catch (e: any) {
       if (e?.code === 'SESSION_LOCKED') {
         Alert.alert('Thất bại', 'Đang xử lý tin trước, vui lòng đợi một lát nhé.');
@@ -175,9 +214,6 @@ export function ChatRoomScreen() {
       <OocPanel
         visible={showOocPanel}
         onClose={() => setShowOocPanel(false)}
-        persistentOOC={persistentOOC}
-        onSavePersistentOOC={setPersistentOOC}
-        onAddTempCharacter={addTempCharacter}
       />
 
       {/* Sheet toggle trạng thái nhân vật trong cốt truyện */}

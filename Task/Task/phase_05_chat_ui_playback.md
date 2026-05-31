@@ -7,7 +7,7 @@
 
 ## P5.T1 — Client: PlaybackQueueManager (expo-av)
 
-**Status**: `[ ]`  
+**Status**: `[x] DONE`  
 **Depends on**: P4.T8
 
 **Mô tả chi tiết**:
@@ -71,7 +71,7 @@
 
 ## P5.T2 — Client: MessageBubble Full UI (Emotion + Pinyin + Translation)
 
-**Status**: `[ ]`  
+**Status**: `[x] DONE`  
 **Depends on**: P5.T1
 
 **Mô tả chi tiết**:
@@ -111,7 +111,7 @@
 
 ## P5.T3 — Client: Tap-to-Show Word Tooltip
 
-**Status**: `[ ]`  
+**Status**: `[x] DONE`  
 **Depends on**: P5.T2
 
 **Mô tả chi tiết**:
@@ -155,7 +155,7 @@
 
 ## P5.T4 — Client: InputBar Lock/Unlock + OOC Inline
 
-**Status**: `[ ]`  
+**Status**: `[x] DONE`  
 **Depends on**: P5.T1
 
 **Mô tả chi tiết**:
@@ -185,7 +185,7 @@
 
 ## P5.T5 — Client: OOC Sidebar Panel (Persistent OOC)
 
-**Status**: `[ ]`  
+**Status**: `[x] DONE`  
 **Depends on**: P5.T4
 
 **Mô tả chi tiết**:
