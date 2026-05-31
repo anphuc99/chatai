@@ -89,6 +89,10 @@ const REGISTRY = {
     status: HttpStatus.SERVICE_UNAVAILABLE,
     defaultMessage: 'ChromaDB tạm thời không khả dụng',
   },
+  EMBED_UNAVAILABLE: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    defaultMessage: 'Dịch vụ embedding tạm thời không khả dụng',
+  },
 } satisfies Record<string, ErrorMeta>;
 
 export function getMeta(code: string): ErrorMeta {
