@@ -69,6 +69,7 @@ model Session {
 
   @@index([userId, storyId, status])
   @@index([storyId, status])
+  @@index([userId, status, endedAt])
   @@map("sessions")
 }
 

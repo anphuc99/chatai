@@ -19,6 +19,7 @@ import { OwnershipModule } from './shared/ownership/ownership.module';
 import { CharactersModule } from './modules/characters/characters.module';
 import { TtsModule } from './modules/tts/tts.module';
 import { ChatModule } from './modules/chat/chat.module';
+import { JournalModule } from './modules/journal/journal.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
@@ -41,6 +42,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     CharactersModule,
     TtsModule,
     ChatModule,
+    JournalModule,
   ],
 
   providers: [

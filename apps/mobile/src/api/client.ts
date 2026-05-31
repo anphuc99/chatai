@@ -26,7 +26,7 @@ instance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   const method = config.method?.toUpperCase();
   if (method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    config.headers['Idempotency-Key'] = uuidv4();
+    config.headers['Idempotency-Key'] = config.headers['Idempotency-Key'] || uuidv4();
   }
 
   return config;

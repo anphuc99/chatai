@@ -32,6 +32,10 @@ const REGISTRY = {
   },
   SESSION_LOCKED: { status: HttpStatus.CONFLICT, defaultMessage: 'Phiên đang được xử lý' },
   SESSION_ALREADY_ENDED: { status: HttpStatus.CONFLICT, defaultMessage: 'Phiên đã kết thúc' },
+  SESSION_ENDED_REQUIRED: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    defaultMessage: 'Phiên hội thoại chưa kết thúc',
+  },
   STORY_HAS_ACTIVE_SESSION: {
     status: HttpStatus.CONFLICT,
     defaultMessage: 'Story đang có phiên active',

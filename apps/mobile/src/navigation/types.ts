@@ -18,10 +18,15 @@ export type StoryStackParamList = {
   ChatRoom: { storyId: string };
 };
 
+export type JournalStackParamList = {
+  JournalList: undefined;
+  JournalDetail: { sessionId: string };
+};
+
 export type MainTabParamList = {
   Home: undefined;
   Stories: NavigatorScreenParams<StoryStackParamList>;
-  Journal: undefined;
+  Journal: NavigatorScreenParams<JournalStackParamList>;
   Profile: undefined;
 };
 

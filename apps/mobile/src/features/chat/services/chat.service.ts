@@ -48,6 +48,20 @@ export const chatService = {
       name,
       description,
     }),
+
+  endSession: (
+    sid: string,
+    idempotencyKey: string,
+  ): Promise<{ journalSessionId: string; summary: string; msgCount: number }> =>
+    apiClient.post(
+      `/chat/sessions/${sid}/end`,
+      {},
+      {
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
+      },
+    ),
 };
 
 export default chatService;

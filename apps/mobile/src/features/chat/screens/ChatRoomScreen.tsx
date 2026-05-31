@@ -25,7 +25,7 @@ import {
   setPlaybackManagerSingleton,
   getPlaybackManagerSingleton,
 } from '../services/playback-queue.manager';
-import { useChatStore } from '../store/chat.store';
+import { chatService } from '../services/chat.service';
 
 type Route = RouteProp<StoryStackParamList, 'ChatRoom'>;
 
@@ -38,6 +38,7 @@ export function ChatRoomScreen() {
   const story = useStoryStore((s) => s.storiesById[storyId]);
 
   const {
+    sessionId,
     messages,
     activeCharacters,
     persistentOOC,
@@ -56,6 +57,55 @@ export function ChatRoomScreen() {
   const [showOocPanel, setShowOocPanel] = useState(false);
   const [showCharToggle, setShowCharToggle] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [ending, setEnding] = useState(false);
+
+  const onEndPress = () => {
+    Alert.alert(
+      'Kết thúc phiên?',
+      'Tin nhắn sẽ được lưu vào Sổ tay và AI sẽ tóm tắt lại phiên học này.',
+      [
+        { text: 'Huỷ', style: 'cancel' },
+        {
+          text: 'Kết thúc',
+          style: 'destructive',
+          onPress: doEnd,
+        },
+      ]
+    );
+  };
+
+  const doEnd = async () => {
+    if (!sessionId) return;
+    setEnding(true);
+
+    const mgr = getPlaybackManagerSingleton();
+    if (mgr) {
+      mgr.stop();
+    }
+
+    try {
+      const idempKey = `end-${sessionId}-${Date.now()}`;
+      const result = await chatService.endSession(sessionId, idempKey);
+
+      (navigation as any).navigate('Main', {
+        screen: 'Journal',
+        params: {
+          screen: 'JournalDetail',
+          params: { sessionId: result.journalSessionId },
+        },
+      });
+    } catch (e: any) {
+      if (e?.code === 'SESSION_LOCKED') {
+        Alert.alert('Thất bại', 'Phiên chat đang được xử lý, vui lòng chờ.');
+      } else if (e?.code === 'LLM_UNAVAILABLE') {
+        Alert.alert('Thất bại', 'AI tạm thời bận, không thể tóm tắt lúc này. Vui lòng thử lại sau.');
+      } else {
+        Alert.alert('Lỗi', e?.message || 'Không thể kết thúc phiên chat.');
+      }
+    } finally {
+      setEnding(false);
+    }
+  };
 
   // Cấu hình header navigation bar
   useLayoutEffect(() => {
@@ -64,9 +114,18 @@ export function ChatRoomScreen() {
       headerRight: () => (
         <View style={styles.headerRightContainer}>
           <TouchableOpacity
+            onPress={onEndPress}
+            style={styles.headerBtn}
+            activeOpacity={0.7}
+            disabled={ending}
+          >
+            <Text style={styles.headerBtnText}>🔚</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             onPress={() => setShowCharToggle(true)}
             style={styles.headerBtn}
             activeOpacity={0.7}
+            disabled={ending}
           >
             <Text style={styles.headerBtnText}>👥</Text>
           </TouchableOpacity>
@@ -74,13 +133,14 @@ export function ChatRoomScreen() {
             onPress={() => setShowOocPanel(true)}
             style={styles.headerBtn}
             activeOpacity={0.7}
+            disabled={ending}
           >
             <Text style={styles.headerBtnText}>⚙️</Text>
           </TouchableOpacity>
         </View>
       ),
     });
-  }, [navigation, story, setShowCharToggle, setShowOocPanel]);
+  }, [navigation, story, setShowCharToggle, setShowOocPanel, ending]);
 
   // Khởi động session và load history
   useEffect(() => {

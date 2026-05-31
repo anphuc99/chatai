@@ -4,7 +4,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { MainTabParamList } from './types';
 import { HomeScreen } from '../features/home/screens/HomeScreen';
 import { StoryStack } from './StoryStack';
-import { JournalListScreen } from '../features/journal/screens/JournalListScreen';
+import { JournalStackNavigator } from './JournalStackNavigator';
 import { ProfileScreen } from '../features/profile/screens/ProfileScreen';
 import { theme } from '../theme';
 
@@ -77,8 +77,8 @@ export function MainTabNavigator() {
       />
       <Tab.Screen 
         name="Journal" 
-        component={JournalListScreen} 
-        options={{ title: 'Nhật ký' }}
+        component={JournalStackNavigator} 
+        options={{ title: 'Nhật ký', headerShown: false }}
       />
       <Tab.Screen 
         name="Profile" 

@@ -1,3 +1,20 @@
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { ChatMessage } from '../types/message';
+import { UserBubble } from './UserBubble';
+import { NarratorBubble } from './NarratorBubble';
+import { CharacterBubble } from './CharacterBubble';
+import { theme } from '../../../theme';
+
+interface MessageBubbleProps {
+  msg: ChatMessage;
+}
+
+export function MessageBubble({ msg }: MessageBubbleProps) {
+  switch (msg.kind) {
+    case 'user':
+      return <UserBubble msg={msg} />;
+
     case 'assistant':
       // Nếu tên nhân vật là Narrator hoặc không có characterId thì là NarratorBubble
       if (msg.characterName === 'Narrator' || msg.characterId == null) {
