@@ -9,6 +9,8 @@ import { ChatController } from './chat.controller';
 import { TokenCounterService } from './services/token-counter.service';
 import { ChatConfig } from '../../config/chat.config';
 import { CheckpointService } from './services/checkpoint.service';
+import { EndChatService } from './services/end-chat.service';
+import { IdempotencyInterceptor } from '../../shared/idempotency/idempotency.interceptor';
 
 @Module({
   controllers: [ChatController],
@@ -22,6 +24,8 @@ import { CheckpointService } from './services/checkpoint.service';
     TokenCounterService,
     ChatConfig,
     CheckpointService,
+    EndChatService,
+    IdempotencyInterceptor,
   ],
   exports: [
     HistoryStoreService,
@@ -33,6 +37,8 @@ import { CheckpointService } from './services/checkpoint.service';
     TokenCounterService,
     ChatConfig,
     CheckpointService,
+    EndChatService,
+    IdempotencyInterceptor,
   ],
 })
 export class ChatModule {}

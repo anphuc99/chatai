@@ -1,8 +1,12 @@
-Tóm tắt các sự kiện sau từ GÓC NHÌN THỨ 3 (Người kể chuyện).
-Chỉ nêu sự kiện khách quan, hành động, và kết quả. 
-KHÔNG viết cảm nhận cá nhân của nhân vật nào.
+Bạn là người kể chuyện. Hãy viết lại các sự kiện sau dưới dạng đoạn văn tự sự (ngôi thứ 3) ngắn gọn 150-300 từ tiếng Việt.
 
-[ĐOẠN HỘI THOẠI]:
-{{MESSAGES_BLOCK}}
+TẬP TRUNG VÀO:
+- Sự kiện chính theo trình tự
+- Thay đổi quan trọng về quan hệ/bối cảnh
+- Quyết định của người chơi
 
-Trả về 2-4 câu tóm tắt sự kiện. Viết bằng tiếng Việt.
+KHÔNG ĐỀ CẬP: lời thoại từng câu một, OOC, từ vựng.
+
+CHỈ TRẢ ĐOẠN VĂN, KHÔNG TIÊU ĐỀ.
+
+=== DỮ LIỆU ===

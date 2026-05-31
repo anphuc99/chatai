@@ -21,6 +21,8 @@ import { AuthUser } from '../../shared/types/auth-user';
 import { RedisThrottlerGuard } from '../../shared/throttler/redis-throttler.guard';
 import { Throttle } from '../../shared/throttler/throttle.decorator';
 import { AppException, ERR } from '../../shared/errors/app-exception';
+import { EndChatService } from './services/end-chat.service';
+import { Idempotent } from '../../shared/idempotency/idempotent.decorator';
 import {
   StartSessionDto,
   SendMessageDto,
@@ -39,6 +41,7 @@ export class ChatController {
     private readonly historyStore: HistoryStoreService,
     private readonly redis: RedisService,
     private readonly prisma: PrismaService,
+    private readonly endChatService: EndChatService,
   ) {}
 
   @Post('sessions')
@@ -165,5 +168,16 @@ export class ChatController {
       `Một nhân vật tạm thời tên ${dto.name} xuất hiện: ${dto.description}`,
     );
     return { tempId };
+  }
+
+  @Post('sessions/:sid/end')
+  @HttpCode(HttpStatus.OK)
+  @Throttle(10, 60)
+  @Idempotent('chat-end', 3600)
+  async endSession(
+    @CurrentUser() u: AuthUser,
+    @Param('sid', ParseUUIDPipe) sid: string,
+  ) {
+    return this.endChatService.execute(sid, u.uid);
   }
 }

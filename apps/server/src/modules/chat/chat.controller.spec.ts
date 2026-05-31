@@ -10,6 +10,7 @@ import { RedisThrottlerGuard } from '../../shared/throttler/redis-throttler.guar
 import { ConflictException } from '@nestjs/common';
 import { AppException, ERR } from '../../shared/errors/app-exception';
 import { AuthUser } from '../../shared/types/auth-user';
+import { EndChatService } from './services/end-chat.service';
 
 describe('ChatController', () => {
   let controller: ChatController;
@@ -19,6 +20,7 @@ describe('ChatController', () => {
   let historyStore: any;
   let redis: any;
   let prisma: any;
+  let endChatService: any;
 
   const mockUser: AuthUser = { uid: 'user-123', email: 'test@example.com' };
 
@@ -60,6 +62,10 @@ describe('ChatController', () => {
     canActivate: jest.fn().mockReturnValue(true),
   };
 
+  const mockEndChatService = {
+    execute: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -72,6 +78,7 @@ describe('ChatController', () => {
         { provide: HistoryStoreService, useValue: mockHistoryStoreService },
         { provide: RedisService, useValue: mockRedisService },
         { provide: PrismaService, useValue: mockPrismaService },
+        { provide: EndChatService, useValue: mockEndChatService },
       ],
     })
       .overrideGuard(RedisThrottlerGuard)
@@ -85,6 +92,7 @@ describe('ChatController', () => {
     historyStore = module.get<HistoryStoreService>(HistoryStoreService);
     redis = module.get<RedisService>(RedisService);
     prisma = module.get<PrismaService>(PrismaService);
+    endChatService = module.get<EndChatService>(EndChatService);
   });
 
   it('should be defined', () => {
@@ -246,6 +254,18 @@ describe('ChatController', () => {
       expect(ooc.addTemporary).toHaveBeenCalledWith(sid, { name: dto.name, description: dto.description });
       expect(ooc.pushEphemeral).toHaveBeenCalledWith(sid, 'Một nhân vật tạm thời tên Dragon xuất hiện: Fire breather');
       expect(res).toEqual({ tempId: 'tmp_dragon-uuid' });
+    });
+  });
+
+  describe('endSession', () => {
+    it('should delegate to endChatService.execute', async () => {
+      const sid = 'session-123';
+      const mockResult = { journalSessionId: sid, summary: 'Summary text', messageCount: 10, alreadyEnded: false };
+      mockEndChatService.execute.mockResolvedValue(mockResult);
+
+      const res = await controller.endSession(mockUser, sid);
+      expect(mockEndChatService.execute).toHaveBeenCalledWith(sid, mockUser.uid);
+      expect(res).toEqual(mockResult);
     });
   });
 });
