@@ -15,6 +15,7 @@ export type StoryStackParamList = {
   Create: { mode: 'create' } | { mode: 'edit'; id: string; title: string; initialSetting: string };
   Detail: { id: string };
   CharacterEditor: { storyId: string; characterId?: string };
+  ChatRoom: { storyId: string };
 };
 
 export type MainTabParamList = {

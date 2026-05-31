@@ -3,6 +3,7 @@ import { StoriesService } from './stories.service';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { RedisService } from '../../shared/redis/redis.service';
 import { AppException } from '../../shared/errors/app-exception';
+import { OwnershipService } from '../../shared/ownership/ownership.service';
 
 describe('StoriesService', () => {
   let service: StoriesService;
@@ -17,6 +18,9 @@ describe('StoriesService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    session: {
+      count: jest.fn().mockResolvedValue(0),
+    },
   };
 
   const mockRedis = {
@@ -30,6 +34,7 @@ describe('StoriesService', () => {
         StoriesService,
         { provide: PrismaService, useValue: mockPrisma },
         { provide: RedisService, useValue: mockRedis },
+        OwnershipService,
       ],
     }).compile();
 
@@ -136,6 +141,7 @@ describe('StoriesService', () => {
         updatedAt: new Date().toISOString(),
       };
       redis.cacheWrap.mockResolvedValue(mockStoryDto);
+      prisma.story.findUnique.mockResolvedValue({ id: 'story-1', userId: 'user-1' });
 
       const result = await service.getById('user-1', 'story-1');
 
@@ -160,6 +166,7 @@ describe('StoriesService', () => {
         updatedAt: new Date().toISOString(),
       };
       redis.cacheWrap.mockResolvedValue(mockStoryDto);
+      prisma.story.findUnique.mockResolvedValue({ id: 'story-1', userId: 'user-2' });
 
       await expect(service.getById('user-1', 'story-1')).rejects.toThrow(
         new AppException('FORBIDDEN', 'Không có quyền truy cập câu chuyện này'),
@@ -285,6 +292,7 @@ describe('StoriesService', () => {
           StoriesService,
           { provide: PrismaService, useValue: mockPrismaWithSession },
           { provide: RedisService, useValue: mockRedis },
+          OwnershipService,
         ],
       }).compile();
 

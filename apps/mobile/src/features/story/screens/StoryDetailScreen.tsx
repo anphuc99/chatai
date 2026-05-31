@@ -62,9 +62,9 @@ export function StoryDetailScreen() {
   }, [navigation, story]);
 
   const handleStartChat = useCallback(() => {
-    // P04: wire lên chat session
-    Alert.alert('Sắp ra mắt', 'Tính năng Chat sẽ được mở ở P04!');
-  }, []);
+    if (!story) return;
+    navigation.navigate('ChatRoom', { storyId: story.id });
+  }, [navigation, story]);
 
   if (loading && !story) {
     return (

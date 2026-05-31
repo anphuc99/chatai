@@ -5,6 +5,7 @@ import { StoryListScreen } from '../features/story/screens/StoryListScreen';
 import { StoryCreateScreen } from '../features/story/screens/StoryCreateScreen';
 import { StoryDetailScreen } from '../features/story/screens/StoryDetailScreen';
 import { CharacterEditorScreen } from '../features/character/screens/CharacterEditorScreen';
+import { ChatRoomScreen } from '../features/chat/screens/ChatRoomScreen';
 import { theme } from '../theme';
 
 const Stack = createNativeStackNavigator<StoryStackParamList>();
@@ -50,6 +51,11 @@ export function StoryStack() {
         options={({ route }) => ({
           title: route.params?.characterId ? 'Chỉnh sửa nhân vật' : 'Tạo nhân vật mới',
         })}
+      />
+      <Stack.Screen
+        name="ChatRoom"
+        component={ChatRoomScreen}
+        options={{ title: 'Phòng Chat' }}
       />
     </Stack.Navigator>
   );

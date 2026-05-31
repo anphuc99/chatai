@@ -149,18 +149,12 @@ export class StoriesService {
 
   private async hasActiveSession(storyId: string): Promise<boolean> {
     try {
-      // Bảng Session chưa tồn tại ở phase 2.
-      // Dùng Prisma dynamic query hoặc check nếu có model Session.
-      // Tạm thời mock trả về false. Khi có Session model, ta sẽ triển khai thực tế.
-      const prismaAny = this.prisma as any;
-      if (prismaAny.session) {
-        const count = await prismaAny.session.count({
-          where: { storyId, status: 'active' },
-        });
-        return count > 0;
-      }
-      return false;
-    } catch {
+      const count = await this.prisma.session.count({
+        where: { storyId, status: 'active' },
+      });
+      return count > 0;
+    } catch (error: any) {
+      this.logger.error(`Error checking active session for story ${storyId}: ${error.message}`);
       return false;
     }
   }
