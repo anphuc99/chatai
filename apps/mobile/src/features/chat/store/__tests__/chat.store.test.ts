@@ -128,10 +128,10 @@ describe('ChatStore', () => {
       // Khi đang gọi API, kiểm tra xem optimistic update đã thêm tin nhắn user vào store chưa và input có bị khóa không
       const stateDuringApiCall = useChatStore.getState();
       expect(stateDuringApiCall.messages.length).toBe(2); // 1 user + 1 ephemeral_ooc
-      expect(stateDuringApiCall.messages[0].kind).toBe('user');
-      expect(stateDuringApiCall.messages[0].text).toBe('Chào');
-      expect(stateDuringApiCall.messages[1].kind).toBe('ephemeral_ooc');
-      expect(stateDuringApiCall.messages[1].text).toBe('Đang cười');
+      expect(stateDuringApiCall.messages[0]?.kind).toBe('user');
+      expect(stateDuringApiCall.messages[0]?.text).toBe('Chào');
+      expect(stateDuringApiCall.messages[1]?.kind).toBe('ephemeral_ooc');
+      expect(stateDuringApiCall.messages[1]?.text).toBe('Đang cười');
       expect(stateDuringApiCall.inputLocked).toBe(true);
 
       return Promise.resolve(mockBatch);
@@ -167,8 +167,8 @@ describe('ChatStore', () => {
     const state = useChatStore.getState();
     expect(state.persistentOOC).toBe('Trời đổ mưa to');
     expect(state.messages.length).toBe(1);
-    expect(state.messages[0].kind).toBe('persistent_ooc');
-    expect(state.messages[0].text).toBe('Trời đổ mưa to');
+    expect(state.messages[0]?.kind).toBe('persistent_ooc');
+    expect(state.messages[0]?.text).toBe('Trời đổ mưa to');
     expect(chatService.setOoc).toHaveBeenCalledWith('session-123', 'persistent', 'Trời đổ mưa to');
   });
 
@@ -193,7 +193,7 @@ describe('ChatStore', () => {
 
     expect(tempId).toBe('temp-char-1');
     expect(useChatStore.getState().messages.length).toBe(1);
-    expect(useChatStore.getState().messages[0].kind).toBe('system');
-    expect(useChatStore.getState().messages[0].text).toContain('A Phàm');
+    expect(useChatStore.getState().messages[0]?.kind).toBe('system');
+    expect(useChatStore.getState().messages[0]?.text).toContain('A Phàm');
   });
 });

@@ -76,7 +76,7 @@ export function CharacterToggleSheet({
           <View>
             <Text style={styles.charName}>{item.name}</Text>
             <Text style={styles.charRole} numberOfLines={1}>
-              {item.description || 'Không có mô tả'}
+              {item.personality || 'Không có mô tả'}
             </Text>
           </View>
         </View>
