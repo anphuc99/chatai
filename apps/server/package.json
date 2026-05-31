@@ -30,6 +30,7 @@
     "@nestjs/platform-fastify": "^10.4.0",
     "@prisma/client": "^6.2.0",
     "axios": "^1.7.0",
+    "chromadb": "^3.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "fastify": "^4.28.0",
