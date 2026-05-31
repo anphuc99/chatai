@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { MessageDto } from '@chatai/shared-types';
 import { ChatMessage } from '../types/message';
 import { chatService } from '../services/chat.service';
+import { getPlaybackManagerSingleton } from '../services/playback-queue.manager';
 
 export interface ChatState {
   sessionId: string | null;
@@ -19,6 +20,10 @@ export interface ChatState {
   setPersistentOOC: (text: string) => Promise<void>;
   toggleCharacter: (charId: string, on: boolean) => Promise<void>;
   addTempCharacter: (name: string, desc: string) => Promise<string | undefined>;
+  setInputLocked: (v: boolean) => void;
+  appendAssistantBubble: (msg: ChatMessage) => void;
+  enqueueAssistantBatch: (messages: ChatMessage[]) => void;
+  pushEphemeralOOC: (text: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -158,14 +163,53 @@ export const useChatStore = create<ChatState>((set, get) => ({
         timestamp: m.timestamp || Date.now(),
       }));
 
+      get().enqueueAssistantBatch(assistantMsgs);
+    } catch (e: any) {
+      set({ error: e, inputLocked: false });
+      throw e;
+    }
+  },
+
+  setInputLocked: (v: boolean) => set({ inputLocked: v }),
+
+  appendAssistantBubble: (msg: ChatMessage) => {
+    set((state) => ({
+      messages: [...state.messages, msg],
+    }));
+  },
+
+  enqueueAssistantBatch: (messages: ChatMessage[]) => {
+    const manager = getPlaybackManagerSingleton();
+    if (manager) {
+      manager.enqueueBatch(messages);
+    } else {
+      // Fallback khi không có manager (ví dụ trong môi trường test hoặc không khởi tạo)
       set((state) => ({
-        messages: [...state.messages, ...assistantMsgs],
+        messages: [...state.messages, ...messages],
+        inputLocked: false,
+      }));
+    }
+  },
+
+  pushEphemeralOOC: async (text: string) => {
+    const sid = get().sessionId;
+    if (!sid) return;
+    try {
+      await chatService.setOoc(sid, 'ephemeral', text);
+      set((state) => ({
+        messages: [
+          ...state.messages,
+          {
+            kind: 'ephemeral_ooc',
+            id: `tmp_eph_${Date.now()}`,
+            text: text,
+            timestamp: Date.now(),
+          },
+        ],
       }));
     } catch (e: any) {
       set({ error: e });
       throw e;
-    } finally {
-      set({ inputLocked: false });
     }
   },
 

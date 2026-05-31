@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { theme } from '../../../theme';
+import { useChatStore } from '../store/chat.store';
 
 interface InputBarProps {
   onSend: (text: string, ephemeralOOC?: string) => void;
@@ -20,22 +21,46 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
   const [showOoc, setShowOoc] = useState(false);
   const [oocText, setOocText] = useState('');
 
+  const inputLocked = useChatStore((state) => state.inputLocked);
+  const disabledEffective = disabled || inputLocked;
+  const isOocMode = text.startsWith('//');
+
   const handleSend = () => {
-    if (!text.trim() || disabled) return;
-    onSend(text.trim(), showOoc && oocText.trim() ? oocText.trim() : undefined);
+    if (!text.trim() || disabledEffective) return;
+
+    if (isOocMode) {
+      const ephOOC = text.replace(/^\/\/\s*/, '').trim();
+      if (!ephOOC) return;
+      onSend('', ephOOC);
+    } else {
+      onSend(text.trim(), showOoc && oocText.trim() ? oocText.trim() : undefined);
+    }
+
     setText('');
     setOocText('');
     setShowOoc(false);
   };
 
-  const isSendDisabled = !text.trim() || disabled;
+  const isSendDisabled = !text.trim() || disabledEffective;
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      style={styles.container}
+      style={[
+        styles.container,
+        isOocMode && { borderTopColor: theme.colors.warning, borderTopWidth: 2 }
+      ]}
     >
+      {/* Indicator OOC inline */}
+      {isOocMode ? (
+        <View style={styles.oocInlineIndicator}>
+          <Text style={styles.oocInlineIndicatorText}>
+            ⚠️ [OOC] – Ngữ cảnh tạm thời (không kích hoạt phản hồi AI)
+          </Text>
+        </View>
+      ) : null}
+
       {/* Ô nhập Ephemeral OOC (nếu bật) */}
       {showOoc ? (
         <View style={styles.oocInputContainer}>
@@ -53,6 +78,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
             placeholderTextColor={theme.colors.textMuted}
             multiline
             maxLength={200}
+            editable={!disabledEffective}
           />
         </View>
       ) : null}
@@ -61,8 +87,13 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
       <View style={styles.mainInputRow}>
         {/* Nút bật/tắt nhập Ephemeral OOC */}
         <TouchableOpacity
-          style={[styles.oocToggleBtn, showOoc && styles.oocToggleBtnActive]}
+          style={[
+            styles.oocToggleBtn,
+            showOoc && styles.oocToggleBtnActive,
+            disabledEffective && styles.oocToggleBtnDisabled
+          ]}
           onPress={() => setShowOoc(!showOoc)}
+          disabled={disabledEffective}
           activeOpacity={0.7}
         >
           <Text style={[styles.oocToggleText, showOoc && styles.oocToggleTextActive]}>
@@ -72,14 +103,14 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
 
         {/* Ô nhập tin nhắn */}
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, isOocMode && styles.textInputOoc]}
           value={text}
           onChangeText={setText}
-          placeholder={disabled ? 'Đang chờ phản hồi...' : 'Gõ tin nhắn bằng tiếng Trung...'}
+          placeholder={disabledEffective ? 'Đang phát...' : 'Gõ tin nhắn bằng tiếng Trung...'}
           placeholderTextColor={theme.colors.textMuted}
           multiline
           maxLength={1000}
-          editable={!disabled}
+          editable={!disabledEffective}
         />
 
         {/* Nút gửi */}
@@ -152,6 +183,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     borderColor: '#FDE68A',
   },
+  oocToggleBtnDisabled: {
+    backgroundColor: '#E2E8F0',
+    borderColor: '#E2E8F0',
+    opacity: 0.6,
+  },
   oocToggleText: {
     fontSize: 12,
     fontWeight: '600',
@@ -171,6 +207,25 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  textInputOoc: {
+    borderColor: theme.colors.warning,
+    borderWidth: 1,
+    backgroundColor: '#FFFBEB',
+  },
+  oocInlineIndicator: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: 4,
+    marginBottom: theme.spacing.sm,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.warning,
+  },
+  oocInlineIndicatorText: {
+    fontSize: 11,
+    color: '#D97706',
+    fontWeight: '600',
   },
   sendBtn: {
     backgroundColor: theme.colors.primary,

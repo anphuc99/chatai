@@ -13,6 +13,16 @@ export interface PlaybackCallbacks {
   onError?: (err: unknown) => void;
 }
 
+let playbackManagerInstance: PlaybackQueueManager | null = null;
+
+export function getPlaybackManagerSingleton(): PlaybackQueueManager | null {
+  return playbackManagerInstance;
+}
+
+export function setPlaybackManagerSingleton(mgr: PlaybackQueueManager | null): void {
+  playbackManagerInstance = mgr;
+}
+
 export class PlaybackQueueManager {
   private queue: ChatMessage[] = [];
   private isPlaying = false;

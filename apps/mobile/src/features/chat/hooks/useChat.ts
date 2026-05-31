@@ -16,6 +16,7 @@ export function useChat() {
   const setPersistentOOC = useChatStore((state) => state.setPersistentOOC);
   const toggleCharacter = useChatStore((state) => state.toggleCharacter);
   const addTempCharacter = useChatStore((state) => state.addTempCharacter);
+  const pushEphemeralOOC = useChatStore((state) => state.pushEphemeralOOC);
   const reset = useChatStore((state) => state.reset);
 
   return {
@@ -33,6 +34,7 @@ export function useChat() {
     setPersistentOOC,
     toggleCharacter,
     addTempCharacter,
+    pushEphemeralOOC,
     reset,
   };
 }

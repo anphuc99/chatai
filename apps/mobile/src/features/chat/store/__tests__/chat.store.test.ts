@@ -1,5 +1,6 @@
 import { useChatStore } from '../chat.store';
 import { chatService } from '../../services/chat.service';
+import { setPlaybackManagerSingleton } from '../../services/playback-queue.manager';
 
 jest.mock('../../services/chat.service', () => ({
   chatService: {
@@ -195,5 +196,50 @@ describe('ChatStore', () => {
     expect(useChatStore.getState().messages.length).toBe(1);
     expect(useChatStore.getState().messages[0]?.kind).toBe('system');
     expect(useChatStore.getState().messages[0]?.text).toContain('A Phàm');
+  });
+
+  it('nên pushEphemeralOOC và append ephemeral_ooc bubble cục bộ', async () => {
+    useChatStore.setState({ sessionId: 'session-123', messages: [] });
+    (chatService.setOoc as jest.Mock).mockResolvedValue({ status: 'ok' });
+
+    await useChatStore.getState().pushEphemeralOOC('Trời đang mưa to');
+
+    const state = useChatStore.getState();
+    expect(state.messages.length).toBe(1);
+    expect(state.messages[0]?.kind).toBe('ephemeral_ooc');
+    expect(state.messages[0]?.text).toBe('Trời đang mưa to');
+    expect(chatService.setOoc).toHaveBeenCalledWith('session-123', 'ephemeral', 'Trời đang mưa to');
+  });
+
+  it('nên setInputLocked cập nhật trạng thái inputLocked chính xác', () => {
+    useChatStore.getState().setInputLocked(true);
+    expect(useChatStore.getState().inputLocked).toBe(true);
+
+    useChatStore.getState().setInputLocked(false);
+    expect(useChatStore.getState().inputLocked).toBe(false);
+  });
+
+  it('nên appendAssistantBubble thêm tin nhắn assistant vào mảng messages', () => {
+    useChatStore.setState({ messages: [] });
+    const mockMsg = { kind: 'assistant' as const, id: 'msg-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 };
+    
+    useChatStore.getState().appendAssistantBubble(mockMsg);
+    
+    expect(useChatStore.getState().messages).toEqual([mockMsg]);
+  });
+
+  it('nên gọi PlaybackQueueManager.enqueueBatch khi enqueueAssistantBatch và có manager', () => {
+    const mockManager = {
+      enqueueBatch: jest.fn(),
+    };
+    setPlaybackManagerSingleton(mockManager as any);
+
+    const mockMsgs = [{ kind: 'assistant' as const, id: 'msg-1', characterName: 'Lý Bạch', text: '你好', timestamp: 123 }];
+    useChatStore.getState().enqueueAssistantBatch(mockMsgs);
+
+    expect(mockManager.enqueueBatch).toHaveBeenCalledWith(mockMsgs);
+
+    // Dọn dẹp
+    setPlaybackManagerSingleton(null);
   });
 });
