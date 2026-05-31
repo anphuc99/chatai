@@ -1,4 +1,4 @@
-# P03.T5 — Firebase Storage Rules cho TTS Audio
+# P03.T5 — Firebase Storage Rules cho TTS Audio ✅ DONE
 
 ## 1. METADATA
 

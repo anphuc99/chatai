@@ -1,4 +1,4 @@
-# P03.T4 — Client TtsService + "Nghe thử giọng" wire
+# P03.T4 — Client TtsService + "Nghe thử giọng" wire ✅ DONE
 
 ## 1. METADATA
 

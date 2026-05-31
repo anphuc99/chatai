@@ -1,4 +1,4 @@
-# P02.T1 — DB Schema: Stories + Characters
+# P02.T1 — DB Schema: Stories + Characters ✅ DONE
 
 ## 1. METADATA
 

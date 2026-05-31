@@ -1,4 +1,4 @@
-# P02.T4 — Client: StoryListScreen + StoryCreateScreen + StoryDetailScreen
+# P02.T4 — Client: StoryListScreen + StoryCreateScreen + StoryDetailScreen ✅ DONE
 
 ## 1. METADATA
 

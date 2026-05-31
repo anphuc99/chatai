@@ -1,4 +1,4 @@
-# P02.T3 — Server CharactersModule (CRUD + Avatar + Voice Validation)
+# P02.T3 — Server CharactersModule (CRUD + Avatar + Voice Validation) ✅ DONE
 
 ## 1. METADATA
 

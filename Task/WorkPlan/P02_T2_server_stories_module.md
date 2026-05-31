@@ -1,4 +1,4 @@
-# P02.T2 — Server StoriesModule (CRUD)
+# P02.T2 — Server StoriesModule (CRUD) ✅ DONE
 
 ## 1. METADATA
 

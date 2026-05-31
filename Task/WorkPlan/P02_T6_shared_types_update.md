@@ -1,4 +1,4 @@
-# P02.T6 — Shared Types Update: Story + Character
+# P02.T6 — Shared Types Update: Story + Character ✅ DONE
 
 ## 1. METADATA
 
