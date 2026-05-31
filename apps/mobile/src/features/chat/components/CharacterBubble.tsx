@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Image,
+  Platform,
+  ToastAndroid,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ChatMessage } from '../types/message';
+import { ChatMessage, Word } from '../types/message';
 import { EmotionIcon } from './EmotionIcon';
 import { PinyinRow } from './PinyinRow';
 import { TranslationSlide } from './TranslationSlide';
+import { TappableChineseText } from './TappableChineseText';
+import { WordTooltip } from './WordTooltip';
 import { useAuthStore } from '../../../stores/auth.store';
 import { useChatStore } from '../store/chat.store';
 import { useCharactersMap } from '../hooks/useCharactersMap';
 import { theme } from '../../../theme';
+
+const showToast = (message: string) => {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  } else {
+    Alert.alert('Thông báo', message);
+  }
+};
 
 interface CharacterBubbleProps {
   msg: Extract<ChatMessage, { kind: 'assistant' }>;
@@ -16,6 +36,7 @@ interface CharacterBubbleProps {
 
 export function CharacterBubble({ msg }: CharacterBubbleProps) {
   const [showTranslation, setShowTranslation] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const showPinyinGlobal = useAuthStore(
     (s) => s.user?.preferences?.showPinyin ?? true
   );
@@ -55,24 +76,43 @@ export function CharacterBubble({ msg }: CharacterBubbleProps) {
           <EmotionIcon emotion={msg.emotion} />
         </View>
 
-        <Pressable
-          style={styles.bubble}
-          onPress={() => setShowTranslation((s) => !s)}
-        >
+        <View style={styles.bubble}>
           {showPinyinGlobal && hasWords ? (
             <View style={styles.wordsRow}>
               {words.map((w, idx) => (
-                <View key={idx} style={styles.wordBlock}>
+                <Pressable
+                  key={idx}
+                  style={styles.wordBlock}
+                  onPress={() => setSelectedWord(w)}
+                >
                   <Text style={styles.pinyinText}>{w.py}</Text>
                   <Text style={styles.hanziText}>{w.hz}</Text>
-                </View>
+                </Pressable>
               ))}
             </View>
           ) : (
             <View>
-              <Text style={styles.assistantText}>{msg.text}</Text>
+              <TappableChineseText
+                text={msg.text}
+                words={msg.words}
+                onWordTap={setSelectedWord}
+                baseStyle={styles.assistantText}
+              />
               {showPinyinGlobal && !hasWords && <PinyinRow text={msg.text} />}
             </View>
+          )}
+
+          {/* Nút dịch nhỏ ở góc dưới */}
+          {msg.translation && (
+            <TouchableOpacity
+              style={styles.translateToggle}
+              onPress={() => setShowTranslation((s) => !s)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.translateToggleText}>
+                {showTranslation ? 'Ẩn bản dịch ▲' : 'Xem bản dịch ▼'}
+              </Text>
+            </TouchableOpacity>
           )}
 
           {/* Hiệu ứng slide-down cho bản dịch */}
@@ -80,8 +120,18 @@ export function CharacterBubble({ msg }: CharacterBubbleProps) {
             translation={msg.translation}
             visible={showTranslation}
           />
-        </Pressable>
+        </View>
       </View>
+
+      {/* Modal giải nghĩa từ vựng */}
+      <WordTooltip
+        visible={selectedWord !== null}
+        word={selectedWord}
+        onClose={() => setSelectedWord(null)}
+        onSave={(w) => {
+          showToast(`Đã lưu "${w.hz}" vào sổ từ`);
+        }}
+      />
     </Animated.View>
   );
 }
@@ -169,5 +219,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: theme.colors.text,
     textAlign: 'center',
+  },
+  translateToggle: {
+    alignSelf: 'flex-end',
+    marginTop: theme.spacing.xs,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: theme.radius.sm,
+    backgroundColor: '#F1F5F9',
+  },
+  translateToggleText: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: '600',
   },
 });

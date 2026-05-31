@@ -1,11 +1,30 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, Pressable } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  Pressable,
+  View,
+  TouchableOpacity,
+  Platform,
+  ToastAndroid,
+  Alert,
+} from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { ChatMessage } from '../types/message';
+import { ChatMessage, Word } from '../types/message';
 import { PinyinRow } from './PinyinRow';
 import { TranslationSlide } from './TranslationSlide';
+import { TappableChineseText } from './TappableChineseText';
+import { WordTooltip } from './WordTooltip';
 import { useAuthStore } from '../../../stores/auth.store';
 import { theme } from '../../../theme';
+
+const showToast = (message: string) => {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.SHORT);
+  } else {
+    Alert.alert('Thông báo', message);
+  }
+};
 
 interface NarratorBubbleProps {
   msg: Extract<ChatMessage, { kind: 'assistant' }>;
@@ -13,6 +32,7 @@ interface NarratorBubbleProps {
 
 export function NarratorBubble({ msg }: NarratorBubbleProps) {
   const [showTranslation, setShowTranslation] = useState(false);
+  const [selectedWord, setSelectedWord] = useState<Word | null>(null);
   const showPinyinGlobal = useAuthStore(
     (s) => s.user?.preferences?.showPinyin ?? true
   );
@@ -25,17 +45,46 @@ export function NarratorBubble({ msg }: NarratorBubbleProps) {
       entering={FadeInDown.duration(250)}
       style={styles.container}
     >
-      <Pressable
-        style={styles.bubble}
-        onPress={() => setShowTranslation((s) => !s)}
-      >
-        <Text style={styles.text}>{msg.text}</Text>
+      <View style={styles.bubble}>
+        {isZh ? (
+          <TappableChineseText
+            text={msg.text}
+            words={msg.words}
+            onWordTap={setSelectedWord}
+            baseStyle={styles.text}
+          />
+        ) : (
+          <Text style={styles.text}>{msg.text}</Text>
+        )}
+
         {isZh && showPinyinGlobal && <PinyinRow text={msg.text} />}
+
+        {msg.translation && (
+          <TouchableOpacity
+            style={styles.translateToggle}
+            onPress={() => setShowTranslation((s) => !s)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.translateToggleText}>
+              {showTranslation ? 'Ẩn bản dịch ▲' : 'Xem bản dịch ▼'}
+            </Text>
+          </TouchableOpacity>
+        )}
+
         <TranslationSlide
           translation={msg.translation}
           visible={showTranslation}
         />
-      </Pressable>
+      </View>
+
+      <WordTooltip
+        visible={selectedWord !== null}
+        word={selectedWord}
+        onClose={() => setSelectedWord(null)}
+        onSave={(w) => {
+          showToast(`Đã lưu "${w.hz}" vào sổ từ`);
+        }}
+      />
     </Animated.View>
   );
 }
@@ -59,5 +108,18 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontStyle: 'italic',
     lineHeight: 22,
+  },
+  translateToggle: {
+    alignSelf: 'flex-end',
+    marginTop: theme.spacing.xs,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: theme.radius.sm,
+    backgroundColor: '#E2E8F0',
+  },
+  translateToggleText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
   },
 });
