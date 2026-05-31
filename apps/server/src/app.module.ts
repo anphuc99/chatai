@@ -18,6 +18,7 @@ import { StoriesModule } from './modules/stories/stories.module';
 import { OwnershipModule } from './shared/ownership/ownership.module';
 import { CharactersModule } from './modules/characters/characters.module';
 import { TtsModule } from './modules/tts/tts.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { TtsModule } from './modules/tts/tts.module';
     OwnershipModule,
     CharactersModule,
     TtsModule,
+    ChatModule,
   ],
 
   providers: [

@@ -14,6 +14,7 @@ export interface AppConfig {
   ttsEngineUrl: string;
   ttsDatasetAbsPath: string;
   maxHistoryTokens: number;
+  historyStoreBasePath: string;
 }
 
 export default (): AppConfig => ({
@@ -32,4 +33,5 @@ export default (): AppConfig => ({
   ttsEngineUrl: process.env.TTS_ENGINE_URL || 'http://localhost:5000',
   ttsDatasetAbsPath: process.env.TTS_DATASET_ABS_PATH || '',
   maxHistoryTokens: parseInt(process.env.MAX_HISTORY_TOKENS || '20000', 10),
+  historyStoreBasePath: process.env.HISTORY_STORE_BASE_PATH || './data/chat-cache',
 });

@@ -16,4 +16,5 @@ export const validationSchema = Joi.object({
   FIREBASE_SERVICE_ACCOUNT_PATH: Joi.string().optional().allow(''),
   FIREBASE_STORAGE_BUCKET: Joi.string().optional().allow(''),
   MAX_HISTORY_TOKENS: Joi.number().default(20000),
+  HISTORY_STORE_BASE_PATH: Joi.string().default('./data/chat-cache'),
 });
