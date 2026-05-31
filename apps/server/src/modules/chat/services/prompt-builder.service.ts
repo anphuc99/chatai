@@ -98,8 +98,20 @@ export class PromptBuilderService implements OnModuleInit {
     }
     messages.push({ role: 'system', content: fullSystem });
 
-    // 2. Process history
-    for (const entry of history) {
+    // 2. Extract checkpoint nếu có ở đầu lịch sử
+    const workingHistory = [...history];
+    const firstEntry = workingHistory[0];
+    if (firstEntry && firstEntry.type === 'checkpoint') {
+      const summary = firstEntry.data.summary;
+      messages.push({
+        role: 'system',
+        content: `## TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ\n${summary}`,
+      });
+      workingHistory.shift();
+    }
+
+    // 3. Process history
+    for (const entry of workingHistory) {
       switch (entry.type) {
         case 'user': {
           let txt = entry.data.text;
@@ -122,7 +134,7 @@ export class PromptBuilderService implements OnModuleInit {
         case 'checkpoint': {
           messages.push({
             role: 'system',
-            content: `## TÓM TẮT TRƯỚC ĐÓ\n${entry.data.summary}`,
+            content: `## TÓM TẮT TRƯỚC ĐÓ (PHỤ)\n${entry.data.summary}`,
           });
           break;
         }
@@ -143,7 +155,7 @@ export class PromptBuilderService implements OnModuleInit {
       }
     }
 
-    // 3. Append current user turn
+    // 4. Append current user turn
     let curr = userMessage;
     const allEphemeral = [...ephemeralOOCs];
     if (allEphemeral.length > 0) {

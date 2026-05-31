@@ -202,10 +202,121 @@ describe('PromptBuilderService', () => {
       expect(batchData.content[0].characterName).toBe('Mimi');
 
       expect(messages[3]!.role).toBe('system');
-      expect(messages[3]!.content).toBe('## TÓM TẮT TRƯỚC ĐÓ\nHai người chào hỏi nhau');
+      expect(messages[3]!.content).toBe('## TÓM TẮT TRƯỚC ĐÓ (PHỤ)\nHai người chào hỏi nhau');
 
       expect(messages[4]!.role).toBe('user');
       expect(messages[4]!.content).toBe('Tiếp tục đi');
+    });
+
+    it('buildLlmMessages should extract first checkpoint as main summary and shift history', () => {
+      const history: HistoryEntry[] = [
+        {
+          type: 'checkpoint',
+          timestamp: 1000,
+          data: { summary: 'Tóm tắt cốt truyện cũ', tokensBefore: 100, entriesCovered: 10 },
+        },
+        {
+          type: 'user',
+          timestamp: 2000,
+          data: { text: 'Hello' },
+        },
+        {
+          type: 'assistant_batch',
+          timestamp: 3000,
+          data: {
+            messages: [{ characterName: 'Mimi', text: 'Chào anh!' }],
+          },
+        },
+      ];
+
+      const messages = service.buildLlmMessages(
+        systemPrompt,
+        history,
+        'Tin nhắn mới',
+        null,
+        []
+      );
+
+      // System ban đầu (1) + checkpoint đầu (2) + user (3) + assistant (4) + final user (5)
+      expect(messages).toHaveLength(5);
+      expect(messages[0]!.role).toBe('system');
+      expect(messages[0]!.content).toContain('Đây là system prompt mẫu.');
+
+      expect(messages[1]!.role).toBe('system');
+      expect(messages[1]!.content).toBe('## TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ\nTóm tắt cốt truyện cũ');
+
+      expect(messages[2]!.role).toBe('user');
+      expect(messages[2]!.content).toBe('Hello');
+
+      expect(messages[4]!.role).toBe('user');
+      expect(messages[4]!.content).toBe('Tin nhắn mới');
+    });
+
+    it('buildLlmMessages should order messages correctly: combined system -> main checkpoint summary -> history -> final user message', () => {
+      const history: HistoryEntry[] = [
+        {
+          type: 'checkpoint',
+          timestamp: 1000,
+          data: { summary: 'Checkpoint chính', tokensBefore: 100, entriesCovered: 5 },
+        },
+        {
+          type: 'user',
+          timestamp: 2000,
+          data: { text: 'Nội dung history' },
+        },
+      ];
+
+      const messages = service.buildLlmMessages(
+        systemPrompt,
+        history,
+        'Nội dung hiện tại',
+        'Bối cảnh OOC cố định',
+        ['OOC tạm thời'],
+        'Ký ức cũ'
+      );
+
+      expect(messages).toHaveLength(4);
+
+      // 1. Combined System Message
+      expect(messages[0]!.role).toBe('system');
+      expect(messages[0]!.content).toContain('Đây là system prompt mẫu.');
+      expect(messages[0]!.content).toContain('## BỐI CẢNH CỐ ĐỊNH\nBối cảnh OOC cố định');
+      expect(messages[0]!.content).toContain('## KÝ ỨC LIÊN QUAN\nKý ức cũ');
+
+      // 2. Checkpoint Summary
+      expect(messages[1]!.role).toBe('system');
+      expect(messages[1]!.content).toBe('## TÓM TẮT CÁC SỰ KIỆN TRƯỚC ĐÓ\nCheckpoint chính');
+
+      // 3. History
+      expect(messages[2]!.role).toBe('user');
+      expect(messages[2]!.content).toBe('Nội dung history');
+
+      // 4. Final User Message with Ephemeral OOC
+      expect(messages[3]!.role).toBe('user');
+      expect(messages[3]!.content).toBe('[OOC: OOC tạm thời]\nNội dung hiện tại');
+    });
+
+    it('buildLlmMessages should handle history with no checkpoint properly', () => {
+      const history: HistoryEntry[] = [
+        {
+          type: 'user',
+          timestamp: 1000,
+          data: { text: 'Nội dung history' },
+        },
+      ];
+
+      const messages = service.buildLlmMessages(
+        systemPrompt,
+        history,
+        'Nội dung hiện tại',
+        null,
+        []
+      );
+
+      // 1 (system) + 1 (history) + 1 (final user) = 3
+      expect(messages).toHaveLength(3);
+      expect(messages[0]!.content).not.toContain('TÓM TẮT');
+      expect(messages[1]!.content).toBe('Nội dung history');
     });
 
     it('should process a long history of 100 entries without errors', () => {
