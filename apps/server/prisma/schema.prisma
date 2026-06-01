@@ -10,12 +10,62 @@ datasource db {
 model UsersMeta {
   userId       String    @id @map("user_id") // Firebase UID
   tutorialStep Int       @default(0) @map("tutorial_step")
+  gems         Int       @default(0)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   stories      Story[]
   sessions     Session[]
+  shopTransactions ShopTransaction[]
+  inventories      Inventory[]
 
   @@map("users_meta")
+}
+
+model ShopItem {
+  id           String   @id
+  name         String
+  description  String   @db.Text
+  priceGems    Int      @map("price_gems")
+  category     String
+  active       Boolean  @default(true)
+  metadata     Json?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  transactions ShopTransaction[]
+  inventories  Inventory[]
+
+  @@index([category, active])
+  @@map("shop_items")
+}
+
+model ShopTransaction {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  itemId    String   @map("item_id")
+  pricePaid Int      @map("price_paid")
+  source    String
+  sessionId String?  @map("session_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      UsersMeta @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  item      ShopItem  @relation(fields: [itemId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("shop_transactions")
+}
+
+model Inventory {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  itemId     String   @map("item_id")
+  quantity   Int      @default(1)
+  acquiredAt DateTime @default(now()) @map("acquired_at")
+
+  user       UsersMeta @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  item       ShopItem  @relation(fields: [itemId], references: [id])
+
+  @@unique([userId, itemId])
+  @@map("inventory")
 }
 
 model Story {

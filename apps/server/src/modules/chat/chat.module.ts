@@ -12,10 +12,12 @@ import { CheckpointService } from './services/checkpoint.service';
 import { EndChatService } from './services/end-chat.service';
 import { IdempotencyInterceptor } from '../../shared/idempotency/idempotency.interceptor';
 import { AutoRateLimiterService } from './services/auto-rate-limiter.service';
+import { ShopEventResolverService } from './services/shop-event-resolver.service';
 import { MemoryModule } from '../memory/memory.module';
+import { ShopModule } from '../shop/shop.module';
 
 @Module({
-  imports: [forwardRef(() => MemoryModule)],
+  imports: [forwardRef(() => MemoryModule), ShopModule],
   controllers: [ChatController],
   providers: [
     HistoryStoreService,
@@ -30,6 +32,7 @@ import { MemoryModule } from '../memory/memory.module';
     EndChatService,
     AutoRateLimiterService,
     IdempotencyInterceptor,
+    ShopEventResolverService,
   ],
   exports: [
     HistoryStoreService,
@@ -44,6 +47,7 @@ import { MemoryModule } from '../memory/memory.module';
     EndChatService,
     AutoRateLimiterService,
     IdempotencyInterceptor,
+    ShopEventResolverService,
   ],
 })
 export class ChatModule {}

@@ -24,17 +24,23 @@ import { AppException, ERR } from '../../shared/errors/app-exception';
 import { EndChatService } from './services/end-chat.service';
 import { AutoRateLimiterService } from './services/auto-rate-limiter.service';
 import { Idempotent } from '../../shared/idempotency/idempotent.decorator';
+import { ShopEventResolverService } from './services/shop-event-resolver.service';
+import { ShopService } from '../shop/shop.service';
+import { TemplateLoader } from '@chatai/prompts';
 import {
   StartSessionDto,
   SendMessageDto,
   OocDto,
   ToggleCharacterDto,
   TempCharacterDto,
+  ShopChoiceDto,
 } from './dto';
 
 @Controller('chat')
 @UseGuards(RedisThrottlerGuard)
 export class ChatController {
+  private readonly shopChoiceTemplates: { buy: string; decline: string };
+
   constructor(
     private readonly sessionService: ChatSessionService,
     private readonly orchestrator: ChatOrchestratorService,
@@ -44,7 +50,15 @@ export class ChatController {
     private readonly prisma: PrismaService,
     private readonly endChatService: EndChatService,
     private readonly autoRateLimiter: AutoRateLimiterService,
-  ) {}
+    private readonly shopEventResolver: ShopEventResolverService,
+    private readonly shopService: ShopService,
+  ) {
+    const raw = TemplateLoader.loadTemplate('shop_choice_branches');
+    const parts = raw.split('---DECLINE---');
+    const buyContent = parts[0]!.split('---BUY---')[1]?.trim() ?? '';
+    const declineContent = parts[1]?.trim() ?? '';
+    this.shopChoiceTemplates = { buy: buyContent, decline: declineContent };
+  }
 
   @Post('sessions')
   @Throttle(20, 60)
@@ -192,6 +206,54 @@ export class ChatController {
           userId: u.uid,
           storyId: session.storyId,
         });
+      });
+    } catch (err: any) {
+      if (err instanceof ConflictException && err.message === 'SESSION_LOCKED') {
+        throw new AppException(ERR.SESSION_LOCKED);
+      }
+      throw err;
+    }
+  }
+
+  @Post('sessions/:sid/shop-choice')
+  @Throttle(10, 60)
+  async shopChoice(
+    @CurrentUser() u: AuthUser,
+    @Param('sid', ParseUUIDPipe) sid: string,
+    @Body() dto: ShopChoiceDto,
+  ) {
+    const session = await this.sessionService.getSessionForUser(u.uid, sid);
+    if (session.status !== 'active') {
+      throw new AppException(ERR.SESSION_ALREADY_ENDED);
+    }
+
+    // Pre-check before acquiring lock
+    await this.shopEventResolver.findPendingShopEvent(sid);
+
+    try {
+      return await this.redis.withLock(`chat:shop-lock:${sid}`, 30000, async () => {
+        // Re-check after lock to prevent concurrent resolution
+        const ref = await this.shopEventResolver.findPendingShopEvent(sid);
+
+        if (dto.choice === 'buy') {
+          await this.shopService.applyContextualEvent(u.uid, ref.event.itemName, ref.event.price, 'buy', sid);
+        }
+
+        // Mark consumed BEFORE orchestrator to prevent re-entry
+        await this.shopEventResolver.markConsumed(sid, ref.msgId);
+
+        const template = this.shopChoiceTemplates[dto.choice];
+        const ooc = template
+          .replace('{{ITEM}}', ref.event.itemName)
+          .replace('{{PRICE}}', ref.event.price.toString());
+
+        const cannedMsg = dto.choice === 'buy' ? '好，我买了' : '不用了，谢谢';
+
+        return await this.orchestrator.handleUserTurn(
+          { sessionId: sid, userId: u.uid, storyId: session.storyId },
+          cannedMsg,
+          ooc,
+        );
       });
     } catch (err: any) {
       if (err instanceof ConflictException && err.message === 'SESSION_LOCKED') {

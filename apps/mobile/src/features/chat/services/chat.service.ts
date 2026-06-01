@@ -6,6 +6,10 @@ import {
 } from '@chatai/shared-types';
 import { apiClient } from '../../../api/client';
 
+export interface ShopChoiceBody {
+  choice: 'buy' | 'decline';
+}
+
 export const chatService = {
   startSession: (storyId: string): Promise<SessionResultDto> =>
     apiClient.post('/chat/sessions', { storyId }),
@@ -66,6 +70,9 @@ export const chatService = {
 
   postAutoContinue: (sid: string, signal?: AbortSignal): Promise<AssistantBatchDto> =>
     apiClient.post(`/chat/sessions/${sid}/auto-continue`, {}, { signal }),
+
+  postShopChoice: (sid: string, body: ShopChoiceBody): Promise<AssistantBatchDto> =>
+    apiClient.post(`/chat/sessions/${sid}/shop-choice`, body),
 };
 
 export default chatService;

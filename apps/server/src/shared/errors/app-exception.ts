@@ -93,6 +93,14 @@ const REGISTRY = {
     status: HttpStatus.SERVICE_UNAVAILABLE,
     defaultMessage: 'Dịch vụ embedding tạm thời không khả dụng',
   },
+  NO_PENDING_SHOP_EVENT: {
+    status: HttpStatus.BAD_REQUEST,
+    defaultMessage: 'Không có sự kiện cửa hàng đang chờ xử lý',
+  },
+  SHOP_EVENT_ALREADY_RESOLVED: {
+    status: HttpStatus.CONFLICT,
+    defaultMessage: 'Sự kiện cửa hàng đã được xử lý',
+  },
 } satisfies Record<string, ErrorMeta>;
 
 export function getMeta(code: string): ErrorMeta {

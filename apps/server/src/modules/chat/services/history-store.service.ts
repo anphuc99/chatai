@@ -153,6 +153,20 @@ export class HistoryStoreService implements OnModuleInit {
   }
 
   /**
+   * Return the messages array of the most recent assistant_batch entry, or [] if none found.
+   */
+  async getLastAssistantBatch(sid: string): Promise<import('../types/history-entry').AssistantMessage[]> {
+    const entries = await this.readAll(sid);
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      if (entry && entry.type === 'assistant_batch') {
+        return entry.data.messages;
+      }
+    }
+    return [];
+  }
+
+  /**
    * Check if history file exists for a session.
    */
   async exists(sid: string): Promise<boolean> {
