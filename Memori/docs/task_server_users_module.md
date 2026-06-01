@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task: Server UsersModule (Profile, Firestore Sync, Avatar, Fastify Integration)
 
 ## 1. Mô tả ngắn gọn

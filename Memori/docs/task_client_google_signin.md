@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Tài liệu kỹ thuật: Google Sign-In & AuthStore (Mobile)
 
 Tài liệu này ghi chép lại chi tiết thiết kế, các hàm cốt lõi, sơ đồ hoạt động và các lưu ý quan trọng (gotchas) trong quá trình thực hiện task **P01.T4** — tích hợp Google Sign-In, Firebase Auth Client SDK, Zustand AuthStore và Axios interceptors trên ứng dụng di động React Native (Expo).

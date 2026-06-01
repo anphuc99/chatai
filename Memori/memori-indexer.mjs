@@ -7,7 +7,8 @@
  * Cách dùng: node memori-indexer.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, createWriteStream } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, createWriteStream } from 'fs';
+import { createHash } from 'crypto';
 import { dirname, join, basename } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -22,28 +23,92 @@ const OLLAMA_URL = 'http://127.0.0.1:11434/api/embed';
 const MAX_CHARS = 1000;
 const OVERLAP = 100;
 
-// === Hàm cắt văn bản thành chunks ===
+// === Hash nội dung file (dùng thay mtime, không bị git pull reset) ===
+function hashContent(text) {
+  return createHash('sha256').update(text).digest('hex').slice(0, 16);
+}
+
+// === Đọc ngày cập nhật từ YAML frontmatter (--- date: YYYY-MM-DD ---) ===
+// Trả về timestamp ms hoặc null nếu không có
+function parseFrontmatterDate(text) {
+  const match = text.match(/^---[\r\n]+(?:[\s\S]*?[\r\n])?date:\s*(\d{4}-\d{2}-\d{2})[\s\S]*?[\r\n]---/);
+  if (!match) return null;
+  const ts = new Date(match[1]).getTime();
+  return isNaN(ts) ? null : ts;
+}
+
+// === Xóa YAML frontmatter khỏi nội dung trước khi chunk ===
+function stripFrontmatter(text) {
+  return text.replace(/^---[\r\n][\s\S]*?[\r\n]---[\r\n]?/, '');
+}
+
+// === Tách văn bản thành sections dựa theo Markdown headings ===
+function splitByMarkdownSections(text) {
+  const lines = text.split('\n');
+  const sections = [];
+  let currentHeading = '';
+  let currentLines = [];
+
+  for (const line of lines) {
+    if (/^#{1,6}\s/.test(line)) {
+      // Lưu section trước khi bắt đầu section mới
+      if (currentLines.length > 0 || currentHeading) {
+        sections.push({ heading: currentHeading, content: currentLines.join('\n') });
+      }
+      currentHeading = line;
+      currentLines = [];
+    } else {
+      currentLines.push(line);
+    }
+  }
+  // Section cuối cùng
+  if (currentLines.length > 0 || currentHeading) {
+    sections.push({ heading: currentHeading, content: currentLines.join('\n') });
+  }
+
+  return sections;
+}
+
+// === Hàm cắt văn bản thành chunks (Markdown-aware + sliding window) ===
 function chunkText(text, maxChars = MAX_CHARS, overlap = OVERLAP) {
   const chunks = [];
-  let start = 0;
+  const sections = splitByMarkdownSections(text);
 
-  while (start < text.length) {
-    let end = Math.min(start + maxChars, text.length);
+  for (const { heading, content } of sections) {
+    const prefix = heading ? heading + '\n' : '';
+    const fullSection = (prefix + content).trim();
 
-    // Nếu không phải đoạn cuối, cố gắng cắt ở ký tự xuống dòng
-    if (end < text.length) {
-      const lastNewline = text.lastIndexOf('\n', end);
-      if (lastNewline !== -1 && lastNewline > start + maxChars / 2) {
-        end = lastNewline + 1;
-      }
+    if (!fullSection) continue;
+
+    // Section vừa đủ → 1 chunk duy nhất, giữ nguyên ranh giới section
+    if (fullSection.length <= maxChars) {
+      chunks.push(fullSection);
+      continue;
     }
 
-    chunks.push(text.slice(start, end));
+    // Section quá lớn → sliding window trên phần body, prepend heading vào mỗi sub-chunk
+    const bodyMaxChars = maxChars - prefix.length;
+    let start = 0;
 
-    // Đã đọc hết text → dừng
-    if (end >= text.length) break;
+    while (start < content.length) {
+      let end = Math.min(start + bodyMaxChars, content.length);
 
-    start = end - overlap;
+      // Snap về ký tự xuống dòng gần nhất (nửa sau của window)
+      if (end < content.length) {
+        const lastNewline = content.lastIndexOf('\n', end);
+        if (lastNewline !== -1 && lastNewline > start + bodyMaxChars / 2) {
+          end = lastNewline + 1;
+        }
+      }
+
+      const chunkBody = content.slice(start, end).trim();
+      if (chunkBody) {
+        chunks.push(heading ? `${heading}\n${chunkBody}` : chunkBody);
+      }
+
+      if (end >= content.length) break;
+      start = end - overlap;
+    }
   }
 
   return chunks;
@@ -146,11 +211,11 @@ async function indexDocuments() {
 
   const existingEntries = existingDB.entries || [];
 
-  // Tạo map mtime cũ theo từng file
-  const oldFileMtimes = {};
+  // Tạo map contentHash cũ theo từng file (git-proof, không bị reset sau pull)
+  const oldFileHashes = {};
   for (const entry of existingEntries) {
-    if (entry.metadata && entry.metadata.source && entry.metadata.mtime) {
-      oldFileMtimes[entry.metadata.source] = entry.metadata.mtime;
+    if (entry.metadata?.source && entry.metadata?.contentHash) {
+      oldFileHashes[entry.metadata.source] = entry.metadata.contentHash;
     }
   }
 
@@ -164,20 +229,26 @@ async function indexDocuments() {
     const filename = basename(filePath);
     currentFiles.add(filename);
 
-    const stats = statSync(filePath);
-    const mtimeMs = stats.mtimeMs;
+    const content = readFileSync(filePath, 'utf-8');
+    const contentHash = hashContent(content);
 
-    // So sánh mtime (thời gian chỉnh sửa)
-    if (oldFileMtimes[filename] && oldFileMtimes[filename] === mtimeMs) {
-      console.log(`  ⏩ Bỏ qua: ${filename} (Không có thay đổi)`);
+    // So sánh content hash — git-proof, không bị reset sau git pull
+    if (oldFileHashes[filename] && oldFileHashes[filename] === contentHash) {
+      console.log(`  ⏩ Bỏ qua: ${filename} (Nội dung không thay đổi)`);
       const fileEntries = existingEntries.filter(e => e.metadata.source === filename);
       reusedEntries.push(...fileEntries);
       continue;
     }
 
-    console.log(`  📝 Phân tích: ${filename} (Cần tạo vector)`);
-    const content = readFileSync(filePath, 'utf-8');
-    const chunks = chunkText(content);
+    // Lấy ngày từ frontmatter, fallback về thời điểm index nếu không có
+    const docDate = parseFrontmatterDate(content) ?? Date.now();
+    const docDateStr = new Date(docDate).toISOString().slice(0, 10);
+    const hasFrontmatterDate = parseFrontmatterDate(content) !== null;
+    console.log(`  📝 Phân tích: ${filename} (Ngày tài liệu: ${docDateStr}${hasFrontmatterDate ? '' : ' [fallback - nên thêm frontmatter date]'})`);
+
+    // Strip frontmatter trước khi chunk để không embed YAML vào vector
+    const bodyContent = stripFrontmatter(content);
+    const chunks = chunkText(bodyContent);
 
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
@@ -187,7 +258,8 @@ async function indexDocuments() {
       metadatasToEmbed.push({
         source: filename,
         chunkIndex: i,
-        mtime: mtimeMs
+        contentHash,
+        docDate,
       });
     }
   }

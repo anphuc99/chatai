@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Document — Client: Story Progress Display (P07.T5)
 
 ## 1. Mô tả tính năng

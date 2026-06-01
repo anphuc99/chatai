@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P07 Refactor - End Chat & Journal
 
 ## 1. Mô tả

@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Tài liệu kỹ thuật: CharactersModule (CRUD + Avatar + Voice Validation) - P02.T3
 
 Tài liệu này ghi nhận quá trình triển khai CharactersModule phục vụ quản lý nhân vật trong câu chuyện, tích hợp upload avatar, kiểm tra phân quyền sở hữu và tích hợp package Prompts mới.

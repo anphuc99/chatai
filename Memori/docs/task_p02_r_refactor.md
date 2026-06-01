@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task P02.R — Refactor & Review Fixes (Phase 2)
 
 ## 1. Mô Tả Tính Năng

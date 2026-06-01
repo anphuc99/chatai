@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task P03.T5 — Cập nhật Firebase Storage Security Rules cho TTS Audio
 
 ## 1. Mô tả tính năng

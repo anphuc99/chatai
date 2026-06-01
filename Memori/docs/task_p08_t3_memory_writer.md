@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Doc: MemoryWriter (BullMQ Async Worker Pipeline)
 
 Tài liệu này lưu trữ bối cảnh thực hiện cho task `P08.T3 — Memory Writer` để hệ thống Memori tự động lưu trữ và sử dụng trong tương lai.

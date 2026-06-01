@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Doc: EmbeddingService (Ollama bge-m3 + Redis Cache)
 
 Tài liệu này lưu trữ bối cảnh thực hiện cho task `P08.T2 — EmbeddingService` để hệ thống Memori tự động lưu trữ và sử dụng trong tương lai.

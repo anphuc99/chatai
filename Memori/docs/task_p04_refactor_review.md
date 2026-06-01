@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Documentation - P04 Refactor Review (Chat MVP)
 
 ## 1. Mô tả Tính Năng

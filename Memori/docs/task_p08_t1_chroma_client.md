@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # P08.T1: Thiết lập ChromaDB Client và Collection cho Memory
 
 ## 1. Mô tả ngắn gọn

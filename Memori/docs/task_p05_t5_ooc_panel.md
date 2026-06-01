@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Tính năng con: OOC Sidebar Panel (Persistent + Active Chars + Temp Chars)
 
 Tài liệu này đặc tả chi tiết thiết kế, cấu trúc hàm, sơ đồ dữ liệu và những lưu ý kỹ thuật khi triển khai thanh Sidebar OOC (`OocPanel`) trượt từ bên phải trên ứng dụng di động.

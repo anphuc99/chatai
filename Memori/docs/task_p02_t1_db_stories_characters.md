@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # P02.T1: DB Schema - Stories & Characters
 
 ## 1. Mô tả tính năng

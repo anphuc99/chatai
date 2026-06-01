@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori: Refactor Phase 08 (Memory RAG) Review Findings
 
 ## 1. Mục Tiêu

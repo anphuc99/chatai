@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Memori: Server TtsModule (ReferenceIndex + Cache + FFmpeg)
 
 ## 1. Mô tả tính năng

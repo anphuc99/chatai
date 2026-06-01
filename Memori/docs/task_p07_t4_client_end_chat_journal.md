@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Tài liệu Memori: Client End Chat Flow & Journal Screens (P07.T4)
 
 Tài liệu này ghi lại kiến thức thiết kế và triển khai của luồng Kết thúc chat và giao diện Nhật ký (Journal) trên React Native Client.

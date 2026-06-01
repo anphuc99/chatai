@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # P01: Auth & User Profile - Code Review & Refactor
 
 ## 1. Mô tả tính năng

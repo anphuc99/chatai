@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori - Task P07.T1: EndChatService (Đóng phiên chat & Tóm tắt cốt truyện)
 
 Tài liệu này ghi nhận quá trình hiện thực tính năng kết thúc chat và tóm tắt tiến trình câu chuyện làm bộ nhớ cho hệ thống VectorDB.

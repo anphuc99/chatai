@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P06.T1 — TokenCounterService + Threshold Config
 
 ## 1. Mô tả ngắn gọn tính năng

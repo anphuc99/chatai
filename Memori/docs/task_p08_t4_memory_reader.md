@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Document — P08.T4: Memory Reader
 
 Tài liệu thiết kế và lưu ý kỹ thuật khi triển khai tính năng **Memory Reader** trong bộ nhớ dài hạn của dự án.

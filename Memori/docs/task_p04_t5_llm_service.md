@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P04.T5 — LlmService (Ollama JSON Mode + Retry)
 
 ## 1. Mô tả tính năng

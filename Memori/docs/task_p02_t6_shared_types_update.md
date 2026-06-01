@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task P02.T6 — Shared Types Update: Story + Character
 
 ## 1. Mô Tả Tính Năng

@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Memori: Server TTS Controller & Rate Limiting
 
 ## 1. Mô tả tính năng

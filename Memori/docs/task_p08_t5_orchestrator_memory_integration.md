@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Document â€” P08.T5: Wire Memory vÃ o ChatOrchestrator
 
 TÃ i liá»‡u thiáº¿t káº¿ vÃ  lÆ°u Ã½ ká»¹ thuáº­t khi tÃ­ch há»£p dá»‹ch vá»¥ **MemoryService** vÃ o **ChatOrchestratorService** nháº±m cung cáº¥p bá»‘i cáº£nh trÃ­ nhá»› dÃ i háº¡n (Plot & Character Memory) cho mÃ´ hÃ¬nh ngÃ´n ngá»¯ lá»›n (LLM).

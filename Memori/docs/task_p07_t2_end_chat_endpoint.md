@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori - Task P07.T2: Chat Controller End Endpoint & Idempotency-Key
 
 Tài liệu này ghi nhận quá trình hiện thực hóa cơ chế chống trùng lặp yêu cầu (Idempotency) dựa trên header `Idempotency-Key` và tích hợp vào API kết thúc hội thoại chat (`POST /chat/sessions/:sid/end`).

@@ -1,3 +1,7 @@
+﻿---
+date: 2026-05-31
+---
+
 # Task P06 Refactor — Checkpoint & Chat History Refactoring
 
 ## 1. Mô Tả Tính Năng

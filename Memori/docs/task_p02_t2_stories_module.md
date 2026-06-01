@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Bộ nhớ Dự án (Memori) - StoriesModule (CRUD)
 
 Tài liệu này lưu trữ bối cảnh thiết kế, đặc tả chức năng và các lưu ý kỹ thuật quan trọng của module quản lý câu chuyện (`StoriesModule`) trên server NestJS.

@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Tài liệu Memori: PlaybackQueueManager & TtsFetchService (P05.T1)
 
 Tài liệu này ghi lại kiến trúc, thiết kế chi tiết và các lỗi quan trọng đã giải quyết khi phát triển lớp `PlaybackQueueManager` quản lý hàng đợi phát âm thanh và hiển thị tin nhắn tuần tự phía client.
