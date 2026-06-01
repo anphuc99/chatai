@@ -256,6 +256,7 @@ describe('EndChatService', () => {
         storyId,
         status: 'active',
       });
+      prisma.message.count.mockResolvedValue(0);
       historyStore.readAll.mockResolvedValue([]); // empty
 
       const result = await service.execute(sid, uid);

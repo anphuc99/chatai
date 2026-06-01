@@ -48,7 +48,7 @@ describe('JournalService', () => {
       expect(result).toEqual({ items: [], nextCursor: null });
       expect(prisma.session.findMany).toHaveBeenCalledWith({
         where: { userId: uid, status: 'ended' },
-        orderBy: { endedAt: 'desc' },
+        orderBy: [{ endedAt: 'desc' }, { id: 'desc' }],
         take: 21,
         include: { story: { select: { title: true } } },
       });
@@ -137,13 +137,15 @@ describe('JournalService', () => {
 
       expect(result.items).toHaveLength(1); // sliced to limit
       expect(result.items[0]?.id).toBe('session-1');
-      // nextCursor should be encoded endedAt of last item in page (session-1, 2000 ms)
-      const expectedCursor = Buffer.from('2000').toString('base64url');
+      // nextCursor should be encoded JSON { endedAt: 2000, id: 'session-1' }
+      const cursorObj = { endedAt: 2000, id: 'session-1' };
+      const expectedCursor = Buffer.from(JSON.stringify(cursorObj)).toString('base64url');
       expect(result.nextCursor).toBe(expectedCursor);
     });
 
     it('should filter by storyId and decode cursor', async () => {
-      const cursor = Buffer.from('1500').toString('base64url');
+      const cursorObj = { endedAt: 1500, id: 'session-old' };
+      const cursor = Buffer.from(JSON.stringify(cursorObj)).toString('base64url');
       prisma.session.findMany.mockResolvedValue([]);
 
       await service.list(uid, { storyId: 'story-abc', cursor, limit: 10 });
@@ -153,9 +155,12 @@ describe('JournalService', () => {
           userId: uid,
           status: 'ended',
           storyId: 'story-abc',
-          endedAt: { lt: BigInt(1500) },
+          OR: [
+            { endedAt: { lt: BigInt(1500) } },
+            { endedAt: BigInt(1500), id: { lt: 'session-old' } },
+          ],
         },
-        orderBy: { endedAt: 'desc' },
+        orderBy: [{ endedAt: 'desc' }, { id: 'desc' }],
         take: 11,
         include: { story: { select: { title: true } } },
       });

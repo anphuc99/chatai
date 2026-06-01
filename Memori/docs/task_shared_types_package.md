@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task: Shared Types Package (@chatai/shared-types)
 
 Tạo và tích hợp một package chia sẻ kiểu dữ liệu (`@chatai/shared-types`) dùng chung giữa `apps/server` (backend NestJS) và `apps/mobile` (frontend Expo) để đảm bảo đồng bộ hóa cấu trúc dữ liệu và an toàn kiểu (type safety).

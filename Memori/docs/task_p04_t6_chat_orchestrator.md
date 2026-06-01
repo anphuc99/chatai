@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P04.T6 — ChatOrchestratorService
 
 Tài liệu này ghi lại chi tiết triển khai dịch vụ điều phối hội thoại `ChatOrchestratorService` và các bài học kinh nghiệm thu được.

@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Memori: Refactor Code Review & Fixes (P03.R)
 
 ## 1. Mô tả ngắn gọn

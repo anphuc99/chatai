@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Documentation - P05.T2 — Client: MessageBubble Full UI
 
 ## 1. Mô tả Tính Năng

@@ -1,5 +1,7 @@
 # P08.T5 — Wire Memory vào ChatOrchestrator
 
+> **Review**: DONE — xem `Task/WorkPlan/P08_R_review_refactor.md`
+
 ## 1. METADATA
 
 | Field | Value |

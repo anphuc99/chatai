@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori — Task P04.T4 — PromptBuilderService & TemplateLoader
 
 Dài hạn lưu trữ thông tin về việc xây dựng prompt builder service và template loader.

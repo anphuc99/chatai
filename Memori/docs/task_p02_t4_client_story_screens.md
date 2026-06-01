@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # P02.T4 — Client Story Screens (StoryListScreen, StoryCreateScreen, StoryDetailScreen)
 
 ## 1. Mô tả tính năng

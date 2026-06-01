@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P06.T3 — Tích Hợp Checkpoint vào Prompt Builder
 
 ## 1. Mô Tả Tính Năng

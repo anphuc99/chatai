@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Memori: Cấu trúc Điều hướng Client (Auth + Main)
 
 Tài liệu này ghi lại chi tiết triển khai cấu trúc điều hướng phân nhánh (conditional navigation) và Bottom Tab Bar cho client di động sử dụng React Navigation v7 trong Expo.

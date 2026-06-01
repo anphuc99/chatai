@@ -12,6 +12,7 @@ import { AppException, ERR } from '../../../shared/errors/app-exception';
 import { EVENTS } from '../../../shared/events/event-names';
 import { ChatContext } from '../types/chat-context';
 import { CheckpointService } from './checkpoint.service';
+import { MemoryService } from '../../memory/memory.service';
 
 describe('ChatOrchestratorService', () => {
   let service: ChatOrchestratorService;
@@ -24,6 +25,7 @@ describe('ChatOrchestratorService', () => {
   let redisMock: any;
   let eventEmitterMock: any;
   let checkpointMock: any;
+  let memoryMock: any;
 
   const ctx: ChatContext = {
     sessionId: '00000000-0000-0000-0000-000000000001',
@@ -44,8 +46,8 @@ describe('ChatOrchestratorService', () => {
           role: 'assistant',
           characterId: 'char-123',
           characterName: 'Mimi',
-          text: '你好！',
-          translation: 'Xin chào!',
+          text: 'ä½ å¥½ï¼',
+          translation: 'Xin chÃ o!',
           emotion: 'Happy',
           intensity: 'medium',
           words: null,
@@ -70,9 +72,16 @@ describe('ChatOrchestratorService', () => {
       getPersistent: jest.fn().mockResolvedValue('Persistent OOC Content'),
       pullAllEphemeral: jest.fn().mockResolvedValue(['ephemeral queue msg']),
       getActiveCharacters: jest.fn().mockResolvedValue(['char-123']),
-      getTemporaries: jest.fn().mockResolvedValue([
-        { tempId: 'tmp_1', name: 'Bác bán rau', description: 'Friendly', createdAt: Date.now() },
-      ]),
+      getTemporaries: jest
+        .fn()
+        .mockResolvedValue([
+          {
+            tempId: 'tmp_1',
+            name: 'BÃ¡c bÃ¡n rau',
+            description: 'Friendly',
+            createdAt: Date.now(),
+          },
+        ]),
     };
 
     promptBuilderMock = {
@@ -88,8 +97,8 @@ describe('ChatOrchestratorService', () => {
         content: [
           {
             characterName: 'Mimi',
-            text: '你好！',
-            translation: 'Xin chào!',
+            text: 'ä½ å¥½ï¼',
+            translation: 'Xin chÃ o!',
             emotion: 'Happy',
             intensity: 'medium',
             words: null,
@@ -117,9 +126,9 @@ describe('ChatOrchestratorService', () => {
         findUnique: jest.fn().mockResolvedValue({
           id: ctx.storyId,
           userId: ctx.userId,
-          title: 'Cuộc phiêu lưu',
-          initialSetting: 'Trong rừng',
-          currentProgress: 'Bắt đầu',
+          title: 'Cuá»™c phiÃªu lÆ°u',
+          initialSetting: 'Trong rá»«ng',
+          currentProgress: 'Báº¯t Ä‘áº§u',
         }),
       },
       message: {
@@ -160,6 +169,10 @@ describe('ChatOrchestratorService', () => {
       maybeTriggerAsync: jest.fn(),
     };
 
+    memoryMock = {
+      retrieveContext: jest.fn().mockResolvedValue('Long-term memory context: Mimi likes apples.'),
+    };
+
     jest.clearAllMocks();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -174,6 +187,7 @@ describe('ChatOrchestratorService', () => {
         { provide: RedisService, useValue: redisMock },
         { provide: EventEmitter2, useValue: eventEmitterMock },
         { provide: CheckpointService, useValue: checkpointMock },
+        { provide: MemoryService, useValue: memoryMock },
       ],
     }).compile();
 
@@ -200,7 +214,20 @@ describe('ChatOrchestratorService', () => {
 
       expect(promptBuilderMock.buildSystemPrompt).toHaveBeenCalled();
       expect(historyStoreMock.readSinceLastCheckpoint).toHaveBeenCalledWith(ctx.sessionId);
-      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalled();
+      expect(memoryMock.retrieveContext).toHaveBeenCalledWith(
+        ctx.userId,
+        ctx.storyId,
+        'Hello there',
+        ['Mimi'],
+      );
+      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalledWith(
+        'Builded System Prompt',
+        expect.any(Array),
+        'Hello there',
+        'Persistent OOC Content',
+        expect.any(Array),
+        'Long-term memory context: Mimi likes apples.',
+      );
       expect(llmMock.chatJson).toHaveBeenCalled();
 
       // Verify transaction persisted user & assistant
@@ -213,8 +240,8 @@ describe('ChatOrchestratorService', () => {
             id: 'msg-assistant-1',
             characterId: 'char-123',
             characterName: 'Mimi',
-            text: '你好！',
-            translation: 'Xin chào!',
+            text: 'ä½ å¥½ï¼',
+            translation: 'Xin chÃ o!',
             emotion: 'Happy',
             intensity: 'medium',
             words: null,
@@ -238,8 +265,8 @@ describe('ChatOrchestratorService', () => {
           content: [
             {
               characterName: 'Mimi',
-              text: '你好！',
-              translation: 'Xin chào!',
+              text: 'ä½ å¥½ï¼',
+              translation: 'Xin chÃ o!',
               emotion: 'Happy',
               intensity: 'medium',
               words: null,
@@ -257,19 +284,28 @@ describe('ChatOrchestratorService', () => {
 
     it('should throw INVALID_PAYLOAD if userMessage is empty or too long', async () => {
       await expect(service.handleUserTurn(ctx, '')).rejects.toThrow(
-        new AppException(ERR.INVALID_PAYLOAD, 'User message length must be between 1 and 2000 characters'),
+        new AppException(
+          ERR.INVALID_PAYLOAD,
+          'User message length must be between 1 and 2000 characters',
+        ),
       );
 
       const tooLongMsg = 'a'.repeat(2001);
       await expect(service.handleUserTurn(ctx, tooLongMsg)).rejects.toThrow(
-        new AppException(ERR.INVALID_PAYLOAD, 'User message length must be between 1 and 2000 characters'),
+        new AppException(
+          ERR.INVALID_PAYLOAD,
+          'User message length must be between 1 and 2000 characters',
+        ),
       );
     });
 
     it('should throw INVALID_PAYLOAD if ephemeralOOC is too long', async () => {
       const tooLongOOC = 'ooc'.repeat(200); // 600 chars
       await expect(service.handleUserTurn(ctx, 'valid msg', tooLongOOC)).rejects.toThrow(
-        new AppException(ERR.INVALID_PAYLOAD, 'Ephemeral OOC length must not exceed 500 characters'),
+        new AppException(
+          ERR.INVALID_PAYLOAD,
+          'Ephemeral OOC length must not exceed 500 characters',
+        ),
       );
     });
 
@@ -301,6 +337,27 @@ describe('ChatOrchestratorService', () => {
           hskLevel: 'HSK3',
           narratorLanguage: 'vi',
         }),
+      );
+    });
+
+    it('should degrade gracefully if memory retrieval fails', async () => {
+      memoryMock.retrieveContext.mockRejectedValue(new Error('Chroma DB connection error'));
+
+      const result = await service.handleUserTurn(ctx, 'Hello there', 'ephemeral OOC');
+
+      // Test still completes successfully
+      expect(result).toBeDefined();
+      expect(historyStoreMock.readSinceLastCheckpoint).toHaveBeenCalledWith(ctx.sessionId);
+      expect(memoryMock.retrieveContext).toHaveBeenCalled();
+
+      // promptBuilder should receive null as memoryContext
+      expect(promptBuilderMock.buildLlmMessages).toHaveBeenCalledWith(
+        'Builded System Prompt',
+        expect.any(Array),
+        'Hello there',
+        'Persistent OOC Content',
+        expect.any(Array),
+        null,
       );
     });
   });

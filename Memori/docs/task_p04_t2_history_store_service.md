@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # P04.T2: HistoryStoreService (.jsonl Adapter)
 
 ## 1. Mô tả tính năng

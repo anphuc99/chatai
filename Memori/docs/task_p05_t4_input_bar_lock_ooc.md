@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Memori Document: InputBar Lock/Unlock + OOC Inline (P05.T4)
 
 ## 1. Mô tả tính năng

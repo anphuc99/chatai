@@ -1,5 +1,7 @@
 # P08.T4 — Memory Reader (Multi-Query RAG + Sliding Window)
 
+> **Review**: DONE — xem `Task/WorkPlan/P08_R_review_refactor.md`
+
 ## 1. METADATA
 
 | Field | Value |

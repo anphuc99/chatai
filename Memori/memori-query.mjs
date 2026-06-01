@@ -20,6 +20,47 @@ const VECTORS_FILE = join(DB_DIR, 'vectors.json');
 const EMBEDDING_MODEL = 'qwen3-embedding';
 const OLLAMA_URL = 'http://127.0.0.1:11434/api/embed';
 
+// === Recency config ===
+// Tỉ lệ ảnh hưởng của độ mới (0 = chỉ similarity, 1 = chỉ recency)
+const RECENCY_WEIGHT = 0.15;
+// Sau DECAY_HALF_LIFE_DAYS ngày, recency score giảm còn 50%
+const DECAY_HALF_LIFE_DAYS = 30;
+
+// === Recency Score: exponential decay theo tuổi tài liệu ===
+// docDate (frontmatter) được ưu tiên, không bị git pull reset như mtime
+function getDocTimestamp(metadata) {
+  return metadata?.docDate ?? metadata?.mtime ?? 0;
+}
+
+function recencyScore(metadata) {
+  const ts = getDocTimestamp(metadata);
+  if (!ts) return 0;
+  const ageMs = Date.now() - ts;
+  const ageDays = ageMs / (1000 * 60 * 60 * 24);
+  return Math.exp((-Math.LN2 * ageDays) / DECAY_HALF_LIFE_DAYS);
+}
+
+// === Combined Score ===
+function combinedScore(similarity, metadata) {
+  const recency = recencyScore(metadata);
+  return (1 - RECENCY_WEIGHT) * similarity + RECENCY_WEIGHT * recency;
+}
+
+// === Format ngày + freshness label ===
+function freshnessLabel(metadata) {
+  const ts = getDocTimestamp(metadata);
+  const ageDays = ts ? (Date.now() - ts) / (1000 * 60 * 60 * 24) : Infinity;
+  const dateStr = ts ? new Date(ts).toLocaleDateString('vi-VN') : 'N/A';
+  const dateSource = metadata?.docDate ? '' : ' ⚠️(mtime - dễ sai sau git pull)';
+  let label;
+  if (ageDays < 1)       label = '🟢 Hôm nay';
+  else if (ageDays < 7)  label = '🟢 Tuần này';
+  else if (ageDays < 30) label = '🟡 Tháng này';
+  else if (ageDays < 90) label = '🟠 Cũ (>1 tháng)';
+  else                   label = '🔴 Rất cũ (>3 tháng)';
+  return `${label} | Cập nhật: ${dateStr}${dateSource}`;
+}
+
 // === Cosine Similarity ===
 function cosineSimilarity(a, b) {
   let dotProduct = 0;
@@ -83,23 +124,31 @@ async function queryMemory(queryText, nResults = 3) {
     throw error;
   }
 
-  // Tính similarity cho tất cả entries
-  const scored = entries.map((entry) => ({
-    ...entry,
-    score: cosineSimilarity(queryEmbedding, entry.embedding),
-  }));
+  // Tính combined score (similarity + recency boost) cho tất cả entries
+  const scored = entries.map((entry) => {
+    const similarity = cosineSimilarity(queryEmbedding, entry.embedding);
+    return {
+      ...entry,
+      similarity,
+      recency: recencyScore(entry.metadata),
+      score: combinedScore(similarity, entry.metadata),
+    };
+  });
 
-  // Sắp xếp theo score giảm dần và lấy top N
+  // Sắp xếp theo combined score giảm dần và lấy top N
   scored.sort((a, b) => b.score - a.score);
   const topResults = scored.slice(0, nResults);
 
   // Output kết quả
   console.log(`\n--- KẾT QUẢ TRUY VẤN TỪ BỘ NHỚ CHO: '${queryText}' ---\n`);
+  console.log(`ℹ️  Scoring: similarity×${(1 - RECENCY_WEIGHT).toFixed(2)} + recency×${RECENCY_WEIGHT.toFixed(2)} (half-life ${DECAY_HALF_LIFE_DAYS} ngày)\n`);
 
   for (let i = 0; i < topResults.length; i++) {
     const r = topResults[i];
-    console.log(`[${i + 1}] Nguồn: ${r.metadata.source} (score: ${r.score.toFixed(4)})`);
-    console.log('-'.repeat(40));
+    console.log(`[${i + 1}] Nguồn: ${r.metadata.source}`);
+    console.log(`    Score tổng: ${r.score.toFixed(4)} | Similarity: ${r.similarity.toFixed(4)} | Recency: ${r.recency.toFixed(4)}`);
+    console.log(`    ${freshnessLabel(r.metadata)}`);
+    console.log('-'.repeat(60));
     console.log(r.document.trim());
     console.log('='.repeat(60) + '\n');
   }
@@ -108,6 +157,10 @@ async function queryMemory(queryText, nResults = 3) {
   return topResults.map((r) => ({
     source: r.metadata.source,
     score: r.score,
+    similarity: r.similarity,
+    recency: r.recency,
+    docDate: r.metadata?.docDate ?? null,
+    freshness: freshnessLabel(r.metadata),
     content: r.document.trim(),
   }));
 }

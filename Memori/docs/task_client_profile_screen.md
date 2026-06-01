@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Tài liệu kỹ thuật: Màn hình Profile, Cập nhật Preferences & Upload Avatar (Mobile)
 
 Tài liệu này ghi chép lại chi tiết thiết kế, các dịch vụ cốt lõi, sơ đồ hoạt động và các lỗi đã được giải quyết (gotchas) trong quá trình thực hiện task **P01.T5** — tích hợp màn hình Hồ sơ cá nhân (ProfileScreen), cài đặt preferences với cơ chế optimistic & debounce, upload avatar, và Firestore realtime sync trên client di động React Native (Expo).

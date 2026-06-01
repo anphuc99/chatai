@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Memori: Client TTS Preview Integration (expo-av)
 
 ## 1. Mô tả tính năng

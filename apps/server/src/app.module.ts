@@ -21,6 +21,7 @@ import { TtsModule } from './modules/tts/tts.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { JournalModule } from './modules/journal/journal.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { MemoryModule } from './modules/memory/memory.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     TtsModule,
     ChatModule,
     JournalModule,
+    MemoryModule,
   ],
 
   providers: [

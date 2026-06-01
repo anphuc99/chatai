@@ -77,6 +77,22 @@ const REGISTRY = {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     defaultMessage: 'Lỗi máy chủ',
   },
+  CHROMA_WRITE_FAIL: {
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    defaultMessage: 'Lỗi ghi dữ liệu vào ChromaDB',
+  },
+  CHROMA_QUERY_FAIL: {
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    defaultMessage: 'Lỗi truy vấn dữ liệu từ ChromaDB',
+  },
+  CHROMA_UNAVAILABLE: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    defaultMessage: 'ChromaDB tạm thời không khả dụng',
+  },
+  EMBED_UNAVAILABLE: {
+    status: HttpStatus.SERVICE_UNAVAILABLE,
+    defaultMessage: 'Dịch vụ embedding tạm thời không khả dụng',
+  },
 } satisfies Record<string, ErrorMeta>;
 
 export function getMeta(code: string): ErrorMeta {

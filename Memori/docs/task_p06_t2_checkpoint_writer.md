@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P06.T2 — Checkpoint Writer (Small AI Summarize)
 
 ## 1. Mô Tả Tính Năng

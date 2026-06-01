@@ -107,14 +107,35 @@ export class LlmService {
 
   async summarize(
     text: string,
-    mode: 'plot' | 'session' | 'character'
+    mode: 'plot' | 'session' | 'character',
+    replacements?: Record<string, string>
   ): Promise<string> {
     const templateName = `summary_${mode}` as const;
-    const systemTemplate = TemplateLoader.loadTemplate(templateName);
+    let systemTemplate = TemplateLoader.loadTemplate(templateName);
+
+    if (replacements) {
+      for (const [key, value] of Object.entries(replacements)) {
+        systemTemplate = systemTemplate.replace(new RegExp(`{{${key}}}`, 'g'), value);
+      }
+    }
+
+    let userText = text;
+    if (systemTemplate.includes('{{HISTORY_TEXT}}')) {
+      systemTemplate = systemTemplate.replace(/{{HISTORY_TEXT}}/g, text);
+      userText = '';
+    } else if (systemTemplate.includes('{{MESSAGES_BLOCK}}')) {
+      systemTemplate = systemTemplate.replace(/{{MESSAGES_BLOCK}}/g, text);
+      userText = '';
+    }
+
     const messages: LlmMessage[] = [
       { role: 'system', content: systemTemplate },
-      { role: 'user', content: text },
     ];
+    if (userText) {
+      messages.push({ role: 'user', content: userText });
+    } else {
+      messages.push({ role: 'user', content: 'Hãy tóm tắt.' });
+    }
 
     const ollamaResp = await this.callOllama(
       this.smallModel,

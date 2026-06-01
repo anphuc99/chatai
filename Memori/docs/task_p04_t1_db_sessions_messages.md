@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # P04.T1: DB Schema - Sessions & Messages
 
 ## 1. Mô tả tính năng

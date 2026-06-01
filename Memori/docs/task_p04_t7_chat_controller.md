@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Bộ nhớ Dự án (Memori) - ChatController & Session Lock (P04.T7)
 
 Tài liệu này lưu trữ bối cảnh thiết kế, đặc tả chức năng và các lưu ý kỹ thuật quan trọng của việc tích hợp `ChatController`, `ChatSessionService`, cơ chế khóa phiên (Redis Lock) và refactor `StoriesService` trong NestJS server.

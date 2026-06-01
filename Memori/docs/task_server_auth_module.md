@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Task: Server AuthModule (Firebase Admin SDK)
 
 ## 1. Mô tả ngắn gọn

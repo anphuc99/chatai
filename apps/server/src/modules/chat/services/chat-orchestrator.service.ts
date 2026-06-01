@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { AssistantBatchDto, HskLevel, NarratorLanguage } from '@chatai/shared-types';
 import { PrismaService } from '../../../shared/prisma/prisma.service';
@@ -12,6 +12,7 @@ import { PromptBuilderService } from './prompt-builder.service';
 import { LlmService } from './llm.service';
 import { CheckpointService } from './checkpoint.service';
 import { AssistantBatchSchema, AssistantMessage } from '../schemas/assistant-batch.schema';
+import { MemoryService } from '../../memory/memory.service';
 import { ChatContext } from '../types/chat-context';
 import { Character, Prisma } from '@prisma/client';
 
@@ -29,6 +30,8 @@ export class ChatOrchestratorService {
     private readonly redis: RedisService,
     private readonly eventEmitter: EventEmitter2,
     private readonly checkpointService: CheckpointService,
+    @Inject(forwardRef(() => MemoryService))
+    private readonly memoryService: MemoryService,
   ) {}
 
   async handleUserTurn(
@@ -94,7 +97,12 @@ export class ChatOrchestratorService {
         narratorLanguage,
       });
 
-      const history = await this.historyStore.readSinceLastCheckpoint(ctx.sessionId);
+      // 5. Parallel: history read + memory context retrieval
+      const activeCharNames = characters.map((c) => c.name);
+      const [history, memoryContext] = await Promise.all([
+        this.historyStore.readSinceLastCheckpoint(ctx.sessionId),
+        this.safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames),
+      ]);
       // Exclude the just-appended user entry from history (will be appended as final user message in messages array)
       const historyForLLM = history.slice(0, -1);
 
@@ -104,7 +112,7 @@ export class ChatOrchestratorService {
         userMessage,
         persistentOOC,
         allEphemerals,
-        null, // memoryContext: Phase 8 wire
+        memoryContext || null,
       );
 
       // 8. Call LLM
@@ -252,6 +260,36 @@ export class ChatOrchestratorService {
         take: assistantMsgs.length,
       });
     });
+  }
+
+  private async safeRetrieveMemory(
+    userId: string,
+    storyId: string,
+    userMessage: string,
+    activeCharNames: string[],
+  ): Promise<string> {
+    const t0 = Date.now();
+    try {
+      const memoryContext = await this.memoryService.retrieveContext(
+        userId,
+        storyId,
+        userMessage,
+        activeCharNames,
+      );
+      this.logger.debug({
+        msg: 'Memory context retrieved successfully',
+        retrievalTimeMs: Date.now() - t0,
+        contextLength: memoryContext.length,
+      });
+      return memoryContext;
+    } catch (error: any) {
+      this.logger.warn({
+        msg: 'Failed to retrieve memory context, continuing with empty string',
+        error: error.message || error,
+        retrievalTimeMs: Date.now() - t0,
+      });
+      return '';
+    }
   }
 
   private transformToDto(records: Prisma.MessageGetPayload<{}>[], triggerMemory: boolean): AssistantBatchDto {

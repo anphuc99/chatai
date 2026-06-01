@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Task P04.T3 — OocService (Redis-backed)
 
 ## 1. Mô tả tính năng

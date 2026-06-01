@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-30
+---
 # Tài liệu kỹ thuật: Client Character Editor (P02.T5)
 
 Tài liệu này ghi nhận quá trình thiết kế, cấu trúc và triển khai tính năng Quản lý/Chỉnh sửa nhân vật phía Client trên nền tảng React Native (Expo).

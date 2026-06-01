@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Tài liệu Memori: JournalModule (Nhật ký & Lưu trữ vĩnh viễn)
 
 Tài liệu này ghi lại kiến thức thiết kế và triển khai của `JournalModule` (Phase 7 - Task P07.T3).

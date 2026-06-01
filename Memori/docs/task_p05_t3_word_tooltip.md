@@ -1,3 +1,6 @@
+﻿---
+date: 2026-05-31
+---
 # Tài liệu Memori: Tap-to-Show Word Tooltip (P05.T3)
 
 ## 1. Mô tả tính năng
