@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Pressable,
   SafeAreaView,
   Alert,
 } from 'react-native';
@@ -16,8 +17,10 @@ import { useChat } from '../hooks/useChat';
 import { useStoryStore } from '../../story/store/story.store';
 import { MessageBubble } from '../components/MessageBubble';
 import { InputBar } from '../components/InputBar';
+import { AutoControlBar } from '../components/AutoControlBar';
 import { OocPanel } from '../components/OocPanel';
 import { CharacterToggleSheet } from '../components/CharacterToggleSheet';
+import { useAppStateAutoExit } from '../hooks/useAppStateAutoExit';
 import { theme } from '../../../theme';
 import { characterApi } from '../../character/services/character.api';
 import {
@@ -53,6 +56,12 @@ export function ChatRoomScreen() {
     addTempCharacter,
     reset,
   } = useChat();
+
+  const autoMode = useChatStore((s) => s.autoMode);
+  const enterAutoMode = useChatStore((s) => s.enterAutoMode);
+  const exitAutoMode = useChatStore((s) => s.exitAutoMode);
+
+  useAppStateAutoExit();
 
   const [showOocPanel, setShowOocPanel] = useState(false);
   const [showCharToggle, setShowCharToggle] = useState(false);
@@ -284,8 +293,25 @@ export function ChatRoomScreen() {
         }
       />
 
-      {/* Thanh nhập liệu */}
-      <InputBar onSend={handleSend} disabled={inputLocked || ending} />
+      {/* Thanh nhập liệu hoặc Auto Control */}
+      {autoMode ? (
+        <AutoControlBar onStop={exitAutoMode} />
+      ) : (
+        <InputBar
+          onSend={handleSend}
+          disabled={inputLocked || ending}
+          rightExtra={
+            <Pressable
+              onPress={enterAutoMode}
+              disabled={inputLocked || ending}
+              style={[styles.autoBtn, (inputLocked || ending) && styles.autoBtnDisabled]}
+              android_ripple={{ color: '#BFDBFE' }}
+            >
+              <Text style={styles.autoBtnText}>▶ Auto</Text>
+            </Pressable>
+          }
+        />
+      )}
 
       {/* Modal chỉnh sửa OOC & nhân vật tạm thời */}
       <OocPanel
@@ -385,5 +411,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
+  },
+  autoBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: theme.radius.md,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  autoBtnDisabled: {
+    opacity: 0.4,
+  },
+  autoBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
   },
 });

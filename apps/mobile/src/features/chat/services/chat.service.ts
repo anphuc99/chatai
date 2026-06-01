@@ -63,6 +63,9 @@ export const chatService = {
         },
       },
     ),
+
+  postAutoContinue: (sid: string, signal?: AbortSignal): Promise<AssistantBatchDto> =>
+    apiClient.post(`/chat/sessions/${sid}/auto-continue`, {}, { signal }),
 };
 
 export default chatService;

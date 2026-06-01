@@ -29,6 +29,7 @@ export class PlaybackQueueManager {
   private isStopped = false;
   private currentSound: Audio.Sound | null = null;
   private charactersVoice: Map<string, { voiceName: VoiceName; pitch: number }>;
+  private queueFinishResolvers: Array<() => void> = [];
 
   private onBubbleShow: (msg: ChatMessage) => void;
   private onQueueFinished: () => void;
@@ -78,6 +79,17 @@ export class PlaybackQueueManager {
       this.currentSound = null;
     }
     this.isPlaying = false;
+    const resolvers = this.queueFinishResolvers.splice(0);
+    for (const resolve of resolvers) resolve();
+  }
+
+  public waitForQueueFinish(): Promise<void> {
+    if (!this.isPlaying && this.queue.length === 0) {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
+      this.queueFinishResolvers.push(resolve);
+    });
   }
 
   private async playNext(): Promise<void> {
@@ -88,6 +100,8 @@ export class PlaybackQueueManager {
     if (this.queue.length === 0) {
       this.isPlaying = false;
       this.onQueueFinished();
+      const resolvers = this.queueFinishResolvers.splice(0);
+      for (const resolve of resolvers) resolve();
       return;
     }
 

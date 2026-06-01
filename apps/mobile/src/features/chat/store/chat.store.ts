@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Alert } from 'react-native';
 import { MessageDto, JournalMessageDto, CharacterDto } from '@chatai/shared-types';
 import { ChatMessage } from '../types/message';
 import { chatService } from '../services/chat.service';
@@ -16,6 +17,8 @@ export interface ChatState {
   inputLocked: boolean;
   loading: boolean;
   error: any | null;
+  autoMode: boolean;
+  autoAbort: AbortController | null;
 
   startSession: (storyId: string) => Promise<void>;
   loadHistory: () => Promise<void>;
@@ -28,6 +31,8 @@ export interface ChatState {
   appendAssistantBubble: (msg: ChatMessage) => void;
   enqueueAssistantBatch: (messages: ChatMessage[]) => void;
   pushEphemeralOOC: (text: string) => Promise<void>;
+  enterAutoMode: () => void;
+  exitAutoMode: () => void;
   reset: () => void;
 }
 
@@ -73,6 +78,26 @@ export function mapDtoToChatMessage(dto: MessageDto | JournalMessageDto, index: 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Helpers for auto mode loop
+// ---------------------------------------------------------------------------
+function _delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal.addEventListener('abort', () => {
+      clearTimeout(t);
+      reject(new DOMException('aborted', 'AbortError'));
+    });
+  });
+}
+
+function _raceAbort<T>(p: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((res, rej) => {
+    p.then(res, rej);
+    signal.addEventListener('abort', () => rej(new DOMException('aborted', 'AbortError')));
+  });
+}
+
 export const useChatStore = create<ChatState>((set, get) => ({
   sessionId: null,
   storyId: null,
@@ -84,6 +109,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
   inputLocked: false,
   loading: false,
   error: null,
+  autoMode: false,
+  autoAbort: null,
 
   startSession: async (storyId: string) => {
     set({ loading: true, error: null, storyId });
@@ -298,6 +325,71 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  enterAutoMode: () => {
+    if (get().autoMode) return;
+    const abort = new AbortController();
+    set({ autoMode: true, inputLocked: true, autoAbort: abort });
+    void (async () => {
+      const signal = abort.signal;
+      while (get().autoMode && !signal.aborted) {
+        try {
+          const sid = get().sessionId;
+          if (!sid) break;
+          const batch = await chatService.postAutoContinue(sid, signal);
+
+          const hasShopEvent = batch.messages.some((m) => m.shopEvent != null);
+
+          const assistantMsgs: import('../types/message').ChatMessage[] = (batch.messages || []).map((m) => ({
+            kind: 'assistant' as const,
+            id: m.id,
+            characterId: m.characterId,
+            characterName: m.characterName || 'Nhân vật',
+            text: m.text,
+            translation: m.translation,
+            emotion: m.emotion,
+            intensity: m.intensity,
+            words: m.words,
+            shopEvent: m.shopEvent,
+            timestamp: m.timestamp || Date.now(),
+          }));
+
+          get().enqueueAssistantBatch(assistantMsgs);
+
+          const mgr = getPlaybackManagerSingleton();
+          if (mgr) {
+            await _raceAbort(mgr.waitForQueueFinish(), signal);
+          }
+          if (signal.aborted) break;
+
+          if (hasShopEvent) {
+            get().exitAutoMode();
+            break;
+          }
+
+          await _delay(2000, signal);
+          if (signal.aborted) break;
+        } catch (e: any) {
+          if (e?.name === 'AbortError') break;
+          console.warn('[auto loop error]', e);
+          const msg = e?.message ?? 'unknown';
+          Alert.alert('Auto mode dừng', `Lỗi: ${msg}`);
+          get().exitAutoMode();
+          break;
+        }
+      }
+      // Ensure cleanup if loop exits without explicit exitAutoMode
+      if (get().autoMode) {
+        set({ autoMode: false, inputLocked: false, autoAbort: null });
+      }
+    })();
+  },
+
+  exitAutoMode: () => {
+    if (!get().autoMode) return;
+    get().autoAbort?.abort();
+    set({ autoMode: false, inputLocked: false, autoAbort: null });
+  },
+
   reset: () =>
     set({
       sessionId: null,
@@ -310,5 +402,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       inputLocked: false,
       loading: false,
       error: null,
+      autoMode: false,
+      autoAbort: null,
     }),
 }));
