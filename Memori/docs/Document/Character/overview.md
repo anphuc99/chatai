@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tổng quan Tính năng: Quản lý Nhân vật (Character)
 
 Tài liệu này mô tả chi tiết thiết kế hệ thống, sơ đồ luồng dữ liệu, sơ đồ hoạt động và sơ đồ tuần tự cho tính năng quản lý nhân vật (CRUD) trong ứng dụng.

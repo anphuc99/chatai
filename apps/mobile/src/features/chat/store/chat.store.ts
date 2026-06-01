@@ -1,9 +1,19 @@
 import { create } from 'zustand';
+import { Alert, Platform, ToastAndroid } from 'react-native';
 import { MessageDto, JournalMessageDto, CharacterDto } from '@chatai/shared-types';
 import { ChatMessage } from '../types/message';
 import { chatService } from '../services/chat.service';
 import { characterApi } from '../../character/services/character.api';
 import { getPlaybackManagerSingleton } from '../services/playback-queue.manager';
+import { useWalletStore } from '../../wallet/store/wallet.store';
+
+function showShopToast(message: string) {
+  if (Platform.OS === 'android') {
+    ToastAndroid.show(message, ToastAndroid.LONG);
+  } else {
+    Alert.alert('Thông báo', message);
+  }
+}
 
 export interface ChatState {
   sessionId: string | null;
@@ -16,6 +26,12 @@ export interface ChatState {
   inputLocked: boolean;
   loading: boolean;
   error: any | null;
+  autoMode: boolean;
+  autoAbort: AbortController | null;
+  isChoiceState: boolean;
+  pendingShopEvent: { msgId: string; itemName: string; price: number } | null;
+  choiceLoading: boolean;
+  insufficientGems: boolean;
 
   startSession: (storyId: string) => Promise<void>;
   loadHistory: () => Promise<void>;
@@ -28,6 +44,9 @@ export interface ChatState {
   appendAssistantBubble: (msg: ChatMessage) => void;
   enqueueAssistantBatch: (messages: ChatMessage[]) => void;
   pushEphemeralOOC: (text: string) => Promise<void>;
+  enterAutoMode: () => void;
+  exitAutoMode: () => void;
+  confirmShopChoice: (choice: 'buy' | 'decline') => Promise<void>;
   reset: () => void;
 }
 
@@ -73,6 +92,23 @@ export function mapDtoToChatMessage(dto: MessageDto | JournalMessageDto, index: 
   }
 }
 
+// ---------------------------------------------------------------------------
+// Helpers for auto mode loop
+// ---------------------------------------------------------------------------
+function _delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const onAbort = () => {
+      clearTimeout(t);
+      reject(new DOMException('aborted', 'AbortError'));
+    };
+    const t = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+}
+
 export const useChatStore = create<ChatState>((set, get) => ({
   sessionId: null,
   storyId: null,
@@ -84,6 +120,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   inputLocked: false,
   loading: false,
   error: null,
+  autoMode: false,
+  autoAbort: null,
+  isChoiceState: false,
+  pendingShopEvent: null,
+  choiceLoading: false,
+  insufficientGems: false,
 
   startSession: async (storyId: string) => {
     set({ loading: true, error: null, storyId });
@@ -185,6 +227,21 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   enqueueAssistantBatch: (messages: ChatMessage[]) => {
+    // Detect shop event in this batch and set choice state
+    const shopMsg = messages.find((m) => m.kind === 'assistant' && m.shopEvent != null);
+    if (shopMsg && shopMsg.kind === 'assistant' && shopMsg.shopEvent) {
+      set({
+        isChoiceState: true,
+        pendingShopEvent: {
+          msgId: shopMsg.id,
+          itemName: shopMsg.shopEvent.itemName,
+          price: shopMsg.shopEvent.price,
+        },
+        inputLocked: true,
+        insufficientGems: false,
+      });
+    }
+
     const manager = getPlaybackManagerSingleton();
     if (manager) {
       manager.enqueueBatch(messages);
@@ -192,7 +249,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       // Fallback khi không có manager (ví dụ trong môi trường test hoặc không khởi tạo)
       set((state) => ({
         messages: [...state.messages, ...messages],
-        inputLocked: false,
+        inputLocked: shopMsg != null ? true : false,
       }));
     }
   },
@@ -298,6 +355,118 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 
+  enterAutoMode: () => {
+    if (get().autoMode) return;
+    const abort = new AbortController();
+    set({ autoMode: true, inputLocked: true, autoAbort: abort });
+    void (async () => {
+      const signal = abort.signal;
+      while (get().autoMode && !signal.aborted) {
+        try {
+          const sid = get().sessionId;
+          if (!sid) break;
+          const batch = await chatService.postAutoContinue(sid, signal);
+
+          const hasShopEvent = batch.messages.some((m) => m.shopEvent != null);
+
+          const assistantMsgs: import('../types/message').ChatMessage[] = (batch.messages || []).map((m) => ({
+            kind: 'assistant' as const,
+            id: m.id,
+            characterId: m.characterId,
+            characterName: m.characterName || 'Nhân vật',
+            text: m.text,
+            translation: m.translation,
+            emotion: m.emotion,
+            intensity: m.intensity,
+            words: m.words,
+            shopEvent: m.shopEvent,
+            timestamp: m.timestamp || Date.now(),
+          }));
+
+          get().enqueueAssistantBatch(assistantMsgs);
+
+          const mgr = getPlaybackManagerSingleton();
+          if (mgr) {
+            await mgr.waitForQueueFinish(signal);
+          }
+          if (signal.aborted) break;
+
+          if (hasShopEvent) {
+            get().exitAutoMode();
+            break;
+          }
+
+          await _delay(2000, signal);
+          if (signal.aborted) break;
+        } catch (e: any) {
+          if (e?.name === 'AbortError') break;
+          console.warn('[auto loop error]', e);
+          const msg = e?.message ?? 'unknown';
+          Alert.alert('Auto mode dừng', `Lỗi: ${msg}`);
+          get().exitAutoMode();
+          break;
+        }
+      }
+      // Ensure cleanup if loop exits without explicit exitAutoMode
+      if (get().autoMode) {
+        set({ autoMode: false, inputLocked: false, autoAbort: null });
+      }
+    })();
+  },
+
+  exitAutoMode: () => {
+    if (!get().autoMode) return;
+    get().autoAbort?.abort();
+    set({ autoMode: false, inputLocked: false, autoAbort: null });
+  },
+
+  confirmShopChoice: async (choice: 'buy' | 'decline') => {
+    const { sessionId, pendingShopEvent } = get();
+    if (!pendingShopEvent || !sessionId) return;
+    set({ choiceLoading: true });
+    try {
+      const batch = await chatService.postShopChoice(sessionId, { choice });
+      set({
+        isChoiceState: false,
+        pendingShopEvent: null,
+        choiceLoading: false,
+        inputLocked: false,
+        insufficientGems: false,
+      });
+      const assistantMsgs: ChatMessage[] = (batch.messages || []).map((m) => ({
+        kind: 'assistant',
+        id: m.id,
+        characterId: m.characterId,
+        characterName: m.characterName || 'Nhân vật',
+        text: m.text,
+        translation: m.translation,
+        emotion: m.emotion,
+        intensity: m.intensity,
+        words: m.words,
+        shopEvent: m.shopEvent,
+        timestamp: m.timestamp || Date.now(),
+      }));
+      get().enqueueAssistantBatch(assistantMsgs);
+      useWalletStore.getState().refresh();
+    } catch (e: any) {
+      set({ choiceLoading: false });
+      const code = e?.code ?? e?.response?.data?.code;
+      if (code === 'NOT_ENOUGH_GEMS') {
+        const details = e?.details ?? e?.response?.data?.details ?? {};
+        const needed = (details.required ?? 0) - (details.have ?? 0);
+        showShopToast(`Bạn cần thêm ${needed > 0 ? needed + ' ' : ''}gem để mua.`);
+        set({ insufficientGems: true });
+      } else if (code === 'SHOP_EVENT_ALREADY_RESOLVED') {
+        set({ isChoiceState: false, pendingShopEvent: null, inputLocked: false, insufficientGems: false });
+      } else {
+        // Generic failure: the purchase may already have committed server-side, so
+        // clear the choice card instead of stranding it (avoids ALREADY_RESOLVED on retry).
+        set({ isChoiceState: false, pendingShopEvent: null, inputLocked: false, insufficientGems: false });
+        showShopToast('Lỗi: ' + (e?.message || 'Không thể thực hiện'));
+      }
+    }
+  },
+
   reset: () =>
     set({
       sessionId: null,
@@ -310,5 +479,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
       inputLocked: false,
       loading: false,
       error: null,
+      autoMode: false,
+      autoAbort: null,
+      isChoiceState: false,
+      pendingShopEvent: null,
+      choiceLoading: false,
+      insufficientGems: false,
     }),
 }));

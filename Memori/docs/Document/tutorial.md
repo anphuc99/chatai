@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế Kỹ thuật: Hệ thống Hướng dẫn Người dùng (Onboarding & Tutorial)
 
 Tài liệu này mô tả chi tiết luồng trải nghiệm (User Journey) dành cho người dùng mới khi lần đầu tiên đăng nhập vào ứng dụng. Trải nghiệm Tutorial được thiết kế theo dạng từng bước (Step-by-step) nhằm giúp người dùng làm quen với toàn bộ tính năng cốt lõi: Thiết lập -> Cốt truyện -> Nhân vật -> Chat -> Từ vựng -> Nhật ký -> Ôn tập.

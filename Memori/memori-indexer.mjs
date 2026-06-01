@@ -37,7 +37,7 @@ function parseFrontmatterDate(text) {
   return isNaN(ts) ? null : ts;
 }
 
-// === Xóa YAML frontmatter khỏi nội dung trước khi chunk ===
+// === Xóa YAML frontmatter khỏi nội dung trước khi chunk (hỗ trợ LF và CRLF) ===
 function stripFrontmatter(text) {
   return text.replace(/^---[\r\n][\s\S]*?[\r\n]---[\r\n]?/, '');
 }
@@ -232,10 +232,11 @@ async function indexDocuments() {
     const filename = basename(filePath);
     currentFiles.add(filename);
 
-    const content = readFileSync(filePath, 'utf-8');
-    const contentHash = hashContent(content);
-
+    const rawContent = readFileSync(filePath, 'utf-8');
+    // Strip UTF-8 BOM nếu có (một số editor Windows ghi BOM)
+    const content = rawContent.replace(/^\uFEFF/, '');
     // So sánh content hash — git-proof, không bị reset sau git pull
+    const contentHash = hashContent(content);
     if (oldFileHashes[filename] && oldFileHashes[filename] === contentHash) {
       console.log(`  ⏩ Bỏ qua: ${filename} (Nội dung không thay đổi)`);
       const fileEntries = existingEntries.filter(e => e.metadata.source === filename);
@@ -243,14 +244,31 @@ async function indexDocuments() {
       continue;
     }
 
-    // Lấy ngày từ frontmatter, fallback về thời điểm index nếu không có
-    const docDate = parseFrontmatterDate(content) ?? Date.now();
-    const docDateStr = new Date(docDate).toISOString().slice(0, 10);
-    const hasFrontmatterDate = parseFrontmatterDate(content) !== null;
-    console.log(`  📝 Phân tích: ${filename} (Ngày tài liệu: ${docDateStr}${hasFrontmatterDate ? '' : ' [fallback - nên thêm frontmatter date]'})`);
+    // Lấy ngày từ frontmatter; nếu thiếu → tự động ghi vào file với ngày hôm nay
+    let docDate = parseFrontmatterDate(content);
+    let finalContent = content;
+    // Kiểm tra có frontmatter (hỗ trợ cả LF và CRLF)
+    const hasFrontmatter = content.startsWith('---\n') || content.startsWith('---\r\n');
+
+    if (docDate === null && !hasFrontmatter) {
+      // Chỉ thêm frontmatter khi file HOÀN TOÀN chưa có --- block nào
+      const todayStr = new Date().toISOString().slice(0, 10);
+      docDate = new Date(todayStr).getTime();
+      finalContent = `---\ndate: ${todayStr}\n---\n` + content;
+      writeFileSync(filePath, finalContent, 'utf-8');
+      console.log(`  📝 Phân tích: ${filename} (Ngày tài liệu: ${todayStr} [tự động thêm frontmatter])`);
+    } else {
+      // Có frontmatter (dù có date hay không) → không đụng vào file
+      docDate = docDate ?? Date.now();
+      const docDateStr = new Date(docDate).toISOString().slice(0, 10);
+      console.log(`  📝 Phân tích: ${filename} (Ngày tài liệu: ${docDateStr})`);
+    }
+
+    // Hash của nội dung cuối cùng (sau khi thêm frontmatter nếu có) để cache lần sau
+    const finalContentHash = hashContent(finalContent);
 
     // Strip frontmatter trước khi chunk để không embed YAML vào vector
-    const bodyContent = stripFrontmatter(content);
+    const bodyContent = stripFrontmatter(finalContent);
     const chunks = chunkText(bodyContent);
 
     for (let i = 0; i < chunks.length; i++) {
@@ -261,7 +279,7 @@ async function indexDocuments() {
       metadatasToEmbed.push({
         source: filename,
         chunkIndex: i,
-        contentHash,
+        contentHash: finalContentHash,
         docDate,
       });
     }

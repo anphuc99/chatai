@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tổng quan Tính năng: Cốt truyện (Story)
 
 Tính năng **Story** cho phép mỗi người dùng sở hữu và quản lý nhiều câu chuyện nhập vai khác nhau. Bối cảnh và cốt truyện do người dùng hoàn toàn tự do định nghĩa và sáng tạo mà không bị giới hạn.

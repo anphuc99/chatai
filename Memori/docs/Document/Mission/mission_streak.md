@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế tính năng: Nhiệm vụ (Missions) và Chuỗi ngày học (Streak)
 
 Tính năng Nhiệm vụ hàng ngày và Chuỗi ngày học (Streak) là cốt lõi để giữ chân người dùng (Retention), tạo động lực và hình thành thói quen học tiếng Trung mỗi ngày thông qua cơ chế Gamification.

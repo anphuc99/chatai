@@ -15,9 +15,10 @@ import { useChatStore } from '../store/chat.store';
 interface InputBarProps {
   onSend: (text: string, ephemeralOOC?: string) => void;
   disabled?: boolean;
+  rightExtra?: React.ReactNode;
 }
 
-export function InputBar({ onSend, disabled }: InputBarProps) {
+export function InputBar({ onSend, disabled, rightExtra }: InputBarProps) {
   const [text, setText] = useState('');
   const [showOoc, setShowOoc] = useState(false);
   const [oocText, setOocText] = useState('');
@@ -123,6 +124,7 @@ export function InputBar({ onSend, disabled }: InputBarProps) {
         >
           <Text style={styles.sendBtnText}>Gửi</Text>
         </TouchableOpacity>
+        {rightExtra ?? null}
       </View>
     </KeyboardAvoidingView>
   );

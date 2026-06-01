@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Kế hoạch Tích hợp Firebase (Database, Storage & Authentication)
 
 > ⚠️ **PHIÊN BẢN CŨ (v1)** — Tài liệu này là bản thiết kế ban đầu khi hệ thống dự kiến dùng Firebase làm backend chính (BaaS).  

@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế Kỹ thuật: Module Tài khoản (Account & Authentication)
 
 Tài liệu này mô tả chi tiết luồng hoạt động, cấu trúc dữ liệu và các sơ đồ thiết kế cho tính năng Quản lý Tài khoản trong ứng dụng. Hệ thống sử dụng **Google Sign-In** thông qua **Firebase Authentication** làm phương thức xác thực duy nhất để đảm bảo tính tiện lợi và bảo mật.

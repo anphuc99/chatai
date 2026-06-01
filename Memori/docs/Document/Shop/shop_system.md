@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế Tính năng: Cửa hàng Sự kiện Kịch bản (Contextual Shop Event)
 
 Tài liệu này mô tả chi tiết logic hoạt động, UI State và Sơ đồ tuần tự cho tính năng Shop ngẫu nhiên bên trong cốt truyện Roleplay. Đây là một cơ chế cực kỳ sáng tạo, giúp Gamification quá trình nhập vai bằng cách dùng tiền tệ (Gem).

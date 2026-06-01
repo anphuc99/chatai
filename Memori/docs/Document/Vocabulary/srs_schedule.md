@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thuật toán Spaced Repetition (SRS) Cực đoan
 
 Khác với các hệ thống SRS truyền thống (như Anki hay SuperMemo) phụ thuộc vào việc người dùng tự đánh giá (Dễ, Khó, Quên) hoặc tính toán dựa trên thời gian/số lần dùng Hint, hệ thống của chúng ta áp dụng một **Lộ trình Cố định Cực đoan (Hardcore Fixed Schedule)**.

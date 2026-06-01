@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng con: Chỉ dẫn ngoài vai (OOC - Out of Character Context)
 
 Tài liệu này đặc tả chi tiết thiết kế hệ thống, luồng hoạt động và tích hợp giao diện cho tính năng **Chỉ dẫn ngoài vai (OOC)** trong phòng chat nhập vai.

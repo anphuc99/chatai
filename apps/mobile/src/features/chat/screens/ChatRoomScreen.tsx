@@ -6,18 +6,23 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  Pressable,
   SafeAreaView,
   Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { StoryStackParamList } from '../../../navigation/types';
 import { useChatStore } from '../store/chat.store';
+import { useWalletStore } from '../../wallet/store/wallet.store';
 import { useChat } from '../hooks/useChat';
 import { useStoryStore } from '../../story/store/story.store';
 import { MessageBubble } from '../components/MessageBubble';
+import { ShopChoiceCard } from '../components/ShopChoiceCard';
 import { InputBar } from '../components/InputBar';
+import { AutoControlBar } from '../components/AutoControlBar';
 import { OocPanel } from '../components/OocPanel';
 import { CharacterToggleSheet } from '../components/CharacterToggleSheet';
+import { useAppStateAutoExit } from '../hooks/useAppStateAutoExit';
 import { theme } from '../../../theme';
 import { characterApi } from '../../character/services/character.api';
 import {
@@ -53,6 +58,19 @@ export function ChatRoomScreen() {
     addTempCharacter,
     reset,
   } = useChat();
+
+  const autoMode = useChatStore((s) => s.autoMode);
+  const enterAutoMode = useChatStore((s) => s.enterAutoMode);
+  const exitAutoMode = useChatStore((s) => s.exitAutoMode);
+  const isChoiceState = useChatStore((s) => s.isChoiceState);
+  const pendingShopEvent = useChatStore((s) => s.pendingShopEvent);
+  const choiceLoading = useChatStore((s) => s.choiceLoading);
+  const insufficientGems = useChatStore((s) => s.insufficientGems);
+  const confirmShopChoice = useChatStore((s) => s.confirmShopChoice);
+  const walletBalance = useWalletStore((s) => s.balance);
+  const refreshWallet = useWalletStore((s) => s.refresh);
+
+  useAppStateAutoExit();
 
   const [showOocPanel, setShowOocPanel] = useState(false);
   const [showCharToggle, setShowCharToggle] = useState(false);
@@ -181,6 +199,8 @@ export function ChatRoomScreen() {
           setPlaybackManagerSingleton(mgr);
 
           await loadHistory();
+          // Fetch wallet balance on enter
+          void refreshWallet();
         }
       } catch (e: any) {
         if (active) {
@@ -269,7 +289,31 @@ export function ChatRoomScreen() {
         data={invertedMessages}
         inverted
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <MessageBubble msg={item} />}
+        renderItem={({ item }) => {
+          const isShopPending =
+            item.kind === 'assistant' &&
+            item.shopEvent != null &&
+            pendingShopEvent != null &&
+            item.id === pendingShopEvent.msgId;
+
+          if (isShopPending && pendingShopEvent) {
+            return (
+              <View>
+                <MessageBubble msg={item} />
+                <ShopChoiceCard
+                  itemName={pendingShopEvent.itemName}
+                  price={pendingShopEvent.price}
+                  balance={walletBalance}
+                  loading={choiceLoading}
+                  insufficientGems={insufficientGems}
+                  onChoose={confirmShopChoice}
+                />
+              </View>
+            );
+          }
+
+          return <MessageBubble msg={item} />;
+        }}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={true}
         ListEmptyComponent={
@@ -284,8 +328,25 @@ export function ChatRoomScreen() {
         }
       />
 
-      {/* Thanh nhập liệu */}
-      <InputBar onSend={handleSend} disabled={inputLocked || ending} />
+      {/* Thanh nhập liệu hoặc Auto Control */}
+      {autoMode ? (
+        <AutoControlBar onStop={exitAutoMode} />
+      ) : (
+        <InputBar
+          onSend={handleSend}
+          disabled={inputLocked || isChoiceState || ending}
+          rightExtra={
+            <Pressable
+              onPress={enterAutoMode}
+              disabled={inputLocked || isChoiceState || ending}
+              style={[styles.autoBtn, (inputLocked || isChoiceState || ending) && styles.autoBtnDisabled]}
+              android_ripple={{ color: '#BFDBFE' }}
+            >
+              <Text style={styles.autoBtnText}>▶ Auto</Text>
+            </Pressable>
+          }
+        />
+      )}
 
       {/* Modal chỉnh sửa OOC & nhân vật tạm thời */}
       <OocPanel
@@ -385,5 +446,21 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     fontWeight: '700',
+  },
+  autoBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: theme.radius.md,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  autoBtnDisabled: {
+    opacity: 0.4,
+  },
+  autoBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2563EB',
   },
 });

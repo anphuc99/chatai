@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tổng quan Tính năng: Nhập vai Chat AI (Roleplay Chat)
 
 Tài liệu này trình bày tổng quan về thiết kế giao diện, luồng hoạt động và kiến trúc tổng thể của hệ thống phòng chat nhập vai. Các module trong hệ thống được thiết kế theo hướng phân tách trách nhiệm (Separation of Concerns), tối ưu hóa hiệu suất (lazy parsing) và ngăn ngừa tràn token (checkpoints).

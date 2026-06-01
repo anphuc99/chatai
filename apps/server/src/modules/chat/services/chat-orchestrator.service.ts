@@ -15,10 +15,14 @@ import { AssistantBatchSchema, AssistantMessage } from '../schemas/assistant-bat
 import { MemoryService } from '../../memory/memory.service';
 import { ChatContext } from '../types/chat-context';
 import { Character, Prisma } from '@prisma/client';
+import { TemplateLoader } from '@chatai/prompts';
+
+const AUTO_PLACEHOLDER_MSG = '[AUTO]';
 
 @Injectable()
 export class ChatOrchestratorService {
   private readonly logger = new Logger(ChatOrchestratorService.name);
+  private readonly autoOocTemplate: string;
 
   constructor(
     private readonly historyStore: HistoryStoreService,
@@ -32,39 +36,48 @@ export class ChatOrchestratorService {
     private readonly checkpointService: CheckpointService,
     @Inject(forwardRef(() => MemoryService))
     private readonly memoryService: MemoryService,
-  ) {}
+  ) {
+    this.autoOocTemplate = TemplateLoader.loadTemplate('auto_turn_ooc');
+  }
 
   async handleUserTurn(
     ctx: ChatContext,
     userMessage: string,
-    ephemeralOOC?: string,
+    extraEphemeralOOC?: string,
+    opts?: { isAuto?: boolean; skipMemory?: boolean },
   ): Promise<AssistantBatchDto> {
-    // 1. Input validation
-    if (!userMessage || userMessage.length < 1 || userMessage.length > 2000) {
-      throw new AppException(ERR.INVALID_PAYLOAD, 'User message length must be between 1 and 2000 characters');
-    }
-    if (ephemeralOOC && ephemeralOOC.length > 500) {
-      throw new AppException(ERR.INVALID_PAYLOAD, 'Ephemeral OOC length must not exceed 500 characters');
+    const isAuto = opts?.isAuto ?? false;
+
+    // Input validation (skipped for auto-generated content)
+    if (!isAuto) {
+      if (!userMessage || userMessage.length < 1 || userMessage.length > 2000) {
+        throw new AppException(ERR.INVALID_PAYLOAD, 'User message length must be between 1 and 2000 characters');
+      }
+      if (extraEphemeralOOC && extraEphemeralOOC.length > 500) {
+        throw new AppException(ERR.INVALID_PAYLOAD, 'Ephemeral OOC length must not exceed 500 characters');
+      }
     }
 
     const ts = Date.now();
 
-    // 2. Append user entry to JSONL
-    await this.historyStore.append(ctx.sessionId, {
-      type: 'user',
-      timestamp: ts,
-      data: { text: userMessage, ephemeralOOC },
-    });
+    // Append user entry to JSONL only for real user turns
+    if (!isAuto) {
+      await this.historyStore.append(ctx.sessionId, {
+        type: 'user',
+        timestamp: ts,
+        data: { text: userMessage, ephemeralOOC: extraEphemeralOOC },
+      });
+    }
 
     try {
-      // 3. OOC pulls
+      // OOC pulls
       const persistentOOC = await this.ooc.getPersistent(ctx.sessionId);
       const ephemeralsFromQueue = await this.ooc.pullAllEphemeral(ctx.sessionId);
-      const allEphemerals = ephemeralOOC
-        ? [ephemeralOOC, ...ephemeralsFromQueue]
+      const allEphemerals = extraEphemeralOOC
+        ? [extraEphemeralOOC, ...ephemeralsFromQueue]
         : ephemeralsFromQueue;
 
-      // 4. Active characters + temporary characters
+      // Active characters + temporary characters
       const activeCharIds = await this.ooc.getActiveCharacters(ctx.sessionId);
       const characters: Character[] = activeCharIds.length > 0
         ? await this.prisma.character.findMany({
@@ -73,7 +86,7 @@ export class ChatOrchestratorService {
         : [];
       const tempChars = await this.ooc.getTemporaries(ctx.sessionId);
 
-      // 5. Story
+      // Story
       const story = await this.prisma.story.findUnique({
         where: { id: ctx.storyId },
       });
@@ -81,10 +94,10 @@ export class ChatOrchestratorService {
         throw new AppException(ERR.NOT_FOUND, 'Story not found');
       }
 
-      // 6. User preferences
+      // User preferences
       const { hskLevel, narratorLanguage } = await this.fetchUserPreferences(ctx.userId);
 
-      // 7. Build prompts
+      // Build system prompt
       const systemPrompt = this.promptBuilder.buildSystemPrompt({
         story: {
           title: story.title,
@@ -97,14 +110,21 @@ export class ChatOrchestratorService {
         narratorLanguage,
       });
 
-      // 5. Parallel: history read + memory context retrieval
+      // Parallel: history read + memory context retrieval
+      // Skip RAG when there is no meaningful user query (auto turns use the '[AUTO]'
+      // placeholder; shop-choice turns use canned strings) — embedding those would
+      // only pull noisy context and waste an embed + Chroma query.
       const activeCharNames = characters.map((c) => c.name);
+      const skipMemory = isAuto || opts?.skipMemory === true;
       const [history, memoryContext] = await Promise.all([
         this.historyStore.readSinceLastCheckpoint(ctx.sessionId),
-        this.safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames),
+        skipMemory
+          ? Promise.resolve('')
+          : this.safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames),
       ]);
-      // Exclude the just-appended user entry from history (will be appended as final user message in messages array)
-      const historyForLLM = history.slice(0, -1);
+
+      // For real user turns, exclude the just-appended user entry (it will be the final message)
+      const historyForLLM = isAuto ? history : history.slice(0, -1);
 
       const llmMessages = this.promptBuilder.buildLlmMessages(
         systemPrompt,
@@ -115,10 +135,10 @@ export class ChatOrchestratorService {
         memoryContext || null,
       );
 
-      // 8. Call LLM
+      // Call LLM
       const llmResp = await this.llm.chatJson(llmMessages, AssistantBatchSchema);
 
-      // 9. Append assistant batch into JSONL
+      // Append assistant batch into JSONL
       await this.historyStore.append(ctx.sessionId, {
         type: 'assistant_batch',
         timestamp: Date.now(),
@@ -128,16 +148,17 @@ export class ChatOrchestratorService {
         },
       });
 
-      // 10. Persist to DB
+      // Persist to DB
       const insertedAssistantMessages = await this.persistMessages(
         ctx.sessionId,
         userMessage,
-        ephemeralOOC,
+        isAuto ? undefined : extraEphemeralOOC,
         llmResp.content,
         characters,
+        isAuto,
       );
 
-      // 11. Emit events
+      // Emit events
       this.eventEmitter.emit(EVENTS.USER_SENT_MESSAGE, {
         sessionId: ctx.sessionId,
         userId: ctx.userId,
@@ -153,12 +174,16 @@ export class ChatOrchestratorService {
       // Trigger checkpoint check asynchronously
       this.checkpointService.maybeTriggerAsync(ctx.sessionId);
 
-      // 12. Transform to DTO
-      return this.transformToDto(insertedAssistantMessages, llmResp.triggerMemory ?? false);
+      // Transform to DTO
+      return this.transformToDto(insertedAssistantMessages, llmResp.triggerMemory ?? false, isAuto);
     } catch (error: any) {
       this.logger.error(`Failed to handle user turn for session ${ctx.sessionId}: ${error.message}`, error.stack);
       throw error;
     }
+  }
+
+  async handleAutoTurn(ctx: ChatContext): Promise<AssistantBatchDto> {
+    return this.handleUserTurn(ctx, AUTO_PLACEHOLDER_MSG, this.autoOocTemplate, { isAuto: true });
   }
 
   private async fetchUserPreferences(
@@ -183,6 +208,7 @@ export class ChatOrchestratorService {
     ephemeralOOC: string | undefined,
     assistantMsgs: AssistantMessage[],
     characters: Character[],
+    isAuto?: boolean,
   ): Promise<Prisma.MessageGetPayload<{}>[]> {
     return this.prisma.$transaction(async (tx) => {
       const maxAgg = await tx.message.aggregate({
@@ -191,29 +217,13 @@ export class ChatOrchestratorService {
       });
       const startOrder = (maxAgg._max.turnOrder ?? 0) + 1;
 
-      // User message
-      await tx.message.create({
-        data: {
-          sessionId,
-          role: 'user',
-          text: userText,
-          characterId: null,
-          characterName: null,
-          translation: null,
-          emotion: null,
-          intensity: null,
-          turnOrder: startOrder,
-          timestamp: BigInt(Date.now()),
-        },
-      });
-
-      // Ephemeral OOC message if exists
-      if (ephemeralOOC) {
+      // Skip user message for auto turns (placeholder is not a real user message)
+      if (!isAuto) {
         await tx.message.create({
           data: {
             sessionId,
-            role: 'ephemeral_ooc',
-            text: ephemeralOOC,
+            role: 'user',
+            text: userText,
             characterId: null,
             characterName: null,
             translation: null,
@@ -223,9 +233,27 @@ export class ChatOrchestratorService {
             timestamp: BigInt(Date.now()),
           },
         });
+
+        if (ephemeralOOC) {
+          await tx.message.create({
+            data: {
+              sessionId,
+              role: 'ephemeral_ooc',
+              text: ephemeralOOC,
+              characterId: null,
+              characterName: null,
+              translation: null,
+              emotion: null,
+              intensity: null,
+              turnOrder: startOrder,
+              timestamp: BigInt(Date.now()),
+            },
+          });
+        }
       }
 
       // Assistant messages
+      const assistantStartOrder = isAuto ? startOrder : startOrder + 1;
       for (let i = 0; i < assistantMsgs.length; i++) {
         const m = assistantMsgs[i]!;
         const matchedChar = characters.find((c) => c.name === m.characterName);
@@ -243,7 +271,7 @@ export class ChatOrchestratorService {
             intensity: m.intensity ?? null,
             words: m.words ?? undefined,
             shopEvent: m.shopEvent ?? undefined,
-            turnOrder: startOrder + 1 + i,
+            turnOrder: assistantStartOrder + i,
             timestamp: BigInt(Date.now()),
           },
         });
@@ -254,7 +282,7 @@ export class ChatOrchestratorService {
         where: {
           sessionId,
           role: 'assistant',
-          turnOrder: { gte: startOrder + 1 },
+          turnOrder: { gte: assistantStartOrder },
         },
         orderBy: { turnOrder: 'asc' },
         take: assistantMsgs.length,
@@ -292,7 +320,11 @@ export class ChatOrchestratorService {
     }
   }
 
-  private transformToDto(records: Prisma.MessageGetPayload<{}>[], triggerMemory: boolean): AssistantBatchDto {
+  private transformToDto(
+    records: Prisma.MessageGetPayload<{}>[],
+    triggerMemory: boolean,
+    isAuto?: boolean,
+  ): AssistantBatchDto {
     return {
       messages: records.map((r) => ({
         id: r.id,
@@ -307,6 +339,7 @@ export class ChatOrchestratorService {
         timestamp: Number(r.timestamp),
       })),
       triggerMemory,
+      ...(isAuto ? { isAuto: true } : {}),
     };
   }
 }

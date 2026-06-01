@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Quản lý Tin nhắn và Trí nhớ Dài hạn (Long-term Memory)
 
 Tài liệu này định nghĩa kiến trúc hệ thống trí nhớ dài hạn sử dụng **ChromaDB**, cách thức phân loại trí nhớ, và quy trình điều phối AI (Orchestration) cho các model được chạy qua **Ollama**.
