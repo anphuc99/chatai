@@ -101,6 +101,10 @@ const REGISTRY = {
     status: HttpStatus.CONFLICT,
     defaultMessage: 'Sự kiện cửa hàng đã được xử lý',
   },
+  SHOP_EVENT_PENDING: {
+    status: HttpStatus.CONFLICT,
+    defaultMessage: 'Vui lòng phản hồi sự kiện cửa hàng đang chờ trước khi tiếp tục',
+  },
 } satisfies Record<string, ErrorMeta>;
 
 export function getMeta(code: string): ErrorMeta {

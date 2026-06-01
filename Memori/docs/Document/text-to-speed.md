@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế Kỹ thuật: Hệ thống Text-to-Speech (GPT-SoVITS)
 
 Tài liệu này mô tả chi tiết kiến trúc và luồng hoạt động của hệ thống Text-to-Speech (TTS) dựa trên nền tảng **GPT-SoVITS**. Hệ thống sử dụng cơ chế "Mồi cảm xúc" (Reference Audio) lấy từ bộ dữ liệu đã được phân loại theo 12 cảm xúc và mức độ (Intensity) để tạo ra giọng nói sinh động, tự nhiên nhất.

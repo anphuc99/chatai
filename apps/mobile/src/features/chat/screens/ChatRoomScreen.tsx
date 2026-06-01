@@ -338,8 +338,8 @@ export function ChatRoomScreen() {
           rightExtra={
             <Pressable
               onPress={enterAutoMode}
-              disabled={inputLocked || ending}
-              style={[styles.autoBtn, (inputLocked || ending) && styles.autoBtnDisabled]}
+              disabled={inputLocked || isChoiceState || ending}
+              style={[styles.autoBtn, (inputLocked || isChoiceState || ending) && styles.autoBtnDisabled]}
               android_ripple={{ color: '#BFDBFE' }}
             >
               <Text style={styles.autoBtnText}>▶ Auto</Text>

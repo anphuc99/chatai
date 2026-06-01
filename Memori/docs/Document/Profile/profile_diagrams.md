@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế tính năng: Màn hình Cá nhân (Profile & Settings)
 
 Tài liệu này mô tả sơ đồ luồng hoạt động (UML Sequence Diagram) cho các thao tác chính trong màn hình Hồ sơ cá nhân (Profile). Bao gồm: Tải thông tin, Cập nhật cài đặt học tập và Đổi ảnh đại diện.

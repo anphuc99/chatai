@@ -10,7 +10,7 @@ datasource db {
 model UsersMeta {
   userId       String    @id @map("user_id") // Firebase UID
   tutorialStep Int       @default(0) @map("tutorial_step")
-  gems         Int       @default(0)
+  gems         Int       @default(100)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   stories      Story[]
@@ -141,7 +141,7 @@ model Message {
   session       Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   character     Character? @relation(fields: [characterId], references: [id], onDelete: SetNull)
 
-  @@index([sessionId, turnOrder])
+  @@unique([sessionId, turnOrder])
   @@index([characterId])
   @@map("messages")
 }

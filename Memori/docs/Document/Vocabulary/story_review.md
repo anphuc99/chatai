@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng Ôn tập Từ vựng: Truyện ngắn Tương tác (Interactive Story Review)
 
 Đây là một ý tưởng cực kỳ xuất sắc và mang tính đột phá! Thay vì bắt người dùng học vẹt từng từ đơn lẻ, chúng ta ném họ vào một **"Mini-Story" (Truyện ngắn)** hoàn toàn mới. Narrator (Người dẫn chuyện) sẽ dẫn dắt cốt truyện bằng tiếng Việt, và người dùng đóng vai trò là "người lấp đầy khoảng trống" bằng cách dịch các câu chốt (chứa từ vựng đã học) sang tiếng Trung để câu chuyện được tiếp tục.

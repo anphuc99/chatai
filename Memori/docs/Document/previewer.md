@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tài liệu Thiết kế & Hướng dẫn: Device Previewer
 
 **Device Previewer** là một công cụ tiện ích nội bộ (Internal Developer Tool) được xây dựng dành riêng cho đội ngũ phát triển dự án ChatAI. Thay vì phải mở trình mô phỏng giả lập nặng nề của Android/iOS, Previewer cung cấp một giao diện web phản hồi theo thời gian thực (real-time) với đầy đủ các cấu hình thiết bị di động phổ biến.

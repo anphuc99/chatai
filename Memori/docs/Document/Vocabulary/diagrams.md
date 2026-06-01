@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tổng hợp Sơ đồ Hệ thống: Ôn tập Từ vựng (Vocabulary Review)
 
 Tài liệu này cung cấp các sơ đồ trực quan mô tả luồng hoạt động, luồng dữ liệu và thiết kế hệ thống cho tính năng **Story-based Vocabulary Review** (bao gồm cơ chế Super Sentence và Hardcore SRS Schedule).

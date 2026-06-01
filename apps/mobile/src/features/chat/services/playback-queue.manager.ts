@@ -83,12 +83,26 @@ export class PlaybackQueueManager {
     for (const resolve of resolvers) resolve();
   }
 
-  public waitForQueueFinish(): Promise<void> {
+  public waitForQueueFinish(signal?: AbortSignal): Promise<void> {
     if (!this.isPlaying && this.queue.length === 0) {
       return Promise.resolve();
     }
-    return new Promise<void>((resolve) => {
-      this.queueFinishResolvers.push(resolve);
+    return new Promise<void>((resolve, reject) => {
+      if (signal?.aborted) {
+        reject(new DOMException('aborted', 'AbortError'));
+        return;
+      }
+      const resolver = () => {
+        signal?.removeEventListener('abort', onAbort);
+        resolve();
+      };
+      const onAbort = () => {
+        const idx = this.queueFinishResolvers.indexOf(resolver);
+        if (idx >= 0) this.queueFinishResolvers.splice(idx, 1);
+        reject(new DOMException('aborted', 'AbortError'));
+      };
+      signal?.addEventListener('abort', onAbort, { once: true });
+      this.queueFinishResolvers.push(resolver);
     });
   }
 

@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Kế hoạch phát triển ứng dụng React Native Roleplay Chat AI & Học tiếng Trung
 
 > ⚠️ **PHIÊN BẢN CŨ (v1)** — Đây là bản kế hoạch ban đầu (concept/ideation phase).  

@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng con: Thêm nhân vật & Tạo nhân vật tạm thời (Add Character)
 
 Tính năng này giúp người dùng biến cuộc trò chuyện 1-1 thông thường thành một phòng chat đa nhân vật (Group Chat) sinh động bằng cách thêm/bớt nhân vật linh hoạt, hoặc tạo nhanh các nhân vật phụ dùng một lần.

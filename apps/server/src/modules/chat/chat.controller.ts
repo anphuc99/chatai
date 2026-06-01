@@ -9,6 +9,7 @@ import {
   ConflictException,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { ChatSessionService } from './services/chat-session.service';
 import { ChatOrchestratorService } from './services/chat-orchestrator.service';
@@ -39,6 +40,7 @@ import {
 @Controller('chat')
 @UseGuards(RedisThrottlerGuard)
 export class ChatController {
+  private readonly logger = new Logger(ChatController.name);
   private readonly shopChoiceTemplates: { buy: string; decline: string };
 
   constructor(
@@ -89,6 +91,12 @@ export class ChatController {
     const session = await this.sessionService.getSessionForUser(u.uid, sid);
     if (session.status !== 'active') {
       throw new AppException(ERR.SESSION_ALREADY_ENDED);
+    }
+
+    // Defense-in-depth: refuse a normal turn while a shop event is still pending,
+    // otherwise the new assistant batch would orphan the unresolved shop event.
+    if (await this.shopEventResolver.hasPendingShopEvent(sid)) {
+      throw new AppException(ERR.SHOP_EVENT_PENDING);
     }
 
     try {
@@ -197,10 +205,17 @@ export class ChatController {
       throw new AppException(ERR.SESSION_ALREADY_ENDED);
     }
 
+    // Defense-in-depth: refuse auto-continue while a shop event is still pending,
+    // otherwise the new assistant batch would orphan the unresolved shop event.
+    if (await this.shopEventResolver.hasPendingShopEvent(sid)) {
+      throw new AppException(ERR.SHOP_EVENT_PENDING);
+    }
+
     await this.autoRateLimiter.checkAndConsume(sid);
 
     try {
-      return await this.redis.withLock(`chat:auto-lock:${sid}`, 30000, async () => {
+      // Share the same per-session lock as send/shop so all turn-writes are serialized.
+      return await this.redis.withLock(`chat:lock:${sid}`, 30000, async () => {
         return await this.orchestrator.handleAutoTurn({
           sessionId: sid,
           userId: u.uid,
@@ -231,29 +246,51 @@ export class ChatController {
     await this.shopEventResolver.findPendingShopEvent(sid);
 
     try {
-      return await this.redis.withLock(`chat:shop-lock:${sid}`, 30000, async () => {
+      // Share the same per-session lock as send/auto so all turn-writes are serialized.
+      return await this.redis.withLock(`chat:lock:${sid}`, 30000, async () => {
         // Re-check after lock to prevent concurrent resolution
         const ref = await this.shopEventResolver.findPendingShopEvent(sid);
 
-        if (dto.choice === 'buy') {
-          await this.shopService.applyContextualEvent(u.uid, ref.event.itemName, ref.event.price, 'buy', sid);
-        }
-
-        // Mark consumed BEFORE orchestrator to prevent re-entry
-        await this.shopEventResolver.markConsumed(sid, ref.msgId);
-
         const template = this.shopChoiceTemplates[dto.choice];
         const ooc = template
-          .replace('{{ITEM}}', ref.event.itemName)
-          .replace('{{PRICE}}', ref.event.price.toString());
+          .replaceAll('{{ITEM}}', ref.event.itemName)
+          .replaceAll('{{PRICE}}', ref.event.price.toString());
 
         const cannedMsg = dto.choice === 'buy' ? '好，我买了' : '不用了，谢谢';
+        const turnCtx = { sessionId: sid, userId: u.uid, storyId: session.storyId };
 
-        return await this.orchestrator.handleUserTurn(
-          { sessionId: sid, userId: u.uid, storyId: session.storyId },
-          cannedMsg,
-          ooc,
-        );
+        if (dto.choice === 'buy') {
+          // 1. Purchase is the authoritative action and is atomic on its own.
+          await this.shopService.applyContextualEvent(
+            u.uid,
+            ref.event.itemName,
+            ref.event.price,
+            'buy',
+            sid,
+          );
+          // 2. Once the purchase commits, mark consumed so a success is never double-charged.
+          await this.shopEventResolver.markConsumed(sid, ref.msgId);
+          // 3. Narration is best-effort: the gems are already spent, so a narration
+          //    failure must NOT surface as a failed transaction (which would strand
+          //    the card and block retry with ALREADY_RESOLVED).
+          try {
+            return await this.orchestrator.handleUserTurn(turnCtx, cannedMsg, ooc, {
+              skipMemory: true,
+            });
+          } catch (narrErr: any) {
+            this.logger.warn(
+              `Shop purchase succeeded but narration failed for session ${sid}: ${narrErr?.message}`,
+            );
+            return { messages: [], triggerMemory: false, narrationFailed: true };
+          }
+        }
+
+        // Decline: no purchase. Run narration first, then mark consumed on success.
+        const result = await this.orchestrator.handleUserTurn(turnCtx, cannedMsg, ooc, {
+          skipMemory: true,
+        });
+        await this.shopEventResolver.markConsumed(sid, ref.msgId);
+        return result;
       });
     } catch (err: any) {
       if (err instanceof ConflictException && err.message === 'SESSION_LOCKED') {

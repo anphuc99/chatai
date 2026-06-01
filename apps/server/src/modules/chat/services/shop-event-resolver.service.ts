@@ -45,6 +45,23 @@ export class ShopEventResolverService {
     await this.redis.set(this.consumedKey(sid, msgId), '1', 86400);
   }
 
+  /**
+   * Non-throwing check used as defense-in-depth by send/auto endpoints so they
+   * refuse to write a new turn while a shop event is still unresolved.
+   */
+  async hasPendingShopEvent(sid: string): Promise<boolean> {
+    const batch = await this.historyStore.getLastAssistantBatch(sid);
+    for (const msg of batch) {
+      if (msg.shopEvent) {
+        const consumed = await this.redis.get(
+          this.consumedKey(sid, msg.shopEvent.itemName),
+        );
+        return !consumed;
+      }
+    }
+    return false;
+  }
+
   private consumedKey(sid: string, msgId: string): string {
     return `chat:shop-consumed:${sid}:${msgId}`;
   }

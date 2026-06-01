@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tổng quan Tính năng: Nhật ký & Lưu trữ vĩnh viễn (Journal)
 
 Tài liệu này trình bày thiết kế kiến trúc, luồng hoạt động và giao diện của module **Nhật ký (Journal)**. Nếu như History Store quản lý dữ liệu đệm tạm thời khi đang chat, thì Journal đóng vai trò là "Kho lưu trữ vĩnh viễn" và "Không gian học tập/ôn luyện" sau khi phiên chat đã khép lại.

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { createHash } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import { AppException, ERR } from '../../shared/errors/app-exception';
@@ -52,11 +53,15 @@ export class ShopService {
       return { success: true, newBalance: await this.getBalance(uid), itemId: null };
     }
 
-    let item = await this.prisma.shopItem.findUnique({ where: { id: itemKey } });
+    // Use a server-derived stable id (slug + hash of the display name) as the PK
+    // instead of the raw LLM-generated display name. This keeps the display name in
+    // the `name` column and avoids accidental PK collisions / garbage rows.
+    const itemId = this.contextualItemId(itemKey);
+    let item = await this.prisma.shopItem.findUnique({ where: { id: itemId } });
     if (!item) {
       item = await this.prisma.shopItem.create({
         data: {
-          id: itemKey,
+          id: itemId,
           name: itemKey,
           description: 'Contextual item',
           priceGems: price,
@@ -138,7 +143,7 @@ export class ShopService {
     return { success: true, ...result };
   }
 
-  private toItemDto(item: ShopItem): ShopItemDto {
+  private toItemDto = (item: ShopItem): ShopItemDto => {
     return {
       id: item.id,
       name: item.name,
@@ -149,5 +154,17 @@ export class ShopService {
       metadata: item.metadata as Record<string, unknown> | null,
       createdAt: item.createdAt.toISOString(),
     };
+  };
+
+  /** Build a stable, collision-resistant id for an LLM-named contextual item. */
+  private contextualItemId(displayName: string): string {
+    const slug = displayName
+      .normalize('NFKD')
+      .replace(/[^\p{L}\p{N}]+/gu, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase()
+      .slice(0, 32);
+    const hash = createHash('sha1').update(displayName).digest('hex').slice(0, 8);
+    return `contextual:${slug || 'item'}-${hash}`;
   }
 }

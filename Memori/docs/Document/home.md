@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Thiết kế tính năng: Màn hình chính (Home Screen) & Xác thực (Authentication)
 
 Tài liệu này mô tả chi tiết luồng xác thực khi người dùng mở ứng dụng và cấu trúc hiển thị của màn hình chính (Home Screen).

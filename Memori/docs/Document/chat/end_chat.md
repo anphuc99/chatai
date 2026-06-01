@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng con: Kết thúc chat & Tóm tắt bài học (End Chat)
 
 Tính năng **Kết thúc chat** giúp người dùng đóng lại phiên hội thoại hiện tại và tự động lưu bản tóm tắt cốt truyện bằng tiếng Việt. Tính năng này đóng vai trò là một bộ điều phối (Orchestrator) thực hiện thu thập dữ liệu cache, làm sạch, tóm tắt và bàn giao **bản tóm tắt (summary)** cùng các siêu dữ liệu (metadata) của session sang cho module Journal để lưu trữ vĩnh viễn (lịch sử tin nhắn chi tiết sẽ do History Store bàn giao riêng). Sau khi hoàn tất, hệ thống sẽ đưa người dùng trở lại màn hình Home.

@@ -44,7 +44,7 @@ export class ChatOrchestratorService {
     ctx: ChatContext,
     userMessage: string,
     extraEphemeralOOC?: string,
-    opts?: { isAuto?: boolean },
+    opts?: { isAuto?: boolean; skipMemory?: boolean },
   ): Promise<AssistantBatchDto> {
     const isAuto = opts?.isAuto ?? false;
 
@@ -111,10 +111,16 @@ export class ChatOrchestratorService {
       });
 
       // Parallel: history read + memory context retrieval
+      // Skip RAG when there is no meaningful user query (auto turns use the '[AUTO]'
+      // placeholder; shop-choice turns use canned strings) — embedding those would
+      // only pull noisy context and waste an embed + Chroma query.
       const activeCharNames = characters.map((c) => c.name);
+      const skipMemory = isAuto || opts?.skipMemory === true;
       const [history, memoryContext] = await Promise.all([
         this.historyStore.readSinceLastCheckpoint(ctx.sessionId),
-        this.safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames),
+        skipMemory
+          ? Promise.resolve('')
+          : this.safeRetrieveMemory(ctx.userId, ctx.storyId, userMessage, activeCharNames),
       ]);
 
       // For real user turns, exclude the just-appended user entry (it will be the final message)

@@ -97,18 +97,15 @@ export function mapDtoToChatMessage(dto: MessageDto | JournalMessageDto, index: 
 // ---------------------------------------------------------------------------
 function _delay(ms: number, signal: AbortSignal): Promise<void> {
   return new Promise<void>((resolve, reject) => {
-    const t = setTimeout(resolve, ms);
-    signal.addEventListener('abort', () => {
+    const onAbort = () => {
       clearTimeout(t);
       reject(new DOMException('aborted', 'AbortError'));
-    });
-  });
-}
-
-function _raceAbort<T>(p: Promise<T>, signal: AbortSignal): Promise<T> {
-  return new Promise<T>((res, rej) => {
-    p.then(res, rej);
-    signal.addEventListener('abort', () => rej(new DOMException('aborted', 'AbortError')));
+    };
+    const t = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort);
+      resolve();
+    }, ms);
+    signal.addEventListener('abort', onAbort, { once: true });
   });
 }
 
@@ -390,7 +387,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
           const mgr = getPlaybackManagerSingleton();
           if (mgr) {
-            await _raceAbort(mgr.waitForQueueFinish(), signal);
+            await mgr.waitForQueueFinish(signal);
           }
           if (signal.aborted) break;
 
@@ -462,6 +459,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
       } else if (code === 'SHOP_EVENT_ALREADY_RESOLVED') {
         set({ isChoiceState: false, pendingShopEvent: null, inputLocked: false, insufficientGems: false });
       } else {
+        // Generic failure: the purchase may already have committed server-side, so
+        // clear the choice card instead of stranding it (avoids ALREADY_RESOLVED on retry).
+        set({ isChoiceState: false, pendingShopEvent: null, inputLocked: false, insufficientGems: false });
         showShopToast('Lỗi: ' + (e?.message || 'Không thể thực hiện'));
       }
     }

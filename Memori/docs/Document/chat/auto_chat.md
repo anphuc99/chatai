@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng con: Chat tự động (Auto Chat)
 
 Tính năng **Chat tự động (Auto Chat)** cho phép người học tiếng Trung tạm thời "nhường lượt" cho AI để AI tự động tiếp nối mạch truyện, giúp người dùng tập trung vào việc đọc hiểu (Comprehensible Input) và nghe phát âm mà không cần phải liên tục suy nghĩ câu thoại tiếp theo.

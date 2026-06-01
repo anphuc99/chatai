@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # Tính năng con: Quản lý Lịch sử Bộ nhớ đệm (History Store)
 
 Tính năng này phụ trách quản lý luồng lưu trữ lịch sử hội thoại tạm thời trong quá trình chat để tối ưu hóa context window (số token) gửi lên AI, và bàn giao dữ liệu sạch cho module Journal để lưu trữ lâu dài khi kết thúc phiên. Khác với tính năng Journal (Nhật ký - lưu trữ tóm tắt chung để người dùng xem lại), History Store tập trung vào luồng xử lý kỹ thuật, quản lý cache trên Server và tối ưu hóa hiệu suất API.
