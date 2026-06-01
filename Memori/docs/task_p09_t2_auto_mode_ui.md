@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # task_p09_t2_auto_mode_ui
 
 ## 1. Mô tả tính năng

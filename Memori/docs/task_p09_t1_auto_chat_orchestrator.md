@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # P09.T1 — Auto Chat Orchestrator + Endpoint
 
 ## Tóm tắt

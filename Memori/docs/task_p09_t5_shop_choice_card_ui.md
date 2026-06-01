@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # task_p09_t5_shop_choice_card_ui.md
 
 ## Tổng quan

@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # P09.T4 — Chat Shop-Choice Endpoint + Narration Branch
 
 ## Tóm tắt

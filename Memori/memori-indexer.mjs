@@ -37,7 +37,7 @@ function parseFrontmatterDate(text) {
   return isNaN(ts) ? null : ts;
 }
 
-// === Xóa YAML frontmatter khỏi nội dung trước khi chunk ===
+// === Xóa YAML frontmatter khỏi nội dung trước khi chunk (hỗ trợ LF và CRLF) ===
 function stripFrontmatter(text) {
   return text.replace(/^---[\r\n][\s\S]*?[\r\n]---[\r\n]?/, '');
 }
@@ -232,7 +232,9 @@ async function indexDocuments() {
     const filename = basename(filePath);
     currentFiles.add(filename);
 
-    const content = readFileSync(filePath, 'utf-8');
+    const rawContent = readFileSync(filePath, 'utf-8');
+    // Strip UTF-8 BOM nếu có (một số editor Windows ghi BOM)
+    const content = rawContent.replace(/^\uFEFF/, '');
     // So sánh content hash — git-proof, không bị reset sau git pull
     const contentHash = hashContent(content);
     if (oldFileHashes[filename] && oldFileHashes[filename] === contentHash) {
@@ -245,7 +247,8 @@ async function indexDocuments() {
     // Lấy ngày từ frontmatter; nếu thiếu → tự động ghi vào file với ngày hôm nay
     let docDate = parseFrontmatterDate(content);
     let finalContent = content;
-    const hasFrontmatter = content.startsWith('---');
+    // Kiểm tra có frontmatter (hỗ trợ cả LF và CRLF)
+    const hasFrontmatter = content.startsWith('---\n') || content.startsWith('---\r\n');
 
     if (docDate === null && !hasFrontmatter) {
       // Chỉ thêm frontmatter khi file HOÀN TOÀN chưa có --- block nào

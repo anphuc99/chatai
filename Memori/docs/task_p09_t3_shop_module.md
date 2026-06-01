@@ -1,3 +1,6 @@
+---
+date: 2026-06-01
+---
 # P09.T3 — ShopModule (Contextual + System Shop)
 
 ## Tổng quan
