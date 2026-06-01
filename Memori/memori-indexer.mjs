@@ -76,8 +76,11 @@ function chunkText(text, maxChars = MAX_CHARS, overlap = OVERLAP) {
 
   for (const { heading, content } of sections) {
     const prefix = heading ? heading + '\n' : '';
-    const fullSection = (prefix + content).trim();
 
+    // Bỏ qua section chỉ có heading mà không có nội dung thực sự
+    if (!content.trim()) continue;
+
+    const fullSection = (prefix + content).trim();
     if (!fullSection) continue;
 
     // Section vừa đủ → 1 chunk duy nhất, giữ nguyên ranh giới section
