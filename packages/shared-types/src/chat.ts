@@ -14,6 +14,7 @@ export interface AssistantMessageDto {
 export interface AssistantBatchDto {
   messages: AssistantMessageDto[];
   triggerMemory: boolean;
+  isAuto?: boolean;
 }
 
 export interface StartSessionDto {

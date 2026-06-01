@@ -22,6 +22,7 @@ import { RedisThrottlerGuard } from '../../shared/throttler/redis-throttler.guar
 import { Throttle } from '../../shared/throttler/throttle.decorator';
 import { AppException, ERR } from '../../shared/errors/app-exception';
 import { EndChatService } from './services/end-chat.service';
+import { AutoRateLimiterService } from './services/auto-rate-limiter.service';
 import { Idempotent } from '../../shared/idempotency/idempotent.decorator';
 import {
   StartSessionDto,
@@ -42,6 +43,7 @@ export class ChatController {
     private readonly redis: RedisService,
     private readonly prisma: PrismaService,
     private readonly endChatService: EndChatService,
+    private readonly autoRateLimiter: AutoRateLimiterService,
   ) {}
 
   @Post('sessions')
@@ -168,6 +170,35 @@ export class ChatController {
       `Một nhân vật tạm thời tên ${dto.name} xuất hiện: ${dto.description}`,
     );
     return { tempId };
+  }
+
+  @Post('sessions/:sid/auto-continue')
+  @Throttle(10, 60)
+  async autoContinue(
+    @CurrentUser() u: AuthUser,
+    @Param('sid', ParseUUIDPipe) sid: string,
+  ) {
+    const session = await this.sessionService.getSessionForUser(u.uid, sid);
+    if (session.status !== 'active') {
+      throw new AppException(ERR.SESSION_ALREADY_ENDED);
+    }
+
+    await this.autoRateLimiter.checkAndConsume(sid);
+
+    try {
+      return await this.redis.withLock(`chat:auto-lock:${sid}`, 30000, async () => {
+        return await this.orchestrator.handleAutoTurn({
+          sessionId: sid,
+          userId: u.uid,
+          storyId: session.storyId,
+        });
+      });
+    } catch (err: any) {
+      if (err instanceof ConflictException && err.message === 'SESSION_LOCKED') {
+        throw new AppException(ERR.SESSION_LOCKED);
+      }
+      throw err;
+    }
   }
 
   @Post('sessions/:sid/end')

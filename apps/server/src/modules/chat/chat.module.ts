@@ -11,6 +11,7 @@ import { ChatConfig } from '../../config/chat.config';
 import { CheckpointService } from './services/checkpoint.service';
 import { EndChatService } from './services/end-chat.service';
 import { IdempotencyInterceptor } from '../../shared/idempotency/idempotency.interceptor';
+import { AutoRateLimiterService } from './services/auto-rate-limiter.service';
 import { MemoryModule } from '../memory/memory.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { MemoryModule } from '../memory/memory.module';
     ChatConfig,
     CheckpointService,
     EndChatService,
+    AutoRateLimiterService,
     IdempotencyInterceptor,
   ],
   exports: [
@@ -40,6 +42,7 @@ import { MemoryModule } from '../memory/memory.module';
     ChatConfig,
     CheckpointService,
     EndChatService,
+    AutoRateLimiterService,
     IdempotencyInterceptor,
   ],
 })

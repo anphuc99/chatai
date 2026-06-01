@@ -8,7 +8,7 @@ export class TemplateLoader {
    * Load template từ packages/prompts/v1
    */
   static loadTemplate(
-    name: 'system_chat' | 'summary_plot' | 'summary_session' | 'summary_character' | 'multi_query'
+    name: 'system_chat' | 'summary_plot' | 'summary_session' | 'summary_character' | 'multi_query' | 'auto_turn_ooc'
   ): string {
     if (cache.has(name)) {
       return cache.get(name)!;
@@ -23,7 +23,7 @@ export class TemplateLoader {
   }
 
   loadTemplate(
-    name: 'system_chat' | 'summary_plot' | 'summary_session' | 'summary_character' | 'multi_query'
+    name: 'system_chat' | 'summary_plot' | 'summary_session' | 'summary_character' | 'multi_query' | 'auto_turn_ooc'
   ): string {
     return TemplateLoader.loadTemplate(name);
   }
